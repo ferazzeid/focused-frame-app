@@ -172,7 +172,7 @@ export const MobileLayout = () => {
               className={`flex flex-col items-center justify-center h-12 text-xs font-medium transition-colors duration-fast rounded-md border border-border ${
                 activeTab === "settings" || activeTab === "admin"
                   ? "text-foreground-subtle bg-background-card border-border opacity-50 cursor-not-allowed"
-                  : "text-foreground-muted hover:text-foreground bg-background-card hover:bg-background-hover"
+                  : "text-foreground hover:text-foreground bg-background-card hover:bg-background-hover border-border"
               }`}
             >
               <Plus className="w-5 h-5" />
@@ -185,7 +185,7 @@ export const MobileLayout = () => {
               className={`flex flex-col items-center justify-center h-12 text-xs font-medium transition-colors duration-fast rounded-md border border-border ${
                 activeTab === "settings" || activeTab === "admin"
                   ? "text-foreground-subtle bg-background-card border-border opacity-50 cursor-not-allowed"
-                  : "text-foreground-muted hover:text-foreground bg-background-card hover:bg-background-hover"
+                  : "text-foreground hover:text-foreground bg-background-card hover:bg-background-hover border-border"
               }`}
             >
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="w-5 h-5">
@@ -201,8 +201,8 @@ export const MobileLayout = () => {
                 isRecording
                   ? "text-white border-red-500 bg-red-500 animate-pulse"
                   : isProcessing
-                    ? "text-background border-border/30 bg-accent-red/50 opacity-50"
-                    : "text-background border-accent-red bg-accent-red hover:bg-accent-red/90"
+                    ? "text-white border-border/30 bg-accent-red/50 opacity-50"
+                    : "text-white border-accent-red bg-accent-red hover:bg-accent-red/90"
               }`}
               style={{
                 animationDuration: isRecording ? "2s" : undefined,
@@ -225,7 +225,7 @@ export const MobileLayout = () => {
                     e.stopPropagation();
                     cancelRecording();
                   }}
-                  className="absolute -top-1 -right-1 w-5 h-5 bg-accent-red rounded-full flex items-center justify-center hover:bg-accent-red/90 transition-colors duration-fast z-10"
+                  className="absolute -top-1 -right-1 w-5 h-5 bg-red-700 rounded-full flex items-center justify-center hover:bg-red-800 transition-colors duration-fast z-10"
                 >
                   <X className="w-3 h-3 text-white" />
                 </button>
