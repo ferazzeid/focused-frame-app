@@ -94,8 +94,8 @@ export const FreeList = () => {
       const data = await loadData();
       data.freeList = newItems;
       await saveData(data);
-      setItems(newItems);
-      console.log("Items saved and state updated");
+      console.log("Items saved to database");
+      // Don't update state here since we're using functional updates
     } catch (error) {
       console.error("Error saving items:", error);
       toast({
@@ -167,46 +167,63 @@ export const FreeList = () => {
     
     const newItem = createTextItem("", "");
     console.log("Created new item:", newItem);
-    const newItems = [...items, newItem];
     
-    const boldValid = validateBoldItemRules(newItems);
-    const emptyValid = validateEmptyLineRules(newItems);
-    console.log("Validation results - bold:", boldValid, "empty:", emptyValid);
-    
-    if (boldValid && emptyValid) {
-      console.log("Validation passed, saving items and setting editing");
-      saveItems(newItems);
-      setEditingId(newItem.id);
-      console.log("Set editing ID to:", newItem.id);
-    } else {
-      console.log("Validation failed");
-      toast({
-        title: "Cannot add item",
-        description: "This would violate formatting rules",
-        variant: "destructive",
-      });
-    }
+    // Use functional state update to get current items
+    setItems(currentItems => {
+      console.log("Current items in addTextItem:", currentItems.length);
+      const newItems = [...currentItems, newItem];
+      
+      const boldValid = validateBoldItemRules(newItems);
+      const emptyValid = validateEmptyLineRules(newItems);
+      console.log("Validation results - bold:", boldValid, "empty:", emptyValid);
+      
+      if (boldValid && emptyValid) {
+        console.log("Validation passed, saving items and setting editing");
+        // Save to database in background
+        saveItems(newItems);
+        setEditingId(newItem.id);
+        console.log("Set editing ID to:", newItem.id);
+        return newItems;
+      } else {
+        console.log("Validation failed");
+        toast({
+          title: "Cannot add item",
+          description: "This would violate formatting rules",
+          variant: "destructive",
+        });
+        return currentItems; // Return unchanged items
+      }
+    });
   };
 
   const addEmptyLine = () => {
-    console.log("addEmptyLine called, current items count:", items.length);
-    console.log("Current items:", items);
-    const newItem = createEmptyItem();
-    console.log("Created empty item:", newItem);
-    const newItems = [...items, newItem];
-    console.log("New items array:", newItems);
+    console.log("addEmptyLine called");
     
-    if (validateEmptyLineRules(newItems)) {
-      console.log("Validation passed, saving items");
-      saveItems(newItems);
-    } else {
-      console.log("Validation failed");
-      toast({
-        title: "Cannot add empty line",
-        description: "No two consecutive empty lines allowed",
-        variant: "destructive",
-      });
-    }
+    // Use functional state update to get current items
+    setItems(currentItems => {
+      console.log("Current items in addEmptyLine:", currentItems.length);
+      console.log("Current items array:", currentItems);
+      
+      const newItem = createEmptyItem();
+      console.log("Created empty item:", newItem);
+      const newItems = [...currentItems, newItem];
+      console.log("New items array:", newItems);
+      
+      if (validateEmptyLineRules(newItems)) {
+        console.log("Validation passed, saving items");
+        // Save to database in background
+        saveItems(newItems);
+        return newItems;
+      } else {
+        console.log("Validation failed");
+        toast({
+          title: "Cannot add empty line",
+          description: "No two consecutive empty lines allowed",
+          variant: "destructive",
+        });
+        return currentItems; // Return unchanged items
+      }
+    });
   };
 
   const updateItem = async (id: string, title: string, content: string) => {
