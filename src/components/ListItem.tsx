@@ -127,7 +127,14 @@ export const ListItem = ({
                     : "font-normal text-foreground"
                 }`}
               >
-                {item.title || (
+                {item.title ? (
+                  <span>
+                    {item.title}
+                    {item.content && item.content.trim() && (
+                      <span className="text-foreground-subtle ml-xs">*</span>
+                    )}
+                  </span>
+                ) : (
                   <span className="text-foreground-subtle italic">Click to add title...</span>
                 )}
               </div>
