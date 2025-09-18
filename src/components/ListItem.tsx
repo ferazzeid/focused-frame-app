@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { MobileButton } from "@/components/ui/mobile-button";
-import { Trash2, GripVertical, Bold, X, Mic } from "lucide-react";
+import { Trash2, GripVertical, Bold, X, Mic, MoreVertical, Info, ArrowRight } from "lucide-react";
 import { useVoiceEdit } from "@/hooks/useVoiceEdit";
 
 export interface ListItemData {
@@ -17,6 +17,8 @@ interface ListItemProps {
   onUpdate: (id: string, title: string, content: string) => void;
   onDelete: (id: string) => void;
   onToggleBold: (id: string) => void;
+  onSendToSecondList?: (id: string) => void;
+  sendToSecondListLabel?: string;
   onDragStart?: (e: React.DragEvent, id: string) => void;
   onDragOver?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent, targetId: string) => void;
@@ -34,6 +36,8 @@ export const ListItem = ({
   onUpdate,
   onDelete,
   onToggleBold,
+  onSendToSecondList,
+  sendToSecondListLabel = "Send to 2nd List",
   onDragStart,
   onDragOver,
   onDrop,
@@ -47,6 +51,7 @@ export const ListItem = ({
 }: ListItemProps) => {
   const [localTitle, setLocalTitle] = useState(item.title);
   const [localContent, setLocalContent] = useState(item.content);
+  const [showMenu, setShowMenu] = useState(false);
   const { isRecording, isProcessing, toggleVoiceEdit, cancelVoiceEdit } = useVoiceEdit();
 
   const handleVoiceTranscription = (transcribedText: string) => {
@@ -203,36 +208,88 @@ export const ListItem = ({
                   <span className="text-foreground-subtle italic">Click to add title...</span>
                 )}
               </div>
-              {item.content && (
-                <button
-                  onClick={() => onViewContent?.(item.id)}
-                  className="text-xs px-sm py-xs rounded-md border border-border bg-background-subtle text-foreground-muted hover:bg-background-hover transition-colors duration-fast"
-                >
-                  View
-                </button>
-              )}
             </div>
           )}
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-xs transition-opacity duration-fast">
-          <MobileButton
-            variant="ghost"
-            size="icon"
-            onClick={() => onToggleBold(item.id)}
-            className={`w-8 h-8 rounded-md border border-transparent hover:border-border ${item.isBold ? "text-accent-green" : "text-foreground-subtle"}`}
+        {/* Actions - Three Dots Menu */}
+        <div className="relative">
+          <button
+            onClick={() => setShowMenu(!showMenu)}
+            className="w-8 h-8 rounded-md border border-transparent hover:border-border text-foreground-subtle hover:text-foreground transition-colors duration-fast flex items-center justify-center"
           >
-            <Bold className="w-3 h-3" />
-          </MobileButton>
-          <MobileButton
-            variant="ghost"
-            size="icon"
-            onClick={() => onDeleteConfirm?.(item.id)}
-            className="w-8 h-8 rounded-md border border-transparent hover:border-border text-foreground-subtle hover:text-accent-red"
-          >
-            <Trash2 className="w-3 h-3" />
-          </MobileButton>
+            <MoreVertical className="w-4 h-4" />
+          </button>
+          
+          {/* Dropdown Menu */}
+          {showMenu && (
+            <>
+              {/* Overlay to close menu when clicking outside */}
+              <div 
+                className="fixed inset-0 z-10" 
+                onClick={() => setShowMenu(false)}
+              />
+              
+              {/* Menu */}
+              <div className="absolute right-0 top-8 z-20 w-36 bg-background-card border border-border rounded-md shadow-lg animate-scale-in">
+                <div className="py-xs">
+                  {/* View Content */}
+                  {item.content && (
+                    <button
+                      onClick={() => {
+                        onViewContent?.(item.id);
+                        setShowMenu(false);
+                      }}
+                      className="w-full px-sm py-xs text-left text-sm text-foreground hover:bg-background-subtle transition-colors duration-fast flex items-center gap-sm"
+                    >
+                      <Info className="w-3 h-3" />
+                      View
+                    </button>
+                  )}
+                  
+                  {/* Toggle Bold */}
+                  <button
+                    onClick={() => {
+                      onToggleBold(item.id);
+                      setShowMenu(false);
+                    }}
+                    className={`w-full px-sm py-xs text-left text-sm hover:bg-background-subtle transition-colors duration-fast flex items-center gap-sm ${
+                      item.isBold ? "text-accent-green" : "text-foreground"
+                    }`}
+                  >
+                    <Bold className="w-3 h-3" />
+                    Bold
+                  </button>
+                  
+                  {/* Send to Second List */}
+                  {onSendToSecondList && (
+                    <button
+                      onClick={() => {
+                        onSendToSecondList(item.id);
+                        setShowMenu(false);
+                      }}
+                      className="w-full px-sm py-xs text-left text-sm text-foreground hover:bg-background-subtle transition-colors duration-fast flex items-center gap-sm"
+                    >
+                      <ArrowRight className="w-3 h-3" />
+                      {sendToSecondListLabel}
+                    </button>
+                  )}
+                  
+                  {/* Delete */}
+                  <button
+                    onClick={() => {
+                      onDeleteConfirm?.(item.id);
+                      setShowMenu(false);
+                    }}
+                    className="w-full px-sm py-xs text-left text-sm text-foreground hover:bg-background-subtle hover:text-accent-red transition-colors duration-fast flex items-center gap-sm"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

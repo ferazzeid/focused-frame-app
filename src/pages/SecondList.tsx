@@ -252,6 +252,28 @@ export const SecondList = () => {
     }
   };
 
+  const handleSendToFreeList = (id: string) => {
+    const itemToSend = items.find(item => item.id === id);
+    if (!itemToSend) return;
+
+    const data = loadData();
+    
+    // Add to free list with new timestamp
+    data.freeList = [...data.freeList, { ...itemToSend, createdAt: new Date() }];
+    
+    // Remove from second list
+    const newItems = items.filter(item => item.id !== id);
+    data.secondList = newItems;
+    
+    saveData(data);
+    setItems(newItems);
+
+    toast({
+      title: "Item moved",
+      description: "Item sent to List successfully",
+    });
+  };
+
   const handleDragStart = (e: React.DragEvent, id: string) => {
     setDraggedItem(id);
     e.dataTransfer.effectAllowed = 'move';
@@ -359,6 +381,8 @@ export const SecondList = () => {
               onUpdate={updateItem}
               onDelete={deleteItem}
               onToggleBold={toggleBold}
+              onSendToSecondList={handleSendToFreeList}
+              sendToSecondListLabel="Send to List"
               isEditing={editingId === item.id}
               onEdit={handleEdit}
               onSave={handleSave}
