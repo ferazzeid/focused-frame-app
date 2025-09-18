@@ -271,7 +271,7 @@ export const ListItem = ({
                       className="w-full px-sm py-xs text-left text-sm text-foreground hover:bg-background-subtle transition-colors duration-fast flex items-center gap-sm"
                     >
                       <ArrowRight className="w-3 h-3" />
-                      {sendToSecondListLabel}
+                      2nd List
                     </button>
                   )}
                   

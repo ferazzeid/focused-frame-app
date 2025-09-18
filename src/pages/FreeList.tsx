@@ -253,11 +253,11 @@ export const FreeList = () => {
 
     const data = loadData();
     
-    // Add to second list with new timestamp
+    // Add to second list with new timestamp and remove bold status
     if (!data.secondList) {
       data.secondList = [];
     }
-    data.secondList = [...data.secondList, { ...itemToSend, createdAt: new Date() }];
+    data.secondList = [...data.secondList, { ...itemToSend, isBold: false, createdAt: new Date() }];
     
     // Remove from free list
     const newItems = items.filter(item => item.id !== id);
