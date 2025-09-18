@@ -3,7 +3,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MobileButton } from "@/components/ui/mobile-button";
-import { Key, MessageSquare, ArrowLeft } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { Key, MessageSquare, ArrowLeft, Zap } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 
 interface AdminDashboardProps {
@@ -12,6 +14,8 @@ interface AdminDashboardProps {
 
 export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const [openaiApiKey, setOpenaiApiKey] = useState("");
+  const [multiItemEnabled, setMultiItemEnabled] = useState(false);
+  const [multiItemPrompt, setMultiItemPrompt] = useState("");
   const { toast } = useToast();
   const { isAdmin, isLoading } = useUserRole();
 
@@ -19,6 +23,16 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
     const savedKey = localStorage.getItem("openai_api_key");
     if (savedKey) {
       setOpenaiApiKey(savedKey);
+    }
+    
+    const savedMultiItem = localStorage.getItem("multi_item_enabled");
+    setMultiItemEnabled(savedMultiItem === "true");
+    
+    const savedPrompt = localStorage.getItem("multi_item_prompt");
+    if (savedPrompt) {
+      setMultiItemPrompt(savedPrompt);
+    } else {
+      setMultiItemPrompt('Analyze this transcript and break it down into distinct, actionable items. Each item should be a separate task, idea, or note. If the content naturally contains multiple distinct items, return them as separate entries. If it\'s really just one cohesive item, return only one. For each item, provide a 3-word title (no punctuation) and the relevant content. Respond in JSON format: {"items": [{"title": "Three Word Title", "content": "detailed content"}], "is_single_item": false}');
     }
   }, []);
 
@@ -36,6 +50,15 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
         description: "Your OpenAI API key has been removed.",
       });
     }
+  };
+
+  const handleSaveMultiItemSettings = () => {
+    localStorage.setItem("multi_item_enabled", multiItemEnabled.toString());
+    localStorage.setItem("multi_item_prompt", multiItemPrompt);
+    toast({
+      title: "Multi-Item Settings Saved",
+      description: "Your multi-item recording settings have been updated.",
+    });
   };
 
   if (isLoading) {
@@ -104,6 +127,52 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
               className="w-full"
             >
               {openaiApiKey ? "Update API Key" : "Save API Key"}
+            </MobileButton>
+          </div>
+        </div>
+
+        {/* Multi-Item Recording */}
+        <div className="space-y-md">
+          <div className="flex items-center gap-sm">
+            <Zap className="w-5 h-5 text-foreground-muted" />
+            <h2 className="text-lg font-semibold text-foreground">Multi-Item Recording</h2>
+          </div>
+          <div className="bg-background-card border border-border rounded-md p-md space-y-md">
+            <div className="flex items-center justify-between">
+              <div className="space-y-xs">
+                <Label className="text-sm font-medium text-foreground">Enable Multi-Item Creation</Label>
+                <p className="text-xs text-foreground-subtle">
+                  When enabled, recordings can be split into multiple list items automatically
+                </p>
+              </div>
+              <Switch
+                checked={multiItemEnabled}
+                onCheckedChange={setMultiItemEnabled}
+              />
+            </div>
+            
+            <div className="space-y-sm">
+              <Label htmlFor="multi-item-prompt" className="text-sm font-medium text-foreground">
+                Multi-Item Analysis Prompt
+              </Label>
+              <Textarea
+                id="multi-item-prompt"
+                value={multiItemPrompt}
+                onChange={(e) => setMultiItemPrompt(e.target.value)}
+                placeholder="Enter the prompt for analyzing recordings..."
+                className="bg-input border border-input-border min-h-[120px] font-mono text-xs"
+              />
+              <p className="text-xs text-foreground-subtle">
+                This prompt instructs the AI how to analyze recordings and split them into multiple items.
+              </p>
+            </div>
+            
+            <MobileButton
+              onClick={handleSaveMultiItemSettings}
+              variant="primary"
+              className="w-full"
+            >
+              Save Multi-Item Settings
             </MobileButton>
           </div>
         </div>

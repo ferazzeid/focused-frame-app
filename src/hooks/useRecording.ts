@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { speechService, TranscriptionResult } from '@/lib/speechService';
+import { speechService, TranscriptionResult, MultiItemResult } from '@/lib/speechService';
 import { createTextItem, loadData, saveData, generateId } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
 
@@ -187,33 +187,68 @@ export const useRecording = (onItemAdded?: () => void) => {
         return;
       }
 
-      toast({
-        title: "Processing Audio",
-        description: "Transcribing and generating summary...",
-      });
-
-      const result: TranscriptionResult = await speechService.processAudio(audioBlob);
+      // Check if multi-item is enabled
+      const multiItemEnabled = localStorage.getItem('multi_item_enabled') === 'true';
       
-      // Create new item with 3-word summary as title and transcript as content
-      const newItem = createTextItem(result.summary, result.transcript);
-      
-      // Add to free list
-      const currentData = await loadData();
-      const updatedData = {
-        ...currentData,
-        freeList: [newItem, ...currentData.freeList],
-      };
-      await saveData(updatedData);
+      if (multiItemEnabled) {
+        toast({
+          title: "Processing Audio",
+          description: "Analyzing for multiple items...",
+        });
 
-      // Remove from pending if it was a retry
-      if (recordingId) {
-        removePendingRecording(recordingId);
+        const multiResult: MultiItemResult = await speechService.processAudioForMultipleItems(audioBlob);
+        
+        // Create multiple items
+        const currentData = await loadData();
+        const newItems = multiResult.items.map(item => createTextItem(item.title, item.content));
+        
+        const updatedData = {
+          ...currentData,
+          freeList: [...newItems, ...currentData.freeList],
+        };
+        await saveData(updatedData);
+
+        // Remove from pending if it was a retry
+        if (recordingId) {
+          removePendingRecording(recordingId);
+        }
+
+        toast({
+          title: multiResult.items.length > 1 ? "Multiple Items Created" : "Voice Note Created",
+          description: multiResult.items.length > 1 
+            ? `Created ${multiResult.items.length} items from recording`
+            : `Added: "${multiResult.items[0].title}"`,
+        });
+
+      } else {
+        toast({
+          title: "Processing Audio",
+          description: "Transcribing and generating summary...",
+        });
+
+        const result: TranscriptionResult = await speechService.processAudio(audioBlob);
+        
+        // Create new item with 3-word summary as title and transcript as content
+        const newItem = createTextItem(result.summary, result.transcript);
+        
+        // Add to free list
+        const currentData = await loadData();
+        const updatedData = {
+          ...currentData,
+          freeList: [newItem, ...currentData.freeList],
+        };
+        await saveData(updatedData);
+
+        // Remove from pending if it was a retry
+        if (recordingId) {
+          removePendingRecording(recordingId);
+        }
+
+        toast({
+          title: "Voice Note Created",
+          description: `Added: "${result.summary}"`,
+        });
       }
-
-      toast({
-        title: "Voice Note Created",
-        description: `Added: "${result.summary}"`,
-      });
 
       // Notify parent component that a new item was added
       onItemAdded?.();

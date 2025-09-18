@@ -33,7 +33,7 @@ export const MobileLayout = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [addTextItem, setAddTextItem] = useState<(() => void) | null>(null);
   const [addEmptyLine, setAddEmptyLine] = useState<(() => void) | null>(null);
-  const { isAdmin } = useUserRole();
+  const { isAdmin, isLoading } = useUserRole();
   
   const handleItemAdded = () => {
     setRefreshTrigger(prev => prev + 1);
@@ -92,7 +92,7 @@ export const MobileLayout = () => {
             </div>
             <div className="flex items-center gap-sm">
               {/* Admin Dashboard Button - Only visible to admins */}
-              {isAdmin && (
+              {!isLoading && isAdmin && (
                 <button
                   onClick={() => setActiveTab("admin")}
                   className={`p-sm transition-colors duration-fast rounded-md ${
