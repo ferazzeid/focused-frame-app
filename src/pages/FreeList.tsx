@@ -2,11 +2,11 @@ import { useState, useEffect } from "react";
 import { ListItem, ListItemData } from "@/components/ListItem";
 import { ContentModal } from "@/components/ContentModal";
 import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
-import { MobileButton } from "@/components/ui/mobile-button";
 import { FileText } from "lucide-react";
 import { loadData, saveData, createTextItem, createEmptyItem, archiveItem } from "@/lib/storage";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useAddFunctions } from "@/components/MobileLayout";
 
 export const FreeList = () => {
   const [items, setItems] = useState<ListItemData[]>([]);
@@ -20,6 +20,7 @@ export const FreeList = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { setAddTextItem, setAddEmptyLine } = useAddFunctions();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,6 +46,18 @@ export const FreeList = () => {
 
     fetchData();
   }, [user, toast]);
+
+  // Register add functions with the context
+  useEffect(() => {
+    setAddTextItem(() => addTextItem);
+    setAddEmptyLine(() => addEmptyLine);
+    
+    // Cleanup functions when component unmounts
+    return () => {
+      setAddTextItem(null);
+      setAddEmptyLine(null);
+    };
+  }, [setAddTextItem, setAddEmptyLine]);
 
   // Calculate which items should be indented as children
   const calculateChildItems = (items: ListItemData[]): boolean[] => {
@@ -491,26 +504,6 @@ export const FreeList = () => {
         onConfirm={handleDeleteExecute}
         itemTitle=""
       />
-
-      {/* Add Actions */}
-      <div className="flex-shrink-0 p-md">
-        <div className="flex gap-sm">
-          <MobileButton
-            variant="outline"
-            onClick={addTextItem}
-            className="flex-1 bg-background-subtle text-foreground-muted border-border rounded-md hover:bg-background-hover font-normal"
-          >
-            Add Item
-          </MobileButton>
-          <MobileButton
-            variant="outline"
-            onClick={addEmptyLine}
-            className="flex-1 bg-background-subtle text-foreground-muted border-border rounded-md hover:bg-background-hover font-normal"
-          >
-            Space
-          </MobileButton>
-        </div>
-      </div>
     </div>
   );
 };
