@@ -100,15 +100,11 @@ export const MobileLayout = () => {
               <h1 className="text-xl font-medium text-foreground">Second List</h1>
             </div>
             <div className="flex items-center gap-sm">
-              {/* Admin Dashboard Button - Only visible to admins */}
-              {!isLoading && isAdmin && (
+              {/* Admin Dashboard Button - Only visible to admins and only in settings */}
+              {!isLoading && isAdmin && activeTab === "settings" && (
                 <button
                   onClick={() => setActiveTab("admin")}
-                  className={`p-sm transition-colors duration-fast rounded-md ${
-                    activeTab === "admin"
-                      ? "bg-accent-red text-background"
-                      : "text-foreground-muted hover:text-foreground"
-                  }`}
+                  className="p-sm transition-colors duration-fast rounded-md text-foreground-muted hover:text-foreground"
                   title="Admin Dashboard"
                 >
                   <Key className="w-5 h-5" />

@@ -209,7 +209,7 @@ export const FreeList = () => {
     }
   };
 
-  const updateItem = (id: string, title: string, content: string) => {
+  const updateItem = async (id: string, title: string, content: string) => {
     console.log("updateItem called for id:", id, "with title:", title, "and content:", content);
     
     // Don't allow empty titles
@@ -221,9 +221,40 @@ export const FreeList = () => {
       });
       return;
     }
+
+    let processedTitle = title.trim();
+    
+    // Check if title has more than 3 words and needs AI summarization
+    const wordCount = processedTitle.split(/\s+/).filter(word => word.length > 0).length;
+    if (wordCount > 3) {
+      try {
+        // Import SpeechService dynamically to avoid circular dependencies
+        const { SpeechService } = await import("@/lib/speechService");
+        const speechService = new SpeechService();
+        
+        // Use AI to create a 3-word summary
+        processedTitle = await speechService.generateSummary(processedTitle);
+        
+        toast({
+          title: "Text summarized",
+          description: "Your text was automatically summarized to 3 words",
+        });
+      } catch (error) {
+        console.error("Error generating summary:", error);
+        // If AI summarization fails, truncate to first 3 words
+        const words = processedTitle.split(/\s+/).filter(word => word.length > 0);
+        processedTitle = words.slice(0, 3).join(" ");
+        
+        toast({
+          title: "Text truncated",
+          description: "Text was shortened to 3 words (AI summarization unavailable)",
+          variant: "destructive",
+        });
+      }
+    }
     
     const newItems = items.map(item => 
-      item.id === id ? { ...item, title: title.trim(), content: content.trim() } : item
+      item.id === id ? { ...item, title: processedTitle, content: content.trim() } : item
     );
     
     if (validateBoldItemRules(newItems)) {
