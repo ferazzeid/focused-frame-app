@@ -7,7 +7,8 @@
 @layer base {
   :root {
     /* Core dark theme - permanent, no light mode */
-    --background: 220 15% 8%;
+    --background-page: 220 15% 5%;      /* Slightly darker for page background */
+    --background: 220 15% 8%;           /* App container background */
     --background-subtle: 220 13% 11%;
     --background-card: 220 12% 12%;
     --foreground: 220 8% 92%;
@@ -67,7 +68,8 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply text-foreground font-sans antialiased;
+    background-color: hsl(var(--background-page));
     min-height: 100vh;
     min-height: 100svh; /* Support for newer mobile browsers */
   }
