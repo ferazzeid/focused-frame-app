@@ -27,8 +27,12 @@ export const FreeList = () => {
       if (user) {
         try {
           setIsLoading(true);
+          console.log("=== LOADING DATA ===");
           const data = await loadData();
+          console.log("Loaded data from database:", data);
+          console.log("Free list items:", data.freeList);
           setItems(data.freeList);
+          console.log("Set items state to:", data.freeList);
         } catch (error) {
           console.error("Error loading data:", error);
           toast({
@@ -185,12 +189,18 @@ export const FreeList = () => {
   };
 
   const addEmptyLine = () => {
+    console.log("addEmptyLine called, current items count:", items.length);
+    console.log("Current items:", items);
     const newItem = createEmptyItem();
+    console.log("Created empty item:", newItem);
     const newItems = [...items, newItem];
+    console.log("New items array:", newItems);
     
     if (validateEmptyLineRules(newItems)) {
+      console.log("Validation passed, saving items");
       saveItems(newItems);
     } else {
+      console.log("Validation failed");
       toast({
         title: "Cannot add empty line",
         description: "No two consecutive empty lines allowed",
