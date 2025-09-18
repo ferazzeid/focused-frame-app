@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ListItem, ListItemData } from "@/components/ListItem";
 import { ContentModal } from "@/components/ContentModal";
+import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
 import { MobileButton } from "@/components/ui/mobile-button";
 import { Plus, FileText } from "lucide-react";
 import { loadData, saveData, createTextItem, createEmptyItem } from "@/lib/storage";
@@ -11,6 +12,9 @@ export const FreeList = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [viewingItem, setViewingItem] = useState<ListItemData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -188,6 +192,67 @@ export const FreeList = () => {
     }
   };
 
+  const handleDeleteConfirm = (id: string) => {
+    setDeleteItemId(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteItemId(null);
+    setIsDeleteModalOpen(false);
+  };
+
+  const handleDeleteExecute = () => {
+    if (deleteItemId) {
+      deleteItem(deleteItemId);
+      setDeleteItemId(null);
+      setIsDeleteModalOpen(false);
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    setDraggedItem(id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    
+    if (!draggedItem || draggedItem === targetId) {
+      setDraggedItem(null);
+      return;
+    }
+
+    const draggedIndex = items.findIndex(item => item.id === draggedItem);
+    const targetIndex = items.findIndex(item => item.id === targetId);
+    
+    if (draggedIndex === -1 || targetIndex === -1) {
+      setDraggedItem(null);
+      return;
+    }
+
+    const newItems = [...items];
+    const [draggedItemData] = newItems.splice(draggedIndex, 1);
+    newItems.splice(targetIndex, 0, draggedItemData);
+    
+    if (validateBoldItemRules(newItems) && validateEmptyLineRules(newItems)) {
+      saveItems(newItems);
+    } else {
+      toast({
+        title: "Invalid order",
+        description: "This arrangement would violate formatting rules",
+        variant: "destructive",
+      });
+    }
+    
+    setDraggedItem(null);
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* List Header */}
@@ -223,6 +288,10 @@ export const FreeList = () => {
               onEdit={handleEdit}
               onSave={handleSave}
               onViewContent={handleViewContent}
+              onDeleteConfirm={handleDeleteConfirm}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
             />
           ))
         )}
@@ -234,6 +303,14 @@ export const FreeList = () => {
         isOpen={isModalOpen}
         onClose={handleModalClose}
         onSave={handleModalSave}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteExecute}
+        itemTitle=""
       />
 
       {/* Add Actions */}

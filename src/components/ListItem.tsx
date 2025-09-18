@@ -23,6 +23,7 @@ interface ListItemProps {
   onEdit?: (id: string) => void;
   onSave?: (id: string) => void;
   onViewContent?: (id: string) => void;
+  onDeleteConfirm?: (id: string) => void;
 }
 
 export const ListItem = ({
@@ -37,6 +38,7 @@ export const ListItem = ({
   onEdit,
   onSave,
   onViewContent,
+  onDeleteConfirm,
 }: ListItemProps) => {
   const [localTitle, setLocalTitle] = useState(item.title);
   const [localContent, setLocalContent] = useState(item.content);
@@ -60,8 +62,8 @@ export const ListItem = ({
 
   if (item.isEmpty) {
     return (
-      <div className="h-6 border-l-2 border-transparent pl-md">
-        <div className="text-foreground-subtle text-xs">— empty line —</div>
+      <div className="h-4 flex items-center justify-center">
+        <div className="w-full h-px bg-border opacity-30"></div>
       </div>
     );
   }
@@ -77,23 +79,31 @@ export const ListItem = ({
       onDrop={(e) => onDrop?.(e, item.id)}
     >
       {/* Drag Handle */}
-      <GripVertical className="w-4 h-4 text-foreground-subtle opacity-0 group-hover:opacity-100 transition-opacity duration-fast mt-1 cursor-grab" />
+      <GripVertical 
+        className="w-4 h-4 text-foreground-subtle opacity-0 group-hover:opacity-100 transition-opacity duration-fast mt-1 cursor-grab active:cursor-grabbing" 
+        onMouseDown={(e) => {
+          e.currentTarget.style.cursor = 'grabbing';
+        }}
+        onMouseUp={(e) => {
+          e.currentTarget.style.cursor = 'grab';
+        }}
+      />
 
       {/* Content */}
       <div className="flex-1 min-w-0">
         {isEditing ? (
-          <input
-            type="text"
-            value={localTitle}
-            onChange={(e) => setLocalTitle(e.target.value)}
-            onBlur={handleSave}
-            onKeyDown={handleKeyDown}
-            placeholder="Title..."
-            className={`w-full bg-input border border-input-border rounded-sm px-sm py-xs text-sm transition-colors duration-fast focus:border-input-focus focus:outline-none ${
-              item.isBold ? "font-bold text-base" : "font-medium"
-            }`}
-            autoFocus
-          />
+            <input
+              type="text"
+              value={localTitle}
+              onChange={(e) => setLocalTitle(e.target.value)}
+              onBlur={handleSave}
+              onKeyDown={handleKeyDown}
+              placeholder="Title..."
+              className={`w-full bg-input border border-input-border rounded-sm px-sm py-sm text-sm transition-colors duration-fast focus:border-input-focus focus:outline-none ${
+                item.isBold ? "font-bold text-base" : "font-medium"
+              }`}
+              autoFocus
+            />
         ) : (
           <div className="flex items-center gap-sm">
             <div
@@ -133,7 +143,7 @@ export const ListItem = ({
         <MobileButton
           variant="ghost"
           size="icon"
-          onClick={() => onDelete(item.id)}
+          onClick={() => onDeleteConfirm?.(item.id)}
           className="w-8 h-8 text-foreground-subtle hover:text-accent-red"
         >
           <Trash2 className="w-3 h-3" />
