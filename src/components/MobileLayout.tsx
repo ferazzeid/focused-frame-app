@@ -94,7 +94,7 @@ export const MobileLayout = () => {
     <AddFunctionsContext.Provider value={contextValue}>
       <div className="min-h-screen bg-background flex flex-col max-w-sm mx-auto">
         {/* Fixed Header */}
-        <header className="fixed top-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm bg-background border-b border-border z-10 px-md py-lg">
+        <header className="fixed top-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm bg-background z-10 px-md py-lg">
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-xl font-medium text-foreground">Second List</h1>
@@ -144,7 +144,7 @@ export const MobileLayout = () => {
         <div className="h-20"></div>
 
         {/* Fixed Bottom Navigation */}
-        <nav className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm border-t border-border z-10 p-md">
+        <nav className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm z-10 p-md">
           <div className={`grid gap-xs transition-all duration-300 ${showSecondList ? 'grid-cols-5' : 'grid-cols-4'}`}>
             {/* List Tab */}
             <button

@@ -23,8 +23,10 @@ interface ListItemProps {
   onDragOver?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent, targetId: string) => void;
   isEditing?: boolean;
+  isSelected?: boolean;
   onEdit?: (id: string) => void;
   onSave?: (id: string) => void;
+  onSelect?: (id: string) => void;
   onViewContent?: (id: string) => void;
   onDeleteConfirm?: (id: string) => void;
   isDragOver?: boolean;
@@ -42,8 +44,10 @@ export const ListItem = ({
   onDragOver,
   onDrop,
   isEditing = false,
+  isSelected = false,
   onEdit,
   onSave,
+  onSelect,
   onViewContent,
   onDeleteConfirm,
   isDragOver = false,
@@ -157,13 +161,25 @@ export const ListItem = ({
         <div className="absolute -top-1 left-0 right-0 h-0.5 bg-accent-green animate-pulse"></div>
       )}
       <div
-        className={`group flex items-center gap-sm p-sm rounded-md border border-border transition-colors duration-fast min-h-[3rem] ${
+        className={`group flex items-center gap-sm p-sm rounded-md transition-colors duration-fast min-h-[3rem] ${
+          isSelected
+            ? "border border-border-focus"
+            : "border border-border"
+        } ${
           item.isBold ? "mt-md" : ""
         } ${isChild ? "ml-lg" : ""}`}
         draggable
         onDragStart={(e) => onDragStart?.(e, item.id)}
         onDragOver={onDragOver}
         onDrop={(e) => onDrop?.(e, item.id)}
+        onClick={(e) => {
+          // Don't trigger selection if clicking on interactive elements
+          if (isEditing || e.target !== e.currentTarget && 
+              !(e.target as HTMLElement).closest('.content-area')) {
+            return;
+          }
+          onSelect?.(item.id);
+        }}
         data-item-id={item.id}
       >
         {/* Drag Handle */}
@@ -180,7 +196,7 @@ export const ListItem = ({
         </div>
 
         {/* Content */}
-        <div className="flex-1 min-w-0 ml-xs flex items-center">
+        <div className="flex-1 min-w-0 ml-xs flex items-center content-area">
           {isEditing ? (
             <div className="relative w-full">
               <input

@@ -11,6 +11,7 @@ import { useAddFunctions } from "@/components/MobileLayout";
 export const FreeList = () => {
   const [items, setItems] = useState<ListItemData[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [viewingItem, setViewingItem] = useState<ListItemData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
@@ -202,15 +203,38 @@ export const FreeList = () => {
     // Use functional state update to get current items
     setItems(currentItems => {
       console.log("Current items in addEmptyLine:", currentItems.length);
-      console.log("Current items array:", currentItems);
+      console.log("Selected item ID:", selectedItemId);
       
       const newItem = createEmptyItem();
       console.log("Created empty item:", newItem);
-      const newItems = [...currentItems, newItem];
-      console.log("New items array:", newItems);
+      
+      let newItems: ListItemData[];
+      
+      if (selectedItemId) {
+        // Find the selected item and insert after it
+        const selectedIndex = currentItems.findIndex(item => item.id === selectedItemId);
+        if (selectedIndex !== -1) {
+          newItems = [
+            ...currentItems.slice(0, selectedIndex + 1),
+            newItem,
+            ...currentItems.slice(selectedIndex + 1)
+          ];
+          console.log(`Inserted empty line after item at index ${selectedIndex}`);
+        } else {
+          // If selected item not found, add at top
+          newItems = [newItem, ...currentItems];
+          console.log("Selected item not found, added at top");
+        }
+      } else {
+        // No item selected, add at top
+        newItems = [newItem, ...currentItems];
+        console.log("No selection, added empty line at top");
+      }
       
       if (validateEmptyLineRules(newItems)) {
         console.log("Validation passed, saving items");
+        // Clear selection after adding divider
+        setSelectedItemId(null);
         // Save to database in background
         saveItems(newItems);
         return newItems;
@@ -331,6 +355,14 @@ export const FreeList = () => {
 
   const handleEdit = (id: string) => {
     setEditingId(id);
+    // Clear selection when editing
+    setSelectedItemId(null);
+  };
+
+  const handleItemSelect = (id: string) => {
+    // Toggle selection - if same item clicked, deselect
+    setSelectedItemId(selectedItemId === id ? null : id);
+    console.log("Selected item:", selectedItemId === id ? null : id);
   };
 
   const handleViewContent = (id: string) => {
@@ -530,8 +562,10 @@ export const FreeList = () => {
               onToggleBold={toggleBold}
               onSendToSecondList={handleSendToSecondList}
               isEditing={editingId === item.id}
+              isSelected={selectedItemId === item.id}
               onEdit={handleEdit}
               onSave={handleSave}
+              onSelect={handleItemSelect}
               onViewContent={handleViewContent}
               onDeleteConfirm={handleDeleteConfirm}
               onDragStart={handleDragStart}

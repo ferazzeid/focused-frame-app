@@ -11,6 +11,7 @@ import { useAddFunctions } from "@/components/MobileLayout";
 export const SecondList = () => {
   const [items, setItems] = useState<ListItemData[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [viewingItem, setViewingItem] = useState<ListItemData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
@@ -185,6 +186,48 @@ export const SecondList = () => {
   };
 
   const addEmptyLine = () => {
+    console.log("addEmptyLine called");
+    
+    const newItem = createEmptyItem();
+    console.log("Created empty item:", newItem);
+    
+    let newItems: ListItemData[];
+    
+    if (selectedItemId) {
+      // Find the selected item and insert after it
+      const selectedIndex = items.findIndex(item => item.id === selectedItemId);
+      if (selectedIndex !== -1) {
+        newItems = [
+          ...items.slice(0, selectedIndex + 1),
+          newItem,
+          ...items.slice(selectedIndex + 1)
+        ];
+        console.log(`Inserted empty line after item at index ${selectedIndex}`);
+      } else {
+        // If selected item not found, add at top
+        newItems = [newItem, ...items];
+        console.log("Selected item not found, added at top");
+      }
+    } else {
+      // No item selected, add at top
+      newItems = [newItem, ...items];
+      console.log("No selection, added empty line at top");
+    }
+    
+    if (validateEmptyLineRules(newItems)) {
+      console.log("Validation passed, saving items");
+      // Clear selection after adding divider
+      setSelectedItemId(null);
+      saveItems(newItems);
+    } else {
+      console.log("Validation failed");
+      toast({
+        title: "Cannot add empty line",
+        description: "No two consecutive empty lines allowed",
+        variant: "destructive",
+      });
+    }
+  };
     const newItem = createEmptyItem();
     const newItems = [...items, newItem];
     
@@ -273,6 +316,14 @@ export const SecondList = () => {
 
   const handleEdit = (id: string) => {
     setEditingId(id);
+    // Clear selection when editing
+    setSelectedItemId(null);
+  };
+
+  const handleItemSelect = (id: string) => {
+    // Toggle selection - if same item clicked, deselect
+    setSelectedItemId(selectedItemId === id ? null : id);
+    console.log("Selected item:", selectedItemId === id ? null : id);
   };
 
   const handleViewContent = (id: string) => {
@@ -470,8 +521,10 @@ export const SecondList = () => {
               onSendToSecondList={handleSendToFreeList}
               sendToSecondListLabel="Send to List"
               isEditing={editingId === item.id}
+              isSelected={selectedItemId === item.id}
               onEdit={handleEdit}
               onSave={handleSave}
+              onSelect={handleItemSelect}
               onViewContent={handleViewContent}
               onDeleteConfirm={handleDeleteConfirm}
               onDragStart={handleDragStart}
