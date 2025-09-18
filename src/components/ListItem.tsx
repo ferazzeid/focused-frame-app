@@ -54,19 +54,42 @@ export const ListItem = ({
   const [showMenu, setShowMenu] = useState(false);
   const { isRecording, isProcessing, toggleVoiceEdit, cancelVoiceEdit } = useVoiceEdit();
 
-  const handleVoiceTranscription = (transcribedText: string) => {
-    setLocalTitle(transcribedText);
+  const handleVoiceTranscription = async (transcribedText: string) => {
+    if (transcribedText.trim() === "") {
+      return;
+    }
+
+    let processedText = transcribedText.trim();
+    
+    // Check if transcribed text has more than 3 words and needs AI summarization
+    const wordCount = processedText.split(/\s+/).filter(word => word.length > 0).length;
+    if (wordCount > 3) {
+      try {
+        // Import SpeechService dynamically 
+        const { SpeechService } = await import("@/lib/speechService");
+        const speechService = new SpeechService();
+        
+        // Use AI to create a 3-word summary
+        processedText = await speechService.generateSummary(processedText);
+      } catch (error) {
+        console.error("Error generating summary for voice:", error);
+        // If AI summarization fails, truncate to first 3 words
+        const words = processedText.split(/\s+/).filter(word => word.length > 0);
+        processedText = words.slice(0, 3).join(" ");
+      }
+    }
+    
+    setLocalTitle(processedText);
+    
     // Auto-save after voice transcription completes
     setTimeout(() => {
-      if (transcribedText.trim() !== "") {
-        onUpdate(item.id, transcribedText, localContent);
-        onSave?.(item.id);
-      }
+      onUpdate(item.id, processedText, localContent);
+      onSave?.(item.id);
     }, 100); // Small delay to ensure state is updated
   };
 
   const handleSave = () => {
-    // Don't save if title is empty
+    // Don't save if item content is empty
     if (localTitle.trim() === "") {
       return;
     }
@@ -171,7 +194,7 @@ export const ListItem = ({
                 }}
                 onBlur={handleSave}
                 onKeyDown={handleKeyDown}
-                placeholder="Title..."
+                placeholder="Item..."
                 className={`w-full bg-input border border-input-border rounded-sm px-sm py-sm text-sm transition-colors duration-fast focus:border-input-border focus:ring-0 focus:ring-offset-0 focus:outline-none ${
                   item.isBold ? "font-bold text-base" : "font-normal"
                 }`}
@@ -196,7 +219,7 @@ export const ListItem = ({
                   )}
                 </span>
               ) : (
-                <span className="text-foreground-subtle italic">Click to add title...</span>
+                <span className="text-foreground-subtle italic">Click to add item...</span>
               )}
             </div>
           )}

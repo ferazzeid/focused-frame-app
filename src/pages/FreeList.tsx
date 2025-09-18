@@ -159,7 +159,7 @@ export const FreeList = () => {
     if (hasEmptyTitleItem) {
       toast({
         title: "Complete current item",
-        description: "Please add a title to the existing empty item before creating a new one",
+        description: "Please add content to the existing empty item before creating a new one",
         variant: "destructive",
       });
       return;
@@ -229,11 +229,11 @@ export const FreeList = () => {
   const updateItem = async (id: string, title: string, content: string) => {
     console.log("updateItem called for id:", id, "with title:", title, "and content:", content);
     
-    // Don't allow empty titles
+    // Don't allow empty items
     if (title.trim() === "") {
       toast({
-        title: "Title required",
-        description: "Items must have a title",
+        title: "Item required",
+        description: "Items must have content",
         variant: "destructive",
       });
       return;
