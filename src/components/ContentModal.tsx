@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,12 +33,12 @@ export const ContentModal = ({ item, isOpen, onClose, onSave }: ContentModalProp
   };
 
   // Update local state when item changes
-  useState(() => {
+  useEffect(() => {
     if (item) {
       setTitle(item.title);
       setContent(item.content);
     }
-  });
+  }, [item]);
 
   if (!item) return null;
 
@@ -46,20 +46,26 @@ export const ContentModal = ({ item, isOpen, onClose, onSave }: ContentModalProp
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px] bg-background border border-border">
         <div className="space-y-md pt-md">
-          <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter title..."
-            className="bg-input border-input-border focus:border-input-border focus:ring-0 focus:ring-offset-0 py-sm flex items-center"
-          />
+          <div className="space-y-xs">
+            <label className="text-xs font-medium text-foreground-muted">Title</label>
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter title..."
+              className="bg-input border-input-border focus:border-input-border focus:ring-0 focus:ring-offset-0 py-sm flex items-center"
+            />
+          </div>
           
-          <Textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Enter your content here..."
-            rows={8}
-            className="bg-input border-input-border focus:border-input-border focus:ring-0 focus:ring-offset-0 resize-none py-sm"
-          />
+          <div className="space-y-xs">
+            <label className="text-xs font-medium text-foreground-muted">Content</label>
+            <Textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Enter your content here..."
+              rows={8}
+              className="bg-input border-input-border focus:border-input-border focus:ring-0 focus:ring-offset-0 resize-none py-sm"
+            />
+          </div>
         </div>
 
         <div className="flex justify-end gap-sm pt-md">
