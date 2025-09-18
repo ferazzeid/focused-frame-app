@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { ListItem, ListItemData } from "@/components/ListItem";
+import { ContentModal } from "@/components/ContentModal";
 import { MobileButton } from "@/components/ui/mobile-button";
 import { Plus, FileText } from "lucide-react";
 import { loadData, saveData, createTextItem, createEmptyItem } from "@/lib/storage";
@@ -8,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 export const FreeList = () => {
   const [items, setItems] = useState<ListItemData[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [viewingItem, setViewingItem] = useState<ListItemData | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -156,6 +159,23 @@ export const FreeList = () => {
     setEditingId(id);
   };
 
+  const handleViewContent = (id: string) => {
+    const item = items.find(item => item.id === id);
+    if (item) {
+      setViewingItem(item);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleModalSave = (id: string, title: string, content: string) => {
+    updateItem(id, title, content);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setViewingItem(null);
+  };
+
   const handleSave = (id: string) => {
     setEditingId(null);
     // Only remove empty items that are not the one we just edited and not intentional empty lines
@@ -202,10 +222,19 @@ export const FreeList = () => {
               isEditing={editingId === item.id}
               onEdit={handleEdit}
               onSave={handleSave}
+              onViewContent={handleViewContent}
             />
           ))
         )}
       </div>
+
+      {/* Content Modal */}
+      <ContentModal
+        item={viewingItem}
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        onSave={handleModalSave}
+      />
 
       {/* Add Actions */}
       <div className="flex-shrink-0 p-md border-t border-border bg-background-subtle">
