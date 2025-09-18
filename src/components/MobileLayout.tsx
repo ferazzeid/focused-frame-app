@@ -2,7 +2,7 @@ import { useState } from "react";
 import { FreeList } from "@/pages/FreeList";
 import { Archive } from "@/pages/Archive";
 import { Settings } from "@/pages/Settings";
-import { Mic, Square } from "lucide-react";
+import { Mic, Square, X } from "lucide-react";
 import { useRecording } from "@/hooks/useRecording";
 
 export type TabType = "free" | "archive" | "settings";
@@ -16,7 +16,7 @@ export const MobileLayout = () => {
     setRefreshTrigger(prev => prev + 1);
   };
   
-  const { isRecording, isProcessing, toggleRecording, pendingRecordings, recordingTimeLeft } = useRecording(handleItemAdded);
+  const { isRecording, isProcessing, toggleRecording, pendingRecordings, recordingTimeLeft, cancelRecording } = useRecording(handleItemAdded);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -83,6 +83,18 @@ export const MobileLayout = () => {
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-accent-red rounded-full text-xs text-white flex items-center justify-center">
                 {pendingRecordings.length}
               </span>
+            )}
+            {/* Cancel Recording Button */}
+            {isRecording && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  cancelRecording();
+                }}
+                className="absolute -top-1 -right-1 w-5 h-5 bg-accent-red rounded-full flex items-center justify-center hover:bg-accent-red/90 transition-colors duration-fast z-10"
+              >
+                <X className="w-3 h-3 text-white" />
+              </button>
             )}
           </button>
           <button

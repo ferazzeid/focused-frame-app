@@ -23,6 +23,31 @@ export const FreeList = () => {
     setItems(data.freeList);
   }, []);
 
+  // Calculate which items should be indented as children
+  const calculateChildItems = (items: ListItemData[]): boolean[] => {
+    const childFlags = new Array(items.length).fill(false);
+    let currentParentIndex = -1;
+    
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      
+      if (item.isBold && !item.isEmpty) {
+        // This is a bold item (parent), reset current parent
+        currentParentIndex = i;
+      } else if (item.isEmpty) {
+        // Empty line ends the current parent's children
+        currentParentIndex = -1;
+      } else if (currentParentIndex !== -1 && i > currentParentIndex) {
+        // This is a child of the current parent
+        childFlags[i] = true;
+      }
+    }
+    
+    return childFlags;
+  };
+
+  const childFlags = calculateChildItems(items);
+
   const saveItems = (newItems: ListItemData[]) => {
     console.log("saveItems called with:", newItems.length, "items");
     const data = loadData();
@@ -322,7 +347,7 @@ export const FreeList = () => {
             <p className="text-xs mt-xs">Add your first item to get started</p>
           </div>
         ) : (
-          items.map((item) => (
+          items.map((item, index) => (
             <ListItem
               key={item.id}
               item={item}
@@ -338,6 +363,7 @@ export const FreeList = () => {
               onDragOver={handleDragOver}
               onDrop={handleDrop}
               isDragOver={dragOverItem === item.id}
+              isChild={childFlags[index]}
             />
           ))
         )}

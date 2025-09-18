@@ -149,6 +149,22 @@ export const useRecording = (onItemAdded?: () => void) => {
     }
   };
 
+  const cancelRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      stopTimer();
+      
+      // Clear audio chunks to prevent processing
+      audioChunksRef.current = [];
+      
+      toast({
+        title: "Recording Cancelled",
+        description: "Voice recording was cancelled",
+      });
+    }
+  };
+
   const processRecording = async (audioBlob: Blob, recordingId?: string) => {
     setIsProcessing(true);
     
@@ -248,6 +264,7 @@ export const useRecording = (onItemAdded?: () => void) => {
     recordingTimeLeft,
     startRecording,
     stopRecording,
+    cancelRecording,
     toggleRecording,
     retryPendingRecording,
     retryAllPending,

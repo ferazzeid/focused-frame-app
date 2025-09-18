@@ -25,6 +25,7 @@ interface ListItemProps {
   onViewContent?: (id: string) => void;
   onDeleteConfirm?: (id: string) => void;
   isDragOver?: boolean;
+  isChild?: boolean;
 }
 
 export const ListItem = ({
@@ -41,6 +42,7 @@ export const ListItem = ({
   onViewContent,
   onDeleteConfirm,
   isDragOver = false,
+  isChild = false,
 }: ListItemProps) => {
   const [localTitle, setLocalTitle] = useState(item.title);
   const [localContent, setLocalContent] = useState(item.content);
@@ -83,7 +85,7 @@ export const ListItem = ({
       <div
         className={`group flex items-start gap-sm p-sm rounded-md border border-border transition-colors duration-fast ${
           item.isBold ? "mt-md" : ""
-        }`}
+        } ${isChild ? "ml-lg" : ""}`}
         draggable
         onDragStart={(e) => onDragStart?.(e, item.id)}
         onDragOver={onDragOver}
