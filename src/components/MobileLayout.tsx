@@ -3,10 +3,12 @@ import { FreeList } from "@/pages/FreeList";
 import { SecondList } from "@/pages/SecondList";
 import { Archive } from "@/pages/Archive";
 import { Settings } from "@/pages/Settings";
-import { Mic, Square, X, Settings as SettingsIcon, Plus, Minus } from "lucide-react";
+import { AdminDashboard } from "@/pages/AdminDashboard";
+import { Mic, Square, X, Settings as SettingsIcon, Plus, Minus, Key } from "lucide-react";
 import { useRecording } from "@/hooks/useRecording";
+import { useUserRole } from "@/hooks/useUserRole";
 
-export type TabType = "free" | "second" | "settings";
+export type TabType = "free" | "second" | "settings" | "admin";
 
 // Context for add functions
 interface AddFunctionsContextType {
@@ -31,6 +33,7 @@ export const MobileLayout = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [addTextItem, setAddTextItem] = useState<(() => void) | null>(null);
   const [addEmptyLine, setAddEmptyLine] = useState<(() => void) | null>(null);
+  const { isAdmin } = useUserRole();
   
   const handleItemAdded = () => {
     setRefreshTrigger(prev => prev + 1);
@@ -53,20 +56,22 @@ export const MobileLayout = () => {
         return <SecondList key={refreshTrigger} />;
       case "settings":
         return <Settings />;
+      case "admin":
+        return <AdminDashboard onBack={() => setActiveTab("settings")} />;
       default:
         return <FreeList key={refreshTrigger} />;
     }
   };
 
   const handleAddItem = () => {
-    if (activeTab === "settings") return; // Don't add items in settings
+    if (activeTab === "settings" || activeTab === "admin") return; // Don't add items in settings or admin
     if (addTextItem) {
       addTextItem();
     }
   };
 
   const handleAddSpace = () => {
-    if (activeTab === "settings") return; // Don't add items in settings
+    if (activeTab === "settings" || activeTab === "admin") return; // Don't add items in settings or admin
     if (addEmptyLine) {
       addEmptyLine();
     }
@@ -85,22 +90,40 @@ export const MobileLayout = () => {
             <div>
               <h1 className="text-xl font-medium text-foreground">Second List</h1>
             </div>
-            <button
-              onClick={() => {
-                if (activeTab === "settings") {
-                  setActiveTab("free"); // Go back to list view
-                } else {
-                  setActiveTab("settings"); // Go to settings
-                }
-              }}
-              className={`p-sm transition-colors duration-fast rounded-md ${
-                activeTab === "settings"
-                  ? "bg-accent-green text-background"
-                  : "text-foreground-muted hover:text-foreground"
-              }`}
-            >
-              <SettingsIcon className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-sm">
+              {/* Admin Dashboard Button - Only visible to admins */}
+              {isAdmin && (
+                <button
+                  onClick={() => setActiveTab("admin")}
+                  className={`p-sm transition-colors duration-fast rounded-md ${
+                    activeTab === "admin"
+                      ? "bg-accent-red text-background"
+                      : "text-foreground-muted hover:text-foreground"
+                  }`}
+                  title="Admin Dashboard"
+                >
+                  <Key className="w-5 h-5" />
+                </button>
+              )}
+              
+              {/* Settings Button */}
+              <button
+                onClick={() => {
+                  if (activeTab === "settings") {
+                    setActiveTab("free"); // Go back to list view
+                  } else {
+                    setActiveTab("settings"); // Go to settings
+                  }
+                }}
+                className={`p-sm transition-colors duration-fast rounded-md ${
+                  activeTab === "settings"
+                    ? "bg-accent-green text-background"
+                    : "text-foreground-muted hover:text-foreground"
+                }`}
+              >
+                <SettingsIcon className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </header>
 
@@ -145,9 +168,9 @@ export const MobileLayout = () => {
             {/* Add Item Button */}
             <button
               onClick={handleAddItem}
-              disabled={activeTab === "settings"}
+              disabled={activeTab === "settings" || activeTab === "admin"}
               className={`flex flex-col items-center justify-center h-12 text-xs font-medium transition-colors duration-fast rounded-md border border-border ${
-                activeTab === "settings"
+                activeTab === "settings" || activeTab === "admin"
                   ? "text-foreground-subtle bg-background-card border-border opacity-50 cursor-not-allowed"
                   : "text-foreground-muted hover:text-foreground bg-background-card hover:bg-background-hover"
               }`}
@@ -158,9 +181,9 @@ export const MobileLayout = () => {
             {/* Space Button */}
             <button
               onClick={handleAddSpace}
-              disabled={activeTab === "settings"}
+              disabled={activeTab === "settings" || activeTab === "admin"}
               className={`flex flex-col items-center justify-center h-12 text-xs font-medium transition-colors duration-fast rounded-md border border-border ${
-                activeTab === "settings"
+                activeTab === "settings" || activeTab === "admin"
                   ? "text-foreground-subtle bg-background-card border-border opacity-50 cursor-not-allowed"
                   : "text-foreground-muted hover:text-foreground bg-background-card hover:bg-background-hover"
               }`}

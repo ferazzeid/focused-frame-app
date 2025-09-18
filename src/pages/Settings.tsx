@@ -152,59 +152,7 @@ export const Settings = () => {
           </div>
         </div>
 
-        {/* OpenAI API Configuration */}
-        <div className="space-y-md">
-          <div className="flex items-center gap-sm">
-            <Key className="w-5 h-5 text-foreground-muted" />
-            <h2 className="text-lg font-semibold text-foreground">OpenAI Configuration</h2>
-          </div>
-          <div className="bg-background-card border border-border rounded-md p-md space-y-md">
-            <div className="space-y-sm">
-              <Label htmlFor="openai-key" className="text-sm font-medium text-foreground">
-                OpenAI API Key
-              </Label>
-              <Input
-                id="openai-key"
-                type="password"
-                value={openaiApiKey}
-                onChange={(e) => setOpenaiApiKey(e.target.value)}
-                placeholder="sk-..."
-                className="bg-input border border-input-border"
-              />
-              <p className="text-xs text-foreground-subtle">
-                Required for voice transcription and AI features. Your key is stored locally and never shared.
-              </p>
-            </div>
-            <MobileButton
-              onClick={handleSaveApiKey}
-              variant="primary"
-              className="w-full"
-            >
-              {openaiApiKey ? "Update API Key" : "Save API Key"}
-            </MobileButton>
-          </div>
-        </div>
-
-        {/* Summary Prompt */}
-        <div className="space-y-md">
-          <h2 className="text-lg font-semibold text-foreground">Summary Prompt</h2>
-          <div className="bg-background-card border border-border rounded-md p-md">
-            <div className="bg-background-subtle border border-border rounded-sm p-sm font-mono text-xs text-foreground space-y-sm">
-              <div>
-                <span className="text-foreground-subtle">System:</span>
-                <div className="mt-xs text-foreground">
-                  "You are a helpful assistant that creates concise 3-word summaries. Respond with exactly 3 words, no punctuation, no extra text."
-                </div>
-              </div>
-              <div>
-                <span className="text-foreground-subtle">User:</span>
-                <div className="mt-xs text-foreground">
-                  "Summarize this text in exactly 3 words: [your text]"
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* OpenAI API Configuration - Removed from regular settings, moved to admin */}
 
         {/* About */}
         <div className="space-y-md">
