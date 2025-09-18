@@ -268,17 +268,38 @@ export const FreeList = () => {
     console.log("Drag validation results:");
     console.log("- Bold rules valid:", boldValid);
     console.log("- Empty rules valid:", emptyValid);
-    console.log("- Current items:", newItems.map((item, index) => ({ 
-      index, 
-      id: item.id, 
-      title: item.title, 
-      isBold: item.isBold, 
-      isEmpty: item.isEmpty 
-    })));
     
     if (boldValid && emptyValid) {
+      // Everything is valid, proceed normally
       saveItems(newItems);
+    } else if (!boldValid && emptyValid && draggedItemData.isBold) {
+      // Bold rules failed but empty rules passed, and the dragged item is bold
+      // Try converting the bold item to regular
+      const convertedItems = [...newItems];
+      const convertedItemIndex = convertedItems.findIndex(item => item.id === draggedItem);
+      if (convertedItemIndex !== -1) {
+        convertedItems[convertedItemIndex] = { ...convertedItems[convertedItemIndex], isBold: false };
+        
+        // Validate again with the converted item
+        if (validateBoldItemRules(convertedItems)) {
+          console.log("Converting bold item to regular to allow drag");
+          saveItems(convertedItems);
+          toast({
+            title: "Item converted",
+            description: "Bold item was converted to regular text to allow this arrangement",
+          });
+        } else {
+          // Still invalid even after conversion
+          console.log("VALIDATION FAILED - Even after converting bold to regular");
+          toast({
+            title: "Invalid order",
+            description: "This arrangement would violate formatting rules",
+            variant: "destructive",
+          });
+        }
+      }
     } else {
+      // Other validation failures
       console.log("VALIDATION FAILED - Bold valid:", boldValid, "Empty valid:", emptyValid);
       toast({
         title: "Invalid order",
