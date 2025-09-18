@@ -38,21 +38,41 @@ export const MobileLayout = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col max-w-sm mx-auto">
-      {/* Header */}
-      <header className="flex-shrink-0 px-md py-lg">
-        <h1 className="text-xl font-medium text-foreground">Second List</h1>
-        <p className="text-sm text-foreground-muted mt-xs">
-          Minimal. Structured. Intentional.
-        </p>
+      {/* Fixed Header */}
+      <header className="fixed top-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm bg-background border-b border-border z-10 px-md py-lg">
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-xl font-medium text-foreground">Second List</h1>
+            <p className="text-sm text-foreground-muted mt-xs">
+              Minimal. Structured. Intentional.
+            </p>
+          </div>
+          <button
+            onClick={() => setActiveTab("settings")}
+            className={`p-sm transition-colors duration-fast rounded-md ${
+              activeTab === "settings"
+                ? "bg-accent-green text-background"
+                : "text-foreground-muted hover:text-foreground"
+            }`}
+          >
+            <SettingsIcon className="w-5 h-5" />
+          </button>
+        </div>
       </header>
 
-      {/* Content */}
-      <main className="flex-1 overflow-hidden">
+      {/* Spacer for fixed header */}
+      <div className="h-24"></div>
+
+      {/* Scrollable Content */}
+      <main className="flex-1 overflow-y-auto">
         {renderContent()}
       </main>
 
-      {/* Bottom Navigation */}
-      <nav className="flex-shrink-0 bg-background-subtle p-md">
+      {/* Spacer for fixed footer */}
+      <div className="h-20"></div>
+
+      {/* Fixed Bottom Navigation */}
+      <nav className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm bg-background-subtle border-t border-border z-10 p-md">
         <div className="flex items-center justify-between">
           {/* Navigation Tabs */}
           <div className="flex bg-background-card rounded-md p-xs border border-border">
@@ -74,17 +94,7 @@ export const MobileLayout = () => {
                   : "text-foreground-muted hover:text-foreground"
               }`}
             >
-              2<span className="text-xs">ND</span> List
-            </button>
-            <button
-              onClick={() => setActiveTab("settings")}
-              className={`px-md py-sm text-sm font-medium transition-colors duration-fast rounded-sm flex items-center ${
-                activeTab === "settings"
-                  ? "bg-accent-green text-background"
-                  : "text-foreground-muted hover:text-foreground"
-              }`}
-            >
-              <SettingsIcon className="w-4 h-4" />
+              2<span className="text-xs">nd</span> List
             </button>
           </div>
 
@@ -93,7 +103,7 @@ export const MobileLayout = () => {
             <button
               onClick={toggleRecording}
               disabled={isProcessing}
-              className={`p-sm transition-all duration-300 rounded-md border relative ${
+              className={`px-md py-sm transition-all duration-300 rounded-md border relative ${
                 isRecording
                   ? "text-white border-red-500 bg-red-500 animate-pulse"
                   : isProcessing
