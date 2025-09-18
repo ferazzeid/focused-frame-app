@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { FreeList } from "@/pages/FreeList";
+import { SecondList } from "@/pages/SecondList";
 import { Archive } from "@/pages/Archive";
 import { Settings } from "@/pages/Settings";
 import { Mic, Square, X } from "lucide-react";
 import { useRecording } from "@/hooks/useRecording";
 
-export type TabType = "free" | "archive" | "settings";
+export type TabType = "free" | "second" | "settings";
 
 export const MobileLayout = () => {
   const [activeTab, setActiveTab] = useState<TabType>("free");
@@ -22,8 +23,8 @@ export const MobileLayout = () => {
     switch (activeTab) {
       case "free":
         return <FreeList key={refreshTrigger} />;
-      case "archive":
-        return <Archive isPremium={isPremium} key={refreshTrigger} />;
+      case "second":
+        return <SecondList key={refreshTrigger} />;
       case "settings":
         return <Settings />;
       default:
@@ -52,7 +53,44 @@ export const MobileLayout = () => {
 
       {/* Bottom Navigation */}
       <nav className="flex-shrink-0 bg-background-subtle">
-        <div className="flex">
+        {/* Navigation Tabs */}
+        <div className="flex flex-1 justify-center">
+          <div className="flex bg-background-card rounded-md p-xs border border-border">
+            <button
+              onClick={() => setActiveTab("free")}
+              className={`px-md py-sm text-sm font-medium transition-colors duration-fast rounded-sm ${
+                activeTab === "free"
+                  ? "bg-accent-green text-background"
+                  : "text-foreground-muted hover:text-foreground"
+              }`}
+            >
+              List
+            </button>
+            <button
+              onClick={() => setActiveTab("second")}
+              className={`px-md py-sm text-sm font-medium transition-colors duration-fast rounded-sm ${
+                activeTab === "second"
+                  ? "bg-accent-green text-background"
+                  : "text-foreground-muted hover:text-foreground"
+              }`}
+            >
+              2ND List
+            </button>
+            <button
+              onClick={() => setActiveTab("settings")}
+              className={`px-md py-sm text-sm font-medium transition-colors duration-fast rounded-sm ${
+                activeTab === "settings"
+                  ? "bg-accent-green text-background"
+                  : "text-foreground-muted hover:text-foreground"
+              }`}
+            >
+              Settings
+            </button>
+          </div>
+        </div>
+
+        {/* Recording Button */}
+        <div className="relative">
           <button
             onClick={toggleRecording}
             disabled={isProcessing}
@@ -96,36 +134,6 @@ export const MobileLayout = () => {
                 <X className="w-3 h-3 text-white" />
               </button>
             )}
-          </button>
-          <button
-            onClick={() => setActiveTab("free")}
-            className={`flex-1 py-md px-sm text-sm font-medium transition-colors duration-normal rounded-md mx-xs my-xs border ${
-              activeTab === "free"
-                ? "text-foreground border-border bg-background"
-                : "text-foreground-muted hover:text-foreground border-border/30 hover:border-border"
-            }`}
-          >
-            List
-          </button>
-          <button
-            onClick={() => setActiveTab("archive")}
-            className={`flex-1 py-md px-sm text-sm font-medium transition-colors duration-normal rounded-md mx-xs my-xs border ${
-              activeTab === "archive"
-                ? "text-foreground border-border bg-background"
-                : "text-foreground-muted hover:text-foreground border-border/30 hover:border-border"
-            }`}
-          >
-            Archive
-          </button>
-          <button
-            onClick={() => setActiveTab("settings")}
-            className={`flex-1 py-md px-sm text-sm font-medium transition-colors duration-normal rounded-md mx-xs my-xs border ${
-              activeTab === "settings"
-                ? "text-foreground border-border bg-background"
-                : "text-foreground-muted hover:text-foreground border-border/30 hover:border-border"
-            }`}
-          >
-            ⚙️
           </button>
         </div>
       </nav>

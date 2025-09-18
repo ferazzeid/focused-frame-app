@@ -2,6 +2,7 @@ import { ListItemData } from "@/components/ListItem";
 
 export interface StorageData {
   freeList: ListItemData[];
+  secondList: ListItemData[];
   premiumList: ListItemData[];
   archive: ListItemData[];
   isPremium: boolean;
@@ -13,6 +14,7 @@ const CURRENT_VERSION = "1.0.0";
 
 const defaultData: StorageData = {
   freeList: [],
+  secondList: [],
   premiumList: [],
   archive: [],
   isPremium: false,
@@ -37,6 +39,7 @@ export const loadData = (): StorageData => {
     return {
       ...parsed,
       freeList: convertDates(parsed.freeList || []),
+      secondList: convertDates(parsed.secondList || []),
       premiumList: convertDates(parsed.premiumList || []),
       archive: convertDates(parsed.archive || []),
       version: CURRENT_VERSION,
