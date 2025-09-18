@@ -70,7 +70,7 @@ export const ListItem = ({
 
   return (
     <div
-      className={`group flex items-start gap-sm p-sm rounded-md border border-transparent hover:border-border transition-colors duration-fast ${
+      className={`group flex items-start gap-sm p-sm rounded-md border border-border transition-colors duration-fast ${
         item.isBold ? "mt-md" : ""
       }`}
       draggable
@@ -80,7 +80,7 @@ export const ListItem = ({
     >
       {/* Drag Handle */}
       <GripVertical 
-        className="w-4 h-4 text-foreground-subtle opacity-0 group-hover:opacity-100 transition-opacity duration-fast mt-1 cursor-grab active:cursor-grabbing" 
+        className="w-4 h-4 text-foreground-subtle transition-opacity duration-fast mt-1 cursor-grab active:cursor-grabbing" 
         onMouseDown={(e) => {
           e.currentTarget.style.cursor = 'grabbing';
         }}
@@ -121,7 +121,7 @@ export const ListItem = ({
             {item.content && (
               <button
                 onClick={() => onViewContent?.(item.id)}
-                className="text-xs px-sm py-xs rounded bg-background-subtle text-foreground-muted hover:bg-background-hover transition-colors duration-fast"
+                className="text-xs px-sm py-xs rounded-md border border-border bg-background-subtle text-foreground-muted hover:bg-background-hover transition-colors duration-fast"
               >
                 View
               </button>
@@ -131,12 +131,12 @@ export const ListItem = ({
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-xs opacity-0 group-hover:opacity-100 transition-opacity duration-fast">
+      <div className="flex items-center gap-xs transition-opacity duration-fast">
         <MobileButton
           variant="ghost"
           size="icon"
           onClick={() => onToggleBold(item.id)}
-          className={`w-8 h-8 ${item.isBold ? "text-accent-green" : "text-foreground-subtle"}`}
+          className={`w-8 h-8 rounded-md border border-transparent hover:border-border ${item.isBold ? "text-accent-green" : "text-foreground-subtle"}`}
         >
           <Type className="w-3 h-3" />
         </MobileButton>
@@ -144,7 +144,7 @@ export const ListItem = ({
           variant="ghost"
           size="icon"
           onClick={() => onDeleteConfirm?.(item.id)}
-          className="w-8 h-8 text-foreground-subtle hover:text-accent-red"
+          className="w-8 h-8 rounded-md border border-transparent hover:border-border text-foreground-subtle hover:text-accent-red"
         >
           <Trash2 className="w-3 h-3" />
         </MobileButton>

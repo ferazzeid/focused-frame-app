@@ -255,19 +255,6 @@ export const FreeList = () => {
 
   return (
     <div className="flex flex-col h-full">
-      {/* List Header */}
-      <div className="flex-shrink-0 px-md py-md border-b border-border bg-background-subtle">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-medium text-foreground">Free List</h2>
-            <p className="text-xs text-foreground-muted">Manual input only</p>
-          </div>
-          <div className="text-xs text-foreground-subtle">
-            {items.filter(i => !i.isEmpty).length} items
-          </div>
-        </div>
-      </div>
-
       {/* List Content */}
       <div className="flex-1 overflow-y-auto px-md py-md space-y-xs">
         {items.length === 0 ? (
@@ -317,9 +304,9 @@ export const FreeList = () => {
       <div className="flex-shrink-0 p-md border-t border-border bg-background-subtle">
         <div className="flex gap-sm">
           <MobileButton
-            variant="primary"
+            variant="outline"
             onClick={addTextItem}
-            className="flex-1"
+            className="flex-1 bg-background-subtle text-foreground-muted border-border rounded-md hover:bg-background-hover"
           >
             <Plus className="w-4 h-4 mr-sm" />
             Add Item
@@ -327,9 +314,9 @@ export const FreeList = () => {
           <MobileButton
             variant="outline"
             onClick={addEmptyLine}
-            className="px-md"
+            className="px-md bg-background-subtle text-foreground-muted border-border rounded-md hover:bg-background-hover"
           >
-            Add Space
+            Space
           </MobileButton>
         </div>
       </div>
