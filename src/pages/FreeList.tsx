@@ -158,8 +158,11 @@ export const FreeList = () => {
 
   const handleSave = (id: string) => {
     setEditingId(null);
-    // Remove empty items after editing
-    const newItems = items.filter(item => !(item.content.trim() === "" && !item.isEmpty));
+    // Only remove empty items that are not the one we just edited and not intentional empty lines
+    const newItems = items.filter(item => {
+      if (item.id === id) return true; // Keep the item we just edited
+      return !(item.content.trim() === "" && !item.isEmpty); // Remove other empty text items
+    });
     if (newItems.length !== items.length) {
       saveItems(newItems);
     }
