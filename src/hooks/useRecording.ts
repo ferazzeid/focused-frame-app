@@ -198,12 +198,12 @@ export const useRecording = (onItemAdded?: () => void) => {
       const newItem = createTextItem(result.summary, result.transcript);
       
       // Add to free list
-      const currentData = loadData();
+      const currentData = await loadData();
       const updatedData = {
         ...currentData,
         freeList: [newItem, ...currentData.freeList],
       };
-      saveData(updatedData);
+      await saveData(updatedData);
 
       // Remove from pending if it was a retry
       if (recordingId) {

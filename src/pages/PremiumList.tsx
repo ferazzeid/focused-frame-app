@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { ListItem, ListItemData } from "@/components/ListItem";
 import { MobileButton } from "@/components/ui/mobile-button";
 import { Plus, Mic, Crown, Lock } from "lucide-react";
-import { loadData, saveData, createTextItem, createEmptyItem } from "@/lib/storage";
+import { createTextItem, createEmptyItem, archiveItem, loadData } from "@/lib/storage";
 import { useToast } from "@/hooks/use-toast";
 
 interface PremiumListProps {
@@ -13,18 +13,42 @@ export const PremiumList = ({ isLocked }: PremiumListProps) => {
   const [items, setItems] = useState<ListItemData[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    const data = loadData();
-    setItems(data.premiumList);
-  }, []);
+    const fetchData = async () => {
+      try {
+        const data = await loadData();
+        // For now, premium list will be empty since it's not implemented in the new storage
+        setItems([]);
+      } catch (error) {
+        console.error("Error loading premium list:", error);
+        toast({
+          title: "Error loading data",
+          description: "Failed to load premium list",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const saveItems = (newItems: ListItemData[]) => {
-    const data = loadData();
-    data.premiumList = newItems;
-    saveData(data);
-    setItems(newItems);
+    fetchData();
+  }, [toast]);
+
+  const saveItems = async (newItems: ListItemData[]) => {
+    try {
+      // For now, just update local state since premium list isn't in the database yet
+      setItems(newItems);
+    } catch (error) {
+      console.error("Error saving premium items:", error);
+      toast({
+        title: "Error saving",
+        description: "Failed to save changes",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleVoiceInput = async () => {
@@ -50,7 +74,7 @@ export const PremiumList = ({ isLocked }: PremiumListProps) => {
     }, 2000);
   };
 
-  const addTextItem = () => {
+  const addTextItem = async () => {
     if (isLocked) {
       toast({
         title: "Premium Feature",
@@ -60,41 +84,50 @@ export const PremiumList = ({ isLocked }: PremiumListProps) => {
       return;
     }
 
-    const newItem = createTextItem("");
+    const newItem = createTextItem("", "");
     const newItems = [...items, newItem];
-    saveItems(newItems);
+    await saveItems(newItems);
     setEditingId(newItem.id);
   };
 
-  const updateItem = (id: string, content: string) => {
+  const updateItem = async (id: string, title: string, content: string) => {
     const newItems = items.map(item => 
-      item.id === id ? { ...item, content: content.trim() } : item
+      item.id === id ? { ...item, title: title.trim(), content: content.trim() } : item
     );
-    saveItems(newItems);
+    await saveItems(newItems);
   };
 
-  const deleteItem = (id: string) => {
+  const deleteItem = async (id: string) => {
     const itemToDelete = items.find(item => item.id === id);
     if (!itemToDelete) return;
 
-    const data = loadData();
-    data.archive = [...data.archive, { ...itemToDelete, createdAt: new Date() }];
-    saveData(data);
+    try {
+      // Archive the item
+      await archiveItem(itemToDelete);
 
-    const newItems = items.filter(item => item.id !== id);
-    saveItems(newItems);
+      // Remove from current list
+      const newItems = items.filter(item => item.id !== id);
+      await saveItems(newItems);
 
-    toast({
-      title: "Item archived",
-      description: "Item moved to archive",
-    });
+      toast({
+        title: "Item archived",
+        description: "Item moved to archive",
+      });
+    } catch (error) {
+      console.error("Error deleting item:", error);
+      toast({
+        title: "Error deleting item",
+        description: "Failed to delete the item",
+        variant: "destructive",
+      });
+    }
   };
 
-  const toggleBold = (id: string) => {
+  const toggleBold = async (id: string) => {
     const newItems = items.map(item => 
       item.id === id ? { ...item, isBold: !item.isBold } : item
     );
-    saveItems(newItems);
+    await saveItems(newItems);
   };
 
   const handleEdit = (id: string) => {
@@ -169,7 +202,11 @@ export const PremiumList = ({ isLocked }: PremiumListProps) => {
 
       {/* List Content */}
       <div className="flex-1 overflow-y-auto px-md py-md space-y-xs">
-        {items.length === 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center py-xl">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : items.length === 0 ? (
           <div className="text-center py-xl text-foreground-muted">
             <Crown className="w-12 h-12 mx-auto mb-md text-accent-green opacity-50" />
             <p className="text-sm">Your premium list is empty</p>

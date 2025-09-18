@@ -14,7 +14,102 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      archived_items: {
+        Row: {
+          archived_at: string
+          content: string
+          id: string
+          is_bold: boolean
+          is_empty: boolean
+          list_type: string
+          original_created_at: string
+          original_id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          archived_at?: string
+          content?: string
+          id?: string
+          is_bold?: boolean
+          is_empty?: boolean
+          list_type?: string
+          original_created_at?: string
+          original_id: string
+          title?: string
+          user_id: string
+        }
+        Update: {
+          archived_at?: string
+          content?: string
+          id?: string
+          is_bold?: boolean
+          is_empty?: boolean
+          list_type?: string
+          original_created_at?: string
+          original_id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      list_items: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_bold: boolean
+          is_empty: boolean
+          list_type: string
+          position: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_bold?: boolean
+          is_empty?: boolean
+          list_type?: string
+          position?: number
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_bold?: boolean
+          is_empty?: boolean
+          list_type?: string
+          position?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

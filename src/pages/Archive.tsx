@@ -11,39 +11,73 @@ export const Archive = () => {
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const [dragOverItem, setDragOverItem] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    const data = loadData();
-    setItems(data.archive.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()));
-  }, []);
+    const fetchData = async () => {
+      try {
+        const data = await loadData();
+        setItems(data.archive.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()));
+      } catch (error) {
+        console.error("Error loading archive:", error);
+        toast({
+          title: "Error loading archive",
+          description: "Failed to load archived items",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const saveArchive = (newItems: ListItemData[]) => {
-    const data = loadData();
-    data.archive = newItems;
-    saveData(data);
-    setItems(newItems.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()));
+    fetchData();
+  }, [toast]);
+
+  const saveArchive = async (newItems: ListItemData[]) => {
+    try {
+      const data = await loadData();
+      data.archive = newItems;
+      await saveData(data);
+      setItems(newItems.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()));
+    } catch (error) {
+      console.error("Error saving archive:", error);
+      toast({
+        title: "Error saving",
+        description: "Failed to save changes",
+        variant: "destructive",
+      });
+    }
   };
 
-  const restoreItem = (id: string) => {
+  const restoreItem = async (id: string) => {
     const itemToRestore = items.find(item => item.id === id);
     if (!itemToRestore) return;
 
-    const data = loadData();
-    // Add back to free list (could be enhanced to remember original list)
-    data.freeList = [...data.freeList, { ...itemToRestore, createdAt: new Date() }];
-    
-    // Remove from archive
-    const newArchive = items.filter(item => item.id !== id);
-    data.archive = newArchive;
-    saveData(data);
-    
-    setItems(newArchive);
-    
-    toast({
-      title: "Item restored",
-      description: "Item has been restored to your free list",
-    });
+    try {
+      const data = await loadData();
+      // Add back to free list (could be enhanced to remember original list)
+      data.freeList = [...data.freeList, { ...itemToRestore, createdAt: new Date() }];
+      
+      // Remove from archive
+      const newArchive = items.filter(item => item.id !== id);
+      data.archive = newArchive;
+      await saveData(data);
+      
+      setItems(newArchive);
+      
+      toast({
+        title: "Item restored",
+        description: "Item has been restored to your free list",
+      });
+    } catch (error) {
+      console.error("Error restoring item:", error);
+      toast({
+        title: "Error restoring item",
+        description: "Failed to restore the item",
+        variant: "destructive",
+      });
+    }
   };
 
   const permanentlyDelete = (id: string) => {
@@ -153,7 +187,11 @@ export const Archive = () => {
     <div className="flex flex-col h-full">
       {/* Archive Content */}
       <div className="flex-1 overflow-y-auto px-md py-md space-y-xs">
-        {items.length === 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center py-xl">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : items.length === 0 ? (
           <div className="text-center py-xl text-foreground-muted">
             <p className="text-sm">empty</p>
           </div>

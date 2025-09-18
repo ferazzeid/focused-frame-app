@@ -3,9 +3,10 @@ import { ListItem, ListItemData } from "@/components/ListItem";
 import { ContentModal } from "@/components/ContentModal";
 import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
 import { MobileButton } from "@/components/ui/mobile-button";
-import { Plus, FileText } from "lucide-react";
-import { loadData, saveData, createTextItem, createEmptyItem } from "@/lib/storage";
+import { FileText } from "lucide-react";
+import { loadData, saveData, createTextItem, createEmptyItem, archiveItem } from "@/lib/storage";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 export const FreeList = () => {
   const [items, setItems] = useState<ListItemData[]>([]);
@@ -16,12 +17,34 @@ export const FreeList = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const [dragOverItem, setDragOverItem] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
-    const data = loadData();
-    setItems(data.freeList);
-  }, []);
+    const fetchData = async () => {
+      if (user) {
+        try {
+          setIsLoading(true);
+          const data = await loadData();
+          setItems(data.freeList);
+        } catch (error) {
+          console.error("Error loading data:", error);
+          toast({
+            title: "Error loading data",
+            description: "Failed to load your list items",
+            variant: "destructive",
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user, toast]);
 
   // Calculate which items should be indented as children
   const calculateChildItems = (items: ListItemData[]): boolean[] => {
@@ -48,13 +71,22 @@ export const FreeList = () => {
 
   const childFlags = calculateChildItems(items);
 
-  const saveItems = (newItems: ListItemData[]) => {
+  const saveItems = async (newItems: ListItemData[]) => {
     console.log("saveItems called with:", newItems.length, "items");
-    const data = loadData();
-    data.freeList = newItems;
-    saveData(data);
-    setItems(newItems);
-    console.log("Items saved and state updated");
+    try {
+      const data = await loadData();
+      data.freeList = newItems;
+      await saveData(data);
+      setItems(newItems);
+      console.log("Items saved and state updated");
+    } catch (error) {
+      console.error("Error saving items:", error);
+      toast({
+        title: "Error saving",
+        description: "Failed to save your changes",
+        variant: "destructive",
+      });
+    }
   };
 
   const validateBoldItemRules = (newItems: ListItemData[]): boolean => {
@@ -184,23 +216,30 @@ export const FreeList = () => {
     }
   };
 
-  const deleteItem = (id: string) => {
+  const deleteItem = async (id: string) => {
     const itemToDelete = items.find(item => item.id === id);
     if (!itemToDelete) return;
 
-    // Move to archive
-    const data = loadData();
-    data.archive = [...data.archive, { ...itemToDelete, createdAt: new Date() }];
-    saveData(data);
+    try {
+      // Archive the item
+      await archiveItem(itemToDelete);
 
-    // Remove from current list
-    const newItems = items.filter(item => item.id !== id);
-    saveItems(newItems);
+      // Remove from current list
+      const newItems = items.filter(item => item.id !== id);
+      await saveItems(newItems);
 
-    toast({
-      title: "Item archived",
-      description: "Item moved to archive (cannot be permanently deleted in free version)",
-    });
+      toast({
+        title: "Item archived",
+        description: "Item moved to archive (cannot be permanently deleted in free version)",
+      });
+    } catch (error) {
+      console.error("Error deleting item:", error);
+      toast({
+        title: "Error deleting item",
+        description: "Failed to delete the item",
+        variant: "destructive",
+      });
+    }
   };
 
   const toggleBold = (id: string) => {
@@ -270,29 +309,38 @@ export const FreeList = () => {
     }
   };
 
-  const handleSendToSecondList = (id: string) => {
+  const handleSendToSecondList = async (id: string) => {
     const itemToSend = items.find(item => item.id === id);
     if (!itemToSend) return;
 
-    const data = loadData();
-    
-    // Add to second list with new timestamp and remove bold status
-    if (!data.secondList) {
-      data.secondList = [];
-    }
-    data.secondList = [...data.secondList, { ...itemToSend, isBold: false, createdAt: new Date() }];
-    
-    // Remove from free list
-    const newItems = items.filter(item => item.id !== id);
-    data.freeList = newItems;
-    
-    saveData(data);
-    setItems(newItems);
+    try {
+      const data = await loadData();
+      
+      // Add to second list with new timestamp and remove bold status
+      if (!data.secondList) {
+        data.secondList = [];
+      }
+      data.secondList = [...data.secondList, { ...itemToSend, isBold: false, createdAt: new Date() }];
+      
+      // Remove from free list
+      const newItems = items.filter(item => item.id !== id);
+      data.freeList = newItems;
+      
+      await saveData(data);
+      setItems(newItems);
 
-    toast({
-      title: "Item moved",
-      description: "Item sent to 2nd List successfully",
-    });
+      toast({
+        title: "Item moved",
+        description: "Item sent to 2nd List successfully",
+      });
+    } catch (error) {
+      console.error("Error moving item:", error);
+      toast({
+        title: "Error moving item",
+        description: "Failed to move the item",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDragStart = (e: React.DragEvent, id: string) => {
@@ -383,6 +431,16 @@ export const FreeList = () => {
     
     setDraggedItem(null);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">
