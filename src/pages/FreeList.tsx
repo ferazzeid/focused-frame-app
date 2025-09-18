@@ -15,6 +15,7 @@ export const FreeList = () => {
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
+  const [dragOverItem, setDragOverItem] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -218,10 +219,20 @@ export const FreeList = () => {
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
+    
+    // Find which item we're hovering over
+    const target = e.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    const itemId = target.getAttribute('data-item-id');
+    
+    if (itemId && itemId !== draggedItem) {
+      setDragOverItem(itemId);
+    }
   };
 
   const handleDrop = (e: React.DragEvent, targetId: string) => {
     e.preventDefault();
+    setDragOverItem(null);
     
     if (!draggedItem || draggedItem === targetId) {
       setDraggedItem(null);
@@ -279,6 +290,7 @@ export const FreeList = () => {
               onDragStart={handleDragStart}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
+              isDragOver={dragOverItem === item.id}
             />
           ))
         )}

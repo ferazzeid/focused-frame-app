@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 
@@ -18,20 +18,6 @@ export const DeleteConfirmModal = ({ isOpen, onClose, onConfirm }: DeleteConfirm
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[400px] bg-background border border-border">
-        <DialogHeader className="flex flex-row items-center justify-between pr-6">
-          <DialogTitle className="text-lg font-medium text-foreground">
-            Delete Note
-          </DialogTitle>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="w-6 h-6 text-foreground-muted hover:text-foreground"
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        </DialogHeader>
-        
         <div className="pt-md pb-md">
           <p className="text-sm text-foreground-muted">
             Are you sure you want to delete this note? This action cannot be undone.
@@ -39,10 +25,18 @@ export const DeleteConfirmModal = ({ isOpen, onClose, onConfirm }: DeleteConfirm
         </div>
 
         <div className="flex justify-end gap-sm">
-          <Button variant="outline" onClick={onClose}>
-            Cancel
+          <Button 
+            variant="ghost" 
+            onClick={onClose}
+            className="w-10 h-10 p-0 rounded-md border border-border hover:bg-background-hover"
+          >
+            <X className="w-4 h-4" />
           </Button>
-          <Button variant="destructive" onClick={handleConfirm}>
+          <Button 
+            variant="destructive" 
+            onClick={handleConfirm}
+            className="rounded-md border border-border"
+          >
             Delete
           </Button>
         </div>
