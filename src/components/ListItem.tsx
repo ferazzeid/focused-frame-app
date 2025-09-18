@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { MobileButton } from "@/components/ui/mobile-button";
-import { Trash2, GripVertical, Bold, X } from "lucide-react";
+import { Trash2, GripVertical, Bold, X, Mic } from "lucide-react";
+import { useVoiceEdit } from "@/hooks/useVoiceEdit";
 
 export interface ListItemData {
   id: string;
@@ -46,6 +47,11 @@ export const ListItem = ({
 }: ListItemProps) => {
   const [localTitle, setLocalTitle] = useState(item.title);
   const [localContent, setLocalContent] = useState(item.content);
+  const { isRecording, isProcessing, toggleVoiceEdit, cancelVoiceEdit } = useVoiceEdit();
+
+  const handleVoiceTranscription = (transcribedText: string) => {
+    setLocalTitle(transcribedText);
+  };
 
   const handleSave = () => {
     onUpdate(item.id, localTitle, localContent);
@@ -137,18 +143,45 @@ export const ListItem = ({
         {/* Content */}
         <div className="flex-1 min-w-0 ml-xs">
           {isEditing ? (
-            <input
-              type="text"
-              value={localTitle}
-              onChange={(e) => setLocalTitle(e.target.value)}
-              onBlur={handleSave}
-              onKeyDown={handleKeyDown}
-              placeholder="Title..."
-              className={`w-full bg-input border border-input-border rounded-sm px-sm py-sm text-sm transition-colors duration-fast focus:border-input-border focus:ring-0 focus:ring-offset-0 focus:outline-none ${
-                item.isBold ? "font-bold text-base" : "font-normal"
-              }`}
-              autoFocus
-            />
+            <div className="relative">
+              <input
+                type="text"
+                value={localTitle}
+                onChange={(e) => setLocalTitle(e.target.value)}
+                onBlur={handleSave}
+                onKeyDown={handleKeyDown}
+                placeholder="Title..."
+                className={`w-full bg-input border border-input-border rounded-sm px-sm py-sm text-sm transition-colors duration-fast focus:border-input-border focus:ring-0 focus:ring-offset-0 focus:outline-none pr-10 ${
+                  item.isBold ? "font-bold text-base" : "font-normal"
+                }`}
+                autoFocus
+              />
+              {/* Voice Edit Button */}
+              <button
+                onClick={() => toggleVoiceEdit(handleVoiceTranscription)}
+                disabled={isProcessing}
+                className={`absolute right-2 top-1/2 transform -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center transition-colors duration-fast ${
+                  isRecording 
+                    ? "bg-accent-red text-white animate-pulse" 
+                    : "text-foreground-muted hover:text-foreground hover:bg-background-subtle"
+                } ${isProcessing ? "opacity-50" : ""}`}
+              >
+                {isProcessing ? (
+                  <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Mic className="w-3 h-3" />
+                )}
+              </button>
+              {/* Cancel Voice Edit Button */}
+              {isRecording && (
+                <button
+                  onClick={cancelVoiceEdit}
+                  className="absolute -right-1 -top-1 w-4 h-4 bg-accent-red rounded-full flex items-center justify-center hover:bg-accent-red/90 transition-colors duration-fast"
+                >
+                  <X className="w-2.5 h-2.5 text-white" />
+                </button>
+              )}
+            </div>
           ) : (
             <div className="flex items-center gap-sm">
               <div
