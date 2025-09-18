@@ -3,7 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MobileButton } from "@/components/ui/mobile-button";
-import { Archive, ChevronRight, Key, User, LogOut, ArrowLeft } from "lucide-react";
+import { Archive, ChevronRight, Key, User, LogOut, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Archive as ArchivePage } from "@/pages/Archive";
 
@@ -55,14 +55,13 @@ export const Settings = () => {
   if (showArchive) {
     return (
       <div className="flex flex-col h-full">
-        {/* Back button */}
-        <div className="flex items-center gap-sm px-md py-sm border-b border-border">
+        {/* Close button */}
+        <div className="flex justify-end px-md py-sm border-b border-border">
           <button
             onClick={() => setShowArchive(false)}
-            className="flex items-center gap-sm text-foreground-muted hover:text-foreground transition-colors duration-fast"
+            className="p-xs text-foreground-muted hover:text-foreground transition-colors duration-fast rounded-md hover:bg-background-hover"
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm">Back to Settings</span>
+            <X className="w-4 h-4" />
           </button>
         </div>
         {/* Archive content */}

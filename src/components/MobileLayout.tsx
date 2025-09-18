@@ -48,7 +48,13 @@ export const MobileLayout = () => {
             </p>
           </div>
           <button
-            onClick={() => setActiveTab("settings")}
+            onClick={() => {
+              if (activeTab === "settings") {
+                setActiveTab("free"); // Go back to list view
+              } else {
+                setActiveTab("settings"); // Go to settings
+              }
+            }}
             className={`p-sm transition-colors duration-fast rounded-md ${
               activeTab === "settings"
                 ? "bg-accent-green text-background"
@@ -75,23 +81,23 @@ export const MobileLayout = () => {
       <nav className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm bg-background-subtle border-t border-border z-10 p-md">
         <div className="flex items-center justify-between">
           {/* Navigation Tabs */}
-          <div className="flex bg-background-card rounded-md p-xs border border-border">
+          <div className="flex gap-xs">
             <button
               onClick={() => setActiveTab("free")}
-              className={`px-md py-sm text-sm font-medium transition-colors duration-fast rounded-sm ${
+              className={`px-md py-sm text-sm font-medium transition-colors duration-fast rounded-md border border-border ${
                 activeTab === "free"
-                  ? "bg-accent-green text-background"
-                  : "text-foreground-muted hover:text-foreground"
+                  ? "bg-accent-green text-background border-accent-green"
+                  : "text-foreground-muted hover:text-foreground bg-background-card"
               }`}
             >
               List
             </button>
             <button
               onClick={() => setActiveTab("second")}
-              className={`px-md py-sm text-sm font-medium transition-colors duration-fast rounded-sm ${
+              className={`px-md py-sm text-sm font-medium transition-colors duration-fast rounded-md border border-border ${
                 activeTab === "second"
-                  ? "bg-accent-green text-background"
-                  : "text-foreground-muted hover:text-foreground"
+                  ? "bg-accent-green text-background border-accent-green"
+                  : "text-foreground-muted hover:text-foreground bg-background-card"
               }`}
             >
               2<span className="text-xs">nd</span> List
