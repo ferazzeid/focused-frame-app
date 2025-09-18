@@ -318,7 +318,7 @@ export const FreeList = () => {
           <MobileButton
             variant="outline"
             onClick={addTextItem}
-            className="flex-1 bg-background-subtle text-foreground-muted border-border rounded-md hover:bg-background-hover"
+            className="flex-1 bg-background-subtle text-foreground-muted border-border rounded-md hover:bg-background-hover font-normal"
           >
             <Plus className="w-4 h-4 mr-sm" />
             Add Item
@@ -326,7 +326,7 @@ export const FreeList = () => {
           <MobileButton
             variant="outline"
             onClick={addEmptyLine}
-            className="px-md bg-background-subtle text-foreground-muted border-border rounded-md hover:bg-background-hover"
+            className="px-md bg-background-subtle text-foreground-muted border-border rounded-md hover:bg-background-hover font-normal"
           >
             Space
           </MobileButton>

@@ -23,7 +23,7 @@ export const MobileLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col max-w-lg mx-auto">
+    <div className="min-h-screen bg-background flex flex-col max-w-sm mx-auto">
       {/* Header */}
       <header className="flex-shrink-0 px-md py-lg">
         <h1 className="text-xl font-medium text-foreground">Second List</h1>
@@ -42,30 +42,30 @@ export const MobileLayout = () => {
         <div className="flex">
           <button
             onClick={() => setActiveTab("free")}
-            className={`flex-1 py-md px-sm text-sm font-medium transition-colors duration-normal rounded-md mx-xs my-xs border border-transparent ${
+            className={`flex-1 py-md px-sm text-sm font-medium transition-colors duration-normal rounded-md mx-xs my-xs border ${
               activeTab === "free"
                 ? "text-foreground border-border bg-background"
-                : "text-foreground-muted hover:text-foreground hover:border-border"
+                : "text-foreground-muted hover:text-foreground border-border/30 hover:border-border"
             }`}
           >
             List
           </button>
           <button
             onClick={() => setActiveTab("archive")}
-            className={`flex-1 py-md px-sm text-sm font-medium transition-colors duration-normal rounded-md mx-xs my-xs border border-transparent ${
+            className={`flex-1 py-md px-sm text-sm font-medium transition-colors duration-normal rounded-md mx-xs my-xs border ${
               activeTab === "archive"
                 ? "text-foreground border-border bg-background"
-                : "text-foreground-muted hover:text-foreground hover:border-border"
+                : "text-foreground-muted hover:text-foreground border-border/30 hover:border-border"
             }`}
           >
             Archive
           </button>
           <button
             onClick={() => setActiveTab("settings")}
-            className={`flex-1 py-md px-sm text-sm font-medium transition-colors duration-normal rounded-md mx-xs my-xs border border-transparent ${
+            className={`flex-1 py-md px-sm text-sm font-medium transition-colors duration-normal rounded-md mx-xs my-xs border ${
               activeTab === "settings"
                 ? "text-foreground border-border bg-background"
-                : "text-foreground-muted hover:text-foreground hover:border-border"
+                : "text-foreground-muted hover:text-foreground border-border/30 hover:border-border"
             }`}
           >
             ⚙️
