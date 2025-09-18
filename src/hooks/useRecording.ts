@@ -120,7 +120,11 @@ export const useRecording = (onItemAdded?: () => void) => {
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
         stream.getTracks().forEach(track => track.stop());
-        await processRecording(audioBlob);
+        
+        // Only process if we have audio chunks (not cancelled)
+        if (audioChunksRef.current.length > 0) {
+          await processRecording(audioBlob);
+        }
       };
 
       mediaRecorder.start();

@@ -47,7 +47,11 @@ export const useVoiceEdit = () => {
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
         stream.getTracks().forEach(track => track.stop());
-        await processVoiceEdit(audioBlob, onTranscription);
+        
+        // Only process if we have audio chunks (not cancelled)
+        if (audioChunksRef.current.length > 0) {
+          await processVoiceEdit(audioBlob, onTranscription);
+        }
       };
 
       mediaRecorder.start();
