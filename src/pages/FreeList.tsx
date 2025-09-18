@@ -33,36 +33,47 @@ export const FreeList = () => {
   };
 
   const validateBoldItemRules = (newItems: ListItemData[]): boolean => {
+    console.log("=== Bold Rules Validation ===");
     for (let i = 0; i < newItems.length; i++) {
       const current = newItems[i];
       const previous = i > 0 ? newItems[i - 1] : null;
       const next = i < newItems.length - 1 ? newItems[i + 1] : null;
 
+      console.log(`Item ${i}: "${current.title}" - Bold: ${current.isBold}, Empty: ${current.isEmpty}`);
+
       // Bold items must be preceded by blank line (or be first item)
       if (current.isBold && !current.isEmpty && previous && !previous.isEmpty) {
+        console.log(`RULE VIOLATION: Bold item "${current.title}" at index ${i} not preceded by blank line`);
+        console.log(`Previous item: "${previous.title}" - Empty: ${previous.isEmpty}`);
         return false;
       }
 
       // Two bold items cannot appear directly under one another
       if (current.isBold && !current.isEmpty && next && next.isBold && !next.isEmpty) {
+        console.log(`RULE VIOLATION: Two consecutive bold items "${current.title}" and "${next.title}" at indices ${i} and ${i+1}`);
         return false;
       }
     }
+    console.log("Bold rules validation PASSED");
     return true;
   };
 
   const validateEmptyLineRules = (newItems: ListItemData[]): boolean => {
+    console.log("=== Empty Lines Validation ===");
     let consecutiveEmpty = 0;
     for (const item of newItems) {
       if (item.isEmpty) {
         consecutiveEmpty++;
+        console.log(`Empty line found: "${item.title}" - Consecutive count: ${consecutiveEmpty}`);
         if (consecutiveEmpty > 1) {
+          console.log(`RULE VIOLATION: More than one consecutive empty line`);
           return false;
         }
       } else {
         consecutiveEmpty = 0;
       }
     }
+    console.log("Empty line rules validation PASSED");
     return true;
   };
 
@@ -251,9 +262,24 @@ export const FreeList = () => {
     const [draggedItemData] = newItems.splice(draggedIndex, 1);
     newItems.splice(targetIndex, 0, draggedItemData);
     
-    if (validateBoldItemRules(newItems) && validateEmptyLineRules(newItems)) {
+    const boldValid = validateBoldItemRules(newItems);
+    const emptyValid = validateEmptyLineRules(newItems);
+    
+    console.log("Drag validation results:");
+    console.log("- Bold rules valid:", boldValid);
+    console.log("- Empty rules valid:", emptyValid);
+    console.log("- Current items:", newItems.map((item, index) => ({ 
+      index, 
+      id: item.id, 
+      title: item.title, 
+      isBold: item.isBold, 
+      isEmpty: item.isEmpty 
+    })));
+    
+    if (boldValid && emptyValid) {
       saveItems(newItems);
     } else {
+      console.log("VALIDATION FAILED - Bold valid:", boldValid, "Empty valid:", emptyValid);
       toast({
         title: "Invalid order",
         description: "This arrangement would violate formatting rules",
