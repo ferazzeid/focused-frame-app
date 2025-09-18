@@ -185,6 +185,27 @@ export const Settings = () => {
           </div>
         </div>
 
+        {/* Summary Prompt */}
+        <div className="space-y-md">
+          <h2 className="text-lg font-semibold text-foreground">Summary Prompt</h2>
+          <div className="bg-background-card border border-border rounded-md p-md">
+            <div className="bg-background-subtle border border-border rounded-sm p-sm font-mono text-xs text-foreground space-y-sm">
+              <div>
+                <span className="text-foreground-subtle">System:</span>
+                <div className="mt-xs text-foreground">
+                  "You are a helpful assistant that creates concise 3-word summaries. Respond with exactly 3 words, no punctuation, no extra text."
+                </div>
+              </div>
+              <div>
+                <span className="text-foreground-subtle">User:</span>
+                <div className="mt-xs text-foreground">
+                  "Summarize this text in exactly 3 words: [your text]"
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* About */}
         <div className="space-y-md">
           <h2 className="text-lg font-semibold text-foreground">About</h2>
