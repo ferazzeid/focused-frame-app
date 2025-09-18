@@ -125,7 +125,7 @@ export const ListItem = ({
                 className={`flex-1 cursor-text p-sm -m-sm rounded transition-colors duration-fast hover:bg-background-subtle ${
                   item.isBold
                     ? "font-bold text-base text-foreground"
-                    : "font-normal text-foreground"
+                    : "font-light text-sm text-foreground leading-tight"
                 }`}
               >
                 {item.title ? (
