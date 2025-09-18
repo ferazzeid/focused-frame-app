@@ -56,6 +56,13 @@ export const ListItem = ({
 
   const handleVoiceTranscription = (transcribedText: string) => {
     setLocalTitle(transcribedText);
+    // Auto-save after voice transcription completes
+    setTimeout(() => {
+      if (transcribedText.trim() !== "") {
+        onUpdate(item.id, transcribedText, localContent);
+        onSave?.(item.id);
+      }
+    }, 100); // Small delay to ensure state is updated
   };
 
   const handleSave = () => {
