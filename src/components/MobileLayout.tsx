@@ -25,7 +25,7 @@ export const MobileLayout = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col max-w-lg mx-auto">
       {/* Header */}
-      <header className="flex-shrink-0 px-md py-lg border-b border-border">
+      <header className="flex-shrink-0 px-md py-lg">
         <h1 className="text-xl font-medium text-foreground">Second List</h1>
         <p className="text-sm text-foreground-muted mt-xs">
           Minimal. Structured. Intentional.
@@ -38,7 +38,7 @@ export const MobileLayout = () => {
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="flex-shrink-0 border-t border-border bg-background-subtle">
+      <nav className="flex-shrink-0 bg-background-subtle">
         <div className="flex">
           <button
             onClick={() => setActiveTab("free")}
@@ -48,7 +48,7 @@ export const MobileLayout = () => {
                 : "text-foreground-muted hover:text-foreground hover:border-border"
             }`}
           >
-            Free List
+            List
           </button>
           <button
             onClick={() => setActiveTab("archive")}

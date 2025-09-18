@@ -313,7 +313,7 @@ export const FreeList = () => {
       />
 
       {/* Add Actions */}
-      <div className="flex-shrink-0 p-md border-t border-border bg-background-subtle">
+      <div className="flex-shrink-0 p-md bg-background-subtle">
         <div className="flex gap-sm">
           <MobileButton
             variant="outline"
