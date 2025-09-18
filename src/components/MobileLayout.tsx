@@ -116,7 +116,7 @@ export const MobileLayout = () => {
         <div className="h-20"></div>
 
         {/* Fixed Bottom Navigation */}
-        <nav className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm bg-background-subtle border-t border-border z-10 p-md">
+        <nav className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm border-t border-border z-10 p-md">
           <div className="grid grid-cols-5 gap-xs">
             {/* List Tab */}
             <button
@@ -152,8 +152,7 @@ export const MobileLayout = () => {
                   : "text-foreground-muted hover:text-foreground bg-background-card hover:bg-background-hover"
               }`}
             >
-              <Plus className="w-4 h-4 mb-0.5" />
-              Add
+              <Plus className="w-5 h-5" />
             </button>
 
             {/* Space Button */}
@@ -166,10 +165,9 @@ export const MobileLayout = () => {
                   : "text-foreground-muted hover:text-foreground bg-background-card hover:bg-background-hover"
               }`}
             >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="w-4 h-4 mb-0.5">
-                <line x1="2" y1="8" x2="14" y2="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="w-5 h-5">
+                <line x1="3" y1="10" x2="17" y2="10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
               </svg>
-              Space
             </button>
 
             {/* Recording Button */}
@@ -180,25 +178,17 @@ export const MobileLayout = () => {
                 isRecording
                   ? "text-white border-red-500 bg-red-500 animate-pulse"
                   : isProcessing
-                    ? "text-background border-border/30 bg-accent-green/50 opacity-50"
-                    : "text-background border-accent-green bg-accent-green hover:bg-accent-green/90"
+                    ? "text-background border-border/30 bg-accent-red/50 opacity-50"
+                    : "text-background border-accent-red bg-accent-red hover:bg-accent-red/90"
               }`}
               style={{
                 animationDuration: isRecording ? "2s" : undefined,
               }}
             >
               {isRecording ? (
-                <>
-                  <Square className="w-4 h-4 mb-0.5" />
-                  <span className="text-xs font-mono leading-none">
-                    {formatTime(recordingTimeLeft)}
-                  </span>
-                </>
+                <Square className="w-5 h-5" />
               ) : (
-                <>
-                  <Mic className={`w-4 h-4 mb-0.5 ${isProcessing ? 'animate-pulse' : ''}`} />
-                  <span className="leading-none">Rec</span>
-                </>
+                <Mic className={`w-5 h-5 ${isProcessing ? 'animate-pulse' : ''}`} />
               )}
               {pendingRecordings.length > 0 && (
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-accent-red rounded-full text-xs text-white flex items-center justify-center">
