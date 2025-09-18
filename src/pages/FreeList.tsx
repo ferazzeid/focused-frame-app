@@ -470,7 +470,7 @@ export const FreeList = () => {
         {items.length === 0 ? (
           <div className="text-center py-xl text-foreground-muted">
             <FileText className="w-12 h-12 mx-auto mb-md opacity-50" />
-            <p className="text-sm">Your free list is empty</p>
+            <p className="text-sm">Your list is empty</p>
           </div>
         ) : (
           items.map((item, index) => (
