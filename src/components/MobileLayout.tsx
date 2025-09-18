@@ -2,8 +2,10 @@ import { useState } from "react";
 import { FreeList } from "@/pages/FreeList";
 import { Archive } from "@/pages/Archive";
 import { Settings } from "@/pages/Settings";
+import { Speech } from "@/pages/Speech";
+import { Mic } from "lucide-react";
 
-export type TabType = "free" | "archive" | "settings";
+export type TabType = "speech" | "free" | "archive" | "settings";
 
 export const MobileLayout = () => {
   const [activeTab, setActiveTab] = useState<TabType>("free");
@@ -11,6 +13,8 @@ export const MobileLayout = () => {
 
   const renderContent = () => {
     switch (activeTab) {
+      case "speech":
+        return <Speech />;
       case "free":
         return <FreeList />;
       case "archive":
@@ -40,6 +44,16 @@ export const MobileLayout = () => {
       {/* Bottom Navigation */}
       <nav className="flex-shrink-0 bg-background-subtle">
         <div className="flex">
+          <button
+            onClick={() => setActiveTab("speech")}
+            className={`flex-1 py-md px-sm text-sm font-medium transition-colors duration-normal rounded-md mx-xs my-xs border ${
+              activeTab === "speech"
+                ? "text-foreground border-border bg-background"
+                : "text-foreground-muted hover:text-foreground border-border/30 hover:border-border"
+            }`}
+          >
+            <Mic className="w-4 h-4 mx-auto" />
+          </button>
           <button
             onClick={() => setActiveTab("free")}
             className={`flex-1 py-md px-sm text-sm font-medium transition-colors duration-normal rounded-md mx-xs my-xs border ${

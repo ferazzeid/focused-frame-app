@@ -1,0 +1,96 @@
+export interface TranscriptionResult {
+  transcript: string;
+  summary: string;
+}
+
+export class SpeechService {
+  private apiKey: string | null;
+
+  constructor() {
+    this.apiKey = localStorage.getItem('openai_api_key');
+  }
+
+  private getApiKey(): string {
+    const key = localStorage.getItem('openai_api_key');
+    if (!key) {
+      throw new Error('OpenAI API key not found. Please set it in Settings.');
+    }
+    return key;
+  }
+
+  async transcribeAudio(audioBlob: Blob): Promise<string> {
+    const apiKey = this.getApiKey();
+    
+    const formData = new FormData();
+    formData.append('file', audioBlob, 'audio.wav');
+    formData.append('model', 'whisper-1');
+
+    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error?.message || `Transcription failed: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.text;
+  }
+
+  async generateSummary(transcript: string): Promise<string> {
+    const apiKey = this.getApiKey();
+    
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a helpful assistant that creates concise 3-word summaries. Respond with exactly 3 words, no punctuation, no extra text.'
+          },
+          {
+            role: 'user',
+            content: `Summarize this text in exactly 3 words: "${transcript}"`
+          }
+        ],
+        max_tokens: 10,
+        temperature: 0.3,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error?.message || `Summary generation failed: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.choices[0]?.message?.content?.trim() || 'Voice Note Summary';
+  }
+
+  async processAudio(audioBlob: Blob): Promise<TranscriptionResult> {
+    try {
+      const transcript = await this.transcribeAudio(audioBlob);
+      const summary = await this.generateSummary(transcript);
+      
+      return {
+        transcript,
+        summary,
+      };
+    } catch (error) {
+      console.error('Speech processing error:', error);
+      throw error;
+    }
+  }
+}
+
+export const speechService = new SpeechService();
