@@ -455,7 +455,7 @@ export const SecondList = () => {
   return (
     <div className="flex flex-col h-full">
       {/* List Content */}
-      <div className="flex-1 overflow-y-auto px-md py-md space-y-xs">
+      <div className="flex-1 overflow-y-auto px-md py-md space-y-xs min-h-[400px]">
         {items.length === 0 ? (
           <div className="text-center py-xl text-foreground-muted">
             <FileText className="w-12 h-12 mx-auto mb-md opacity-50" />

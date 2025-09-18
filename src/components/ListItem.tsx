@@ -251,8 +251,8 @@ export const ListItem = ({
               />
               
               {/* Menu */}
-              <div className="absolute right-0 top-8 z-20 w-36 bg-background-card border border-border rounded-md shadow-lg animate-scale-in">
-                <div className="py-xs">
+              <div className="absolute right-0 top-8 z-30 w-48 bg-background-card border border-border rounded-md shadow-lg animate-scale-in">
+                <div className="py-sm">
                   {/* View Content */}
                   {item.content && (
                     <button
@@ -260,9 +260,9 @@ export const ListItem = ({
                         onViewContent?.(item.id);
                         setShowMenu(false);
                       }}
-                      className="w-full px-sm py-xs text-left text-sm text-foreground hover:bg-background-subtle transition-colors duration-fast flex items-center gap-sm"
+                      className="w-full px-lg py-md text-left text-sm text-foreground hover:bg-background-subtle transition-colors duration-fast flex items-center gap-sm touch-manipulation"
                     >
-                      <Info className="w-3 h-3" />
+                      <Info className="w-4 h-4" />
                       View
                     </button>
                   )}
@@ -273,11 +273,11 @@ export const ListItem = ({
                       onToggleBold(item.id);
                       setShowMenu(false);
                     }}
-                    className={`w-full px-sm py-xs text-left text-sm hover:bg-background-subtle transition-colors duration-fast flex items-center gap-sm ${
+                    className={`w-full px-lg py-md text-left text-sm hover:bg-background-subtle transition-colors duration-fast flex items-center gap-sm touch-manipulation ${
                       item.isBold ? "text-accent-green" : "text-foreground"
                     }`}
                   >
-                    <Bold className="w-3 h-3" />
+                    <span className="w-4 h-4 flex items-center justify-center text-xs font-bold border border-current rounded">AT</span>
                     Bold
                   </button>
                   
@@ -288,9 +288,9 @@ export const ListItem = ({
                         onSendToSecondList(item.id);
                         setShowMenu(false);
                       }}
-                      className="w-full px-sm py-xs text-left text-sm text-foreground hover:bg-background-subtle transition-colors duration-fast flex items-center gap-sm"
+                      className="w-full px-lg py-md text-left text-sm text-foreground hover:bg-background-subtle transition-colors duration-fast flex items-center gap-sm touch-manipulation"
                     >
-                      <ArrowRight className="w-3 h-3" />
+                      <ArrowRight className="w-4 h-4" />
                       2nd List
                     </button>
                   )}
@@ -301,9 +301,9 @@ export const ListItem = ({
                       onDeleteConfirm?.(item.id);
                       setShowMenu(false);
                     }}
-                    className="w-full px-sm py-xs text-left text-sm text-foreground hover:bg-background-subtle hover:text-accent-red transition-colors duration-fast flex items-center gap-sm"
+                    className="w-full px-lg py-md text-left text-sm text-foreground hover:bg-background-subtle hover:text-accent-red transition-colors duration-fast flex items-center gap-sm touch-manipulation"
                   >
-                    <Trash2 className="w-3 h-3" />
+                    <Trash2 className="w-4 h-4" />
                     Delete
                   </button>
                 </div>
