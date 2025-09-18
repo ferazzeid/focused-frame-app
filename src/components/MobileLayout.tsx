@@ -107,8 +107,8 @@ export const MobileLayout = () => {
                 isRecording
                   ? "text-white border-red-500 bg-red-500 animate-pulse"
                   : isProcessing
-                    ? "text-foreground-muted border-border/30 opacity-50"
-                    : "text-foreground-muted hover:text-foreground border-border/30 hover:border-border"
+                    ? "text-background border-border/30 bg-accent-green/50 opacity-50"
+                    : "text-background border-accent-green bg-accent-green hover:bg-accent-green/90"
               }`}
               style={{
                 animationDuration: isRecording ? "2s" : undefined,

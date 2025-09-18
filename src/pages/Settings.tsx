@@ -3,11 +3,15 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MobileButton } from "@/components/ui/mobile-button";
-import { Archive, ChevronRight, Key, User } from "lucide-react";
+import { Archive, ChevronRight, Key, User, LogOut, ArrowLeft } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Archive as ArchivePage } from "@/pages/Archive";
 
 export const Settings = () => {
   const [openaiApiKey, setOpenaiApiKey] = useState("");
+  const [showArchive, setShowArchive] = useState(false);
   const { toast } = useToast();
+  const { user, signOut, isAuthenticated } = useAuth();
 
   useEffect(() => {
     const savedKey = localStorage.getItem("openai_api_key");
@@ -32,22 +36,42 @@ export const Settings = () => {
     }
   };
 
-  const handleArchiveClick = () => {
-    // Create a temporary archive page view
-    const archiveWindow = window.open('', '_blank');
-    if (archiveWindow) {
-      archiveWindow.document.write(`
-        <html>
-          <head><title>Archive</title></head>
-          <body style="font-family: system-ui; padding: 20px; background: #1a1a1a; color: #fff;">
-            <h1>Archive</h1>
-            <p>Archive functionality will be available once authentication is set up.</p>
-            <button onclick="window.close()">Close</button>
-          </body>
-        </html>
-      `);
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast({
+        title: "Error signing out",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Signed out successfully",
+        description: "You have been signed out of your account",
+      });
     }
   };
+
+  if (showArchive) {
+    return (
+      <div className="flex flex-col h-full">
+        {/* Back button */}
+        <div className="flex items-center gap-sm px-md py-sm border-b border-border">
+          <button
+            onClick={() => setShowArchive(false)}
+            className="flex items-center gap-sm text-foreground-muted hover:text-foreground transition-colors duration-fast"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm">Back to Settings</span>
+          </button>
+        </div>
+        {/* Archive content */}
+        <div className="flex-1">
+          <ArchivePage />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -63,7 +87,7 @@ export const Settings = () => {
               View and manage your archived items
             </p>
             <button 
-              onClick={handleArchiveClick}
+              onClick={() => setShowArchive(true)}
               className="w-full text-left p-sm rounded-md bg-background-subtle hover:bg-background-hover transition-colors duration-fast border border-border"
             >
               <div className="flex items-center justify-between">
@@ -74,44 +98,58 @@ export const Settings = () => {
           </div>
         </div>
 
-        {/* Account Section - Placeholder for after Supabase integration */}
+        {/* Account Section */}
         <div className="space-y-md">
           <div className="flex items-center gap-sm">
             <User className="w-5 h-5 text-foreground-muted" />
             <h2 className="text-lg font-semibold text-foreground">Account</h2>
           </div>
           <div className="bg-background-card border border-border rounded-md p-md">
-            <p className="text-sm text-foreground-muted mb-md">
-              Account management will be available after connecting to Supabase
-            </p>
-            <div className="space-y-sm text-xs text-foreground-subtle">
-              <div className="flex justify-between">
-                <span>Email:</span>
-                <span>Connect Supabase to see</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Member Since:</span>
-                <span>Connect Supabase to see</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Status:</span>
-                <span>Connect Supabase to see</span>
-              </div>
-            </div>
-            <div className="mt-md space-y-sm">
-              <button 
-                disabled
-                className="w-full p-sm rounded-md bg-background-subtle text-foreground-muted border border-border opacity-50 cursor-not-allowed"
-              >
-                Manage Account (Requires Supabase)
-              </button>
-              <button 
-                disabled
-                className="w-full p-sm rounded-md bg-background-subtle text-foreground-muted border border-border opacity-50 cursor-not-allowed"
-              >
-                Sign Out (Requires Supabase)
-              </button>
-            </div>
+            {isAuthenticated && user ? (
+              <>
+                <div className="space-y-sm text-sm text-foreground-muted mb-md">
+                  <div className="flex justify-between">
+                    <span>Email:</span>
+                    <span className="text-foreground">{user.email}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Member Since:</span>
+                    <span className="text-foreground">
+                      {new Date(user.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Status:</span>
+                    <span className="text-accent-green">Active</span>
+                  </div>
+                </div>
+                <div className="mt-md space-y-sm">
+                  <MobileButton
+                    onClick={handleSignOut}
+                    variant="outline"
+                    className="w-full flex items-center gap-sm"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </MobileButton>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-foreground-muted mb-md">
+                  Sign in to access account features
+                </p>
+                <div className="space-y-sm">
+                  <MobileButton
+                    onClick={() => window.location.href = '/auth'}
+                    variant="primary"
+                    className="w-full"
+                  >
+                    Sign In
+                  </MobileButton>
+                </div>
+              </>
+            )}
           </div>
         </div>
 

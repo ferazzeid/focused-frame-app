@@ -5,11 +5,8 @@ import { Archive as ArchiveIcon, Trash2, RotateCcw } from "lucide-react";
 import { loadData, saveData } from "@/lib/storage";
 import { useToast } from "@/hooks/use-toast";
 
-interface ArchiveProps {
-  isPremium: boolean;
-}
-
-export const Archive = ({ isPremium }: ArchiveProps) => {
+export const Archive = () => {
+  const isPremium = false; // TODO: Implement premium check
   const [items, setItems] = useState<ListItemData[]>([]);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
