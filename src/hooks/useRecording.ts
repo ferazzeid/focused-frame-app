@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { speechService, TranscriptionResult } from '@/lib/speechService';
 import { createTextItem, loadData, saveData, generateId } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
@@ -9,16 +9,50 @@ interface PendingRecording {
   timestamp: number;
 }
 
+const RECORDING_TIME_LIMIT = 60; // 60 seconds max recording time
+
 export const useRecording = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [pendingRecordings, setPendingRecordings] = useState<PendingRecording[]>([]);
+  const [recordingTimeLeft, setRecordingTimeLeft] = useState(RECORDING_TIME_LIMIT);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []);
+
+  const startTimer = () => {
+    setRecordingTimeLeft(RECORDING_TIME_LIMIT);
+    timerRef.current = setInterval(() => {
+      setRecordingTimeLeft((prev) => {
+        if (prev <= 1) {
+          // Auto-stop recording when time runs out
+          stopRecording();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const stopTimer = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    setRecordingTimeLeft(RECORDING_TIME_LIMIT);
+  };
   // Load pending recordings from localStorage on initialization
   const loadPendingRecordings = () => {
     try {
@@ -91,10 +125,11 @@ export const useRecording = () => {
 
       mediaRecorder.start();
       setIsRecording(true);
+      startTimer();
       
       toast({
         title: "Recording Started",
-        description: "Speak your idea now...",
+        description: `Speak your idea now... (${RECORDING_TIME_LIMIT}s max)`,
       });
     } catch (error) {
       console.error('Failed to start recording:', error);
@@ -110,6 +145,7 @@ export const useRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      stopTimer();
     }
   };
 
@@ -206,6 +242,7 @@ export const useRecording = () => {
     isProcessing,
     hasPermission,
     pendingRecordings,
+    recordingTimeLeft,
     startRecording,
     stopRecording,
     toggleRecording,

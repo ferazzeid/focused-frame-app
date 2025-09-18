@@ -10,7 +10,7 @@ export type TabType = "free" | "archive" | "settings";
 export const MobileLayout = () => {
   const [activeTab, setActiveTab] = useState<TabType>("free");
   const [isPremium] = useState(false); // TODO: Implement premium check
-  const { isRecording, isProcessing, toggleRecording, pendingRecordings } = useRecording();
+  const { isRecording, isProcessing, toggleRecording, pendingRecordings, recordingTimeLeft } = useRecording();
 
   const renderContent = () => {
     switch (activeTab) {
@@ -23,6 +23,10 @@ export const MobileLayout = () => {
       default:
         return <FreeList />;
     }
+  };
+
+  const formatTime = (seconds: number) => {
+    return `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`;
   };
 
   return (
@@ -57,11 +61,18 @@ export const MobileLayout = () => {
               animationDuration: isRecording ? "2s" : undefined,
             }}
           >
-            {isRecording ? (
-              <Square className="w-4 h-4 mx-auto" />
-            ) : (
-              <Mic className={`w-4 h-4 mx-auto ${isProcessing ? 'animate-pulse' : ''}`} />
-            )}
+            <div className="flex flex-col items-center gap-0.5">
+              {isRecording ? (
+                <Square className="w-4 h-4" />
+              ) : (
+                <Mic className={`w-4 h-4 ${isProcessing ? 'animate-pulse' : ''}`} />
+              )}
+              {isRecording && (
+                <span className="text-xs font-mono">
+                  {formatTime(recordingTimeLeft)}
+                </span>
+              )}
+            </div>
             {pendingRecordings.length > 0 && (
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-accent-red rounded-full text-xs text-white flex items-center justify-center">
                 {pendingRecordings.length}
