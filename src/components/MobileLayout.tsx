@@ -1,4 +1,4 @@
-import { useState, createContext, useContext } from "react";
+import { useState, useEffect, createContext, useContext } from "react";
 import { FreeList } from "@/pages/FreeList";
 import { SecondList } from "@/pages/SecondList";
 import { Archive } from "@/pages/Archive";
@@ -33,7 +33,16 @@ export const MobileLayout = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [addTextItem, setAddTextItem] = useState<(() => void) | null>(null);
   const [addEmptyLine, setAddEmptyLine] = useState<(() => void) | null>(null);
+  const [showSecondList, setShowSecondList] = useState(true);
   const { isAdmin, isLoading } = useUserRole();
+  
+  useEffect(() => {
+    // Load second list setting on mount
+    const savedSecondListSetting = localStorage.getItem("show_second_list");
+    if (savedSecondListSetting !== null) {
+      setShowSecondList(JSON.parse(savedSecondListSetting));
+    }
+  }, []);
   
   const handleItemAdded = () => {
     setRefreshTrigger(prev => prev + 1);
@@ -140,7 +149,7 @@ export const MobileLayout = () => {
 
         {/* Fixed Bottom Navigation */}
         <nav className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm border-t border-border z-10 p-md">
-          <div className="grid grid-cols-5 gap-xs">
+          <div className={`grid gap-xs ${showSecondList ? 'grid-cols-5' : 'grid-cols-4'}`}>
             {/* List Tab */}
             <button
               onClick={() => setActiveTab("free")}
@@ -153,17 +162,19 @@ export const MobileLayout = () => {
               List
             </button>
 
-            {/* Second List Tab */}
-            <button
-              onClick={() => setActiveTab("second")}
-              className={`flex flex-col items-center justify-center h-12 text-xs font-medium transition-colors duration-fast rounded-md border border-border whitespace-nowrap ${
-                activeTab === "second"
-                  ? "bg-accent-green text-background border-accent-green"
-                  : "text-foreground-muted hover:text-foreground bg-background-card"
-              }`}
-            >
-              2nd
-            </button>
+            {/* Second List Tab - Only show if enabled */}
+            {showSecondList && (
+              <button
+                onClick={() => setActiveTab("second")}
+                className={`flex flex-col items-center justify-center h-12 text-xs font-medium transition-colors duration-fast rounded-md border border-border whitespace-nowrap ${
+                  activeTab === "second"
+                    ? "bg-accent-green text-background border-accent-green"
+                    : "text-foreground-muted hover:text-foreground bg-background-card"
+                }`}
+              >
+                2nd
+              </button>
+            )}
 
             {/* Add Item Button */}
             <button

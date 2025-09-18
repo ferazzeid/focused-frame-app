@@ -3,13 +3,15 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MobileButton } from "@/components/ui/mobile-button";
-import { Archive, ChevronRight, Key, User, LogOut, X } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Archive, ChevronRight, Key, User, LogOut, X, List } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Archive as ArchivePage } from "@/pages/Archive";
 
 export const Settings = () => {
   const [openaiApiKey, setOpenaiApiKey] = useState("");
   const [showArchive, setShowArchive] = useState(false);
+  const [showSecondList, setShowSecondList] = useState(true);
   const { toast } = useToast();
   const { user, signOut, isAuthenticated } = useAuth();
 
@@ -17,6 +19,12 @@ export const Settings = () => {
     const savedKey = localStorage.getItem("openai_api_key");
     if (savedKey) {
       setOpenaiApiKey(savedKey);
+    }
+    
+    // Load second list setting
+    const savedSecondListSetting = localStorage.getItem("show_second_list");
+    if (savedSecondListSetting !== null) {
+      setShowSecondList(JSON.parse(savedSecondListSetting));
     }
   }, []);
 
@@ -34,6 +42,15 @@ export const Settings = () => {
         description: "Your OpenAI API key has been removed.",
       });
     }
+  };
+
+  const handleToggleSecondList = (enabled: boolean) => {
+    setShowSecondList(enabled);
+    localStorage.setItem("show_second_list", JSON.stringify(enabled));
+    toast({
+      title: enabled ? "2nd List Enabled" : "2nd List Disabled",
+      description: enabled ? "The 2nd list is now available" : "The 2nd list has been hidden",
+    });
   };
 
   const handleSignOut = async () => {
@@ -75,6 +92,22 @@ export const Settings = () => {
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto px-md py-md space-y-lg">
+        {/* 2nd List Toggle */}
+        <div className="space-y-md">
+          <div className="bg-background-card border border-border rounded-md p-md">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-sm">
+                <List className="w-5 h-5 text-foreground-muted" />
+                <span className="text-sm font-medium text-foreground">2nd List</span>
+              </div>
+              <Switch
+                checked={showSecondList}
+                onCheckedChange={handleToggleSecondList}
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Archive Section */}
         <div className="space-y-md">
           <div className="flex items-center gap-sm">
