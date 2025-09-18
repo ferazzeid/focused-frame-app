@@ -109,6 +109,18 @@ export const SecondList = () => {
 
   const addTextItem = () => {
     console.log("addTextItem clicked, current items:", items.length);
+    
+    // Check if there's already an item with empty title
+    const hasEmptyTitleItem = items.some(item => !item.isEmpty && item.title.trim() === "");
+    if (hasEmptyTitleItem) {
+      toast({
+        title: "Complete current item",
+        description: "Please add a title to the existing empty item before creating a new one",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const newItem = createTextItem("", "");
     console.log("Created new item:", newItem);
     const newItems = [...items, newItem];
@@ -149,6 +161,17 @@ export const SecondList = () => {
 
   const updateItem = (id: string, title: string, content: string) => {
     console.log("updateItem called for id:", id, "with title:", title, "and content:", content);
+    
+    // Don't allow empty titles
+    if (title.trim() === "") {
+      toast({
+        title: "Title required",
+        description: "Items must have a title",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const newItems = items.map(item => 
       item.id === id ? { ...item, title: title.trim(), content: content.trim() } : item
     );
@@ -422,13 +445,12 @@ export const SecondList = () => {
             onClick={addTextItem}
             className="flex-1 bg-background-subtle text-foreground-muted border-border rounded-md hover:bg-background-hover font-normal"
           >
-            <Plus className="w-4 h-4 mr-sm" />
             Add Item
           </MobileButton>
           <MobileButton
             variant="outline"
             onClick={addEmptyLine}
-            className="px-md bg-background-subtle text-foreground-muted border-border rounded-md hover:bg-background-hover font-normal"
+            className="flex-1 bg-background-subtle text-foreground-muted border-border rounded-md hover:bg-background-hover font-normal"
           >
             Space
           </MobileButton>

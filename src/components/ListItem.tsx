@@ -59,6 +59,10 @@ export const ListItem = ({
   };
 
   const handleSave = () => {
+    // Don't save if title is empty
+    if (localTitle.trim() === "") {
+      return;
+    }
     onUpdate(item.id, localTitle, localContent);
     onSave?.(item.id);
   };
@@ -152,7 +156,12 @@ export const ListItem = ({
               <input
                 type="text"
                 value={localTitle}
-                onChange={(e) => setLocalTitle(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Auto-capitalize first letter
+                  const capitalizedValue = value.length > 0 ? value.charAt(0).toUpperCase() + value.slice(1) : value;
+                  setLocalTitle(capitalizedValue);
+                }}
                 onBlur={handleSave}
                 onKeyDown={handleKeyDown}
                 placeholder="Title..."
@@ -191,7 +200,7 @@ export const ListItem = ({
             <div className="flex items-center gap-sm">
               <div
                 onClick={() => onEdit?.(item.id)}
-                className={`flex-1 cursor-text p-sm -m-sm rounded transition-colors duration-fast hover:bg-background-subtle ${
+                className={`flex-1 cursor-text p-sm -m-sm rounded transition-colors duration-fast hover:bg-background-subtle flex items-center ${
                   item.isBold
                     ? "font-bold text-base text-foreground"
                     : "font-light text-sm text-foreground leading-tight"
