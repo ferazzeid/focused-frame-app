@@ -1,18 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MobileButton } from "@/components/ui/mobile-button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
+
+  // Load saved email and remember me preference on component mount
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("remembered_email");
+    const savedRememberMe = localStorage.getItem("remember_me") === "true";
+    
+    if (savedEmail && savedRememberMe) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   // Redirect authenticated users
   if (isAuthenticated) {
@@ -42,6 +55,15 @@ export const Auth = () => {
           description: "We've sent you a confirmation link to complete your signup.",
         });
       } else {
+        // Handle Remember Me functionality
+        if (rememberMe) {
+          localStorage.setItem("remembered_email", email);
+          localStorage.setItem("remember_me", "true");
+        } else {
+          localStorage.removeItem("remembered_email");
+          localStorage.removeItem("remember_me");
+        }
+
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -111,6 +133,23 @@ export const Auth = () => {
               className="bg-input border border-input-border"
             />
           </div>
+
+          {/* Remember Me - Only show for sign in */}
+          {!isSignUp && (
+            <div className="flex items-center space-x-sm">
+              <Checkbox
+                id="remember-me"
+                checked={rememberMe}
+                onCheckedChange={(checked) => setRememberMe(checked === true)}
+              />
+              <Label
+                htmlFor="remember-me"
+                className="text-sm text-foreground-muted cursor-pointer"
+              >
+                Remember me
+              </Label>
+            </div>
+          )}
 
           <MobileButton
             type="submit"
