@@ -88,6 +88,7 @@ export const ListItem = ({
         onDragStart={(e) => onDragStart?.(e, item.id)}
         onDragOver={onDragOver}
         onDrop={(e) => onDrop?.(e, item.id)}
+        data-item-id={item.id}
       >
         {/* Drag Handle */}
         <div className="flex items-center justify-center w-6 h-6 mt-0.5">
@@ -112,7 +113,7 @@ export const ListItem = ({
               onBlur={handleSave}
               onKeyDown={handleKeyDown}
               placeholder="Title..."
-              className={`w-full bg-input border border-input-border rounded-sm px-sm py-sm text-sm transition-colors duration-fast focus:border-input-focus focus:outline-none ${
+              className={`w-full bg-input border border-input-border rounded-sm px-sm py-sm text-sm transition-colors duration-fast focus:border-input-border focus:ring-0 focus:ring-offset-0 focus:outline-none ${
                 item.isBold ? "font-bold text-base" : "font-normal"
               }`}
               autoFocus

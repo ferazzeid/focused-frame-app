@@ -118,9 +118,9 @@ export const Archive = ({ isPremium }: ArchiveProps) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     
-    // Find which item we're hovering over
+    // Find which item we're hovering over by looking at the target element
     const target = e.currentTarget as HTMLElement;
-    const itemId = target.getAttribute('data-item-id');
+    const itemId = target.closest('[data-item-id]')?.getAttribute('data-item-id');
     
     if (itemId && itemId !== draggedItem) {
       setDragOverItem(itemId);

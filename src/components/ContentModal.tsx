@@ -50,7 +50,7 @@ export const ContentModal = ({ item, isOpen, onClose, onSave }: ContentModalProp
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Enter title..."
-            className="bg-input border-input-border focus:border-input-border focus:ring-0"
+            className="bg-input border-input-border focus:border-input-border focus:ring-0 focus:ring-offset-0 py-sm flex items-center"
           />
           
           <Textarea
@@ -58,7 +58,7 @@ export const ContentModal = ({ item, isOpen, onClose, onSave }: ContentModalProp
             onChange={(e) => setContent(e.target.value)}
             placeholder="Enter your content here..."
             rows={8}
-            className="bg-input border-input-border focus:border-input-border focus:ring-0 resize-none"
+            className="bg-input border-input-border focus:border-input-border focus:ring-0 focus:ring-offset-0 resize-none py-sm"
           />
         </div>
 
