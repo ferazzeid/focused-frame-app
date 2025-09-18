@@ -60,7 +60,7 @@ export const FreeList = () => {
 
   const addTextItem = () => {
     console.log("addTextItem clicked, current items:", items.length);
-    const newItem = createTextItem("");
+    const newItem = createTextItem("", "");
     console.log("Created new item:", newItem);
     const newItems = [...items, newItem];
     
@@ -98,10 +98,10 @@ export const FreeList = () => {
     }
   };
 
-  const updateItem = (id: string, content: string) => {
-    console.log("updateItem called for id:", id, "with content:", content);
+  const updateItem = (id: string, title: string, content: string) => {
+    console.log("updateItem called for id:", id, "with title:", title, "and content:", content);
     const newItems = items.map(item => 
-      item.id === id ? { ...item, content: content.trim() } : item
+      item.id === id ? { ...item, title: title.trim(), content: content.trim() } : item
     );
     
     if (validateBoldItemRules(newItems)) {
@@ -161,7 +161,7 @@ export const FreeList = () => {
     // Only remove empty items that are not the one we just edited and not intentional empty lines
     const newItems = items.filter(item => {
       if (item.id === id) return true; // Keep the item we just edited
-      return !(item.content.trim() === "" && !item.isEmpty); // Remove other empty text items
+      return !(item.title.trim() === "" && item.content.trim() === "" && !item.isEmpty); // Remove other empty text items
     });
     if (newItems.length !== items.length) {
       saveItems(newItems);

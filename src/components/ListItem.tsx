@@ -4,6 +4,7 @@ import { Trash2, GripVertical, Type } from "lucide-react";
 
 export interface ListItemData {
   id: string;
+  title: string;
   content: string;
   isBold: boolean;
   isEmpty: boolean;
@@ -12,7 +13,7 @@ export interface ListItemData {
 
 interface ListItemProps {
   item: ListItemData;
-  onUpdate: (id: string, content: string) => void;
+  onUpdate: (id: string, title: string, content: string) => void;
   onDelete: (id: string) => void;
   onToggleBold: (id: string) => void;
   onDragStart?: (e: React.DragEvent, id: string) => void;
@@ -35,19 +36,21 @@ export const ListItem = ({
   onEdit,
   onSave,
 }: ListItemProps) => {
+  const [localTitle, setLocalTitle] = useState(item.title);
   const [localContent, setLocalContent] = useState(item.content);
 
   const handleSave = () => {
-    onUpdate(item.id, localContent);
+    onUpdate(item.id, localTitle, localContent);
     onSave?.(item.id);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey && e.target === e.currentTarget) {
       e.preventDefault();
       handleSave();
     }
     if (e.key === "Escape") {
+      setLocalTitle(item.title);
       setLocalContent(item.content);
       onSave?.(item.id);
     }
@@ -75,30 +78,48 @@ export const ListItem = ({
       <GripVertical className="w-4 h-4 text-foreground-subtle opacity-0 group-hover:opacity-100 transition-opacity duration-fast mt-1 cursor-grab" />
 
       {/* Content */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 space-y-xs">
         {isEditing ? (
-          <textarea
-            value={localContent}
-            onChange={(e) => setLocalContent(e.target.value)}
-            onBlur={handleSave}
-            onKeyDown={handleKeyDown}
-            className={`w-full bg-input border border-input-border rounded-sm px-sm py-xs text-sm resize-none transition-colors duration-fast focus:border-input-focus focus:outline-none ${
-              item.isBold ? "font-bold text-lg" : "font-normal"
-            }`}
-            rows={Math.max(1, Math.ceil(localContent.length / 40))}
-            autoFocus
-          />
+          <div className="space-y-xs">
+            <input
+              type="text"
+              value={localTitle}
+              onChange={(e) => setLocalTitle(e.target.value)}
+              onBlur={handleSave}
+              onKeyDown={handleKeyDown}
+              placeholder="Title..."
+              className={`w-full bg-input border border-input-border rounded-sm px-sm py-xs text-sm transition-colors duration-fast focus:border-input-focus focus:outline-none ${
+                item.isBold ? "font-bold text-base" : "font-medium"
+              }`}
+              autoFocus
+            />
+            <textarea
+              value={localContent}
+              onChange={(e) => setLocalContent(e.target.value)}
+              onBlur={handleSave}
+              placeholder="Content (optional)..."
+              className="w-full bg-input border border-input-border rounded-sm px-sm py-xs text-sm resize-none transition-colors duration-fast focus:border-input-focus focus:outline-none font-normal"
+              rows={Math.max(2, Math.ceil(localContent.length / 50))}
+            />
+          </div>
         ) : (
           <div
             onClick={() => onEdit?.(item.id)}
-            className={`cursor-text p-sm -m-sm rounded transition-colors duration-fast hover:bg-background-subtle ${
-              item.isBold
-                ? "font-bold text-lg text-foreground"
-                : "font-normal text-foreground"
-            }`}
+            className="cursor-text p-sm -m-sm rounded transition-colors duration-fast hover:bg-background-subtle space-y-xs"
           >
-            {item.content || (
-              <span className="text-foreground-subtle italic">Click to edit...</span>
+            <div className={`${
+              item.isBold
+                ? "font-bold text-base text-foreground"
+                : "font-medium text-foreground"
+            }`}>
+              {item.title || (
+                <span className="text-foreground-subtle italic">Click to add title...</span>
+              )}
+            </div>
+            {item.content && (
+              <div className="text-sm text-foreground-muted whitespace-pre-wrap">
+                {item.content}
+              </div>
             )}
           </div>
         )}

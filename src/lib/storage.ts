@@ -78,14 +78,16 @@ export const generateId = (): string => {
 
 export const createEmptyItem = (): ListItemData => ({
   id: generateId(),
+  title: "",
   content: "",
   isBold: false,
   isEmpty: true,
   createdAt: new Date(),
 });
 
-export const createTextItem = (content: string, isBold: boolean = false): ListItemData => ({
+export const createTextItem = (title: string = "", content: string = "", isBold: boolean = false): ListItemData => ({
   id: generateId(),
+  title,
   content,
   isBold,
   isEmpty: false,
