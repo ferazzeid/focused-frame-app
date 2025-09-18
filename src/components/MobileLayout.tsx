@@ -10,18 +10,24 @@ export type TabType = "free" | "archive" | "settings";
 export const MobileLayout = () => {
   const [activeTab, setActiveTab] = useState<TabType>("free");
   const [isPremium] = useState(false); // TODO: Implement premium check
-  const { isRecording, isProcessing, toggleRecording, pendingRecordings, recordingTimeLeft } = useRecording();
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
+  const handleItemAdded = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+  
+  const { isRecording, isProcessing, toggleRecording, pendingRecordings, recordingTimeLeft } = useRecording(handleItemAdded);
 
   const renderContent = () => {
     switch (activeTab) {
       case "free":
-        return <FreeList />;
+        return <FreeList key={refreshTrigger} />;
       case "archive":
-        return <Archive isPremium={isPremium} />;
+        return <Archive isPremium={isPremium} key={refreshTrigger} />;
       case "settings":
         return <Settings />;
       default:
-        return <FreeList />;
+        return <FreeList key={refreshTrigger} />;
     }
   };
 

@@ -11,7 +11,7 @@ interface PendingRecording {
 
 const RECORDING_TIME_LIMIT = 60; // 60 seconds max recording time
 
-export const useRecording = () => {
+export const useRecording = (onItemAdded?: () => void) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
@@ -194,6 +194,9 @@ export const useRecording = () => {
         title: "Voice Note Created",
         description: `Added: "${result.summary}"`,
       });
+
+      // Notify parent component that a new item was added
+      onItemAdded?.();
 
       setIsProcessing(false);
     } catch (error) {
