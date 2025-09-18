@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { MobileButton } from "@/components/ui/mobile-button";
-import { Trash2, GripVertical, Bold } from "lucide-react";
+import { Trash2, GripVertical, Bold, X } from "lucide-react";
 
 export interface ListItemData {
   id: string;
@@ -70,8 +70,37 @@ export const ListItem = ({
         {isDragOver && (
           <div className="absolute -top-1 left-0 right-0 h-0.5 bg-accent-green animate-pulse"></div>
         )}
-        <div className="h-4 flex items-center justify-center">
+        <div 
+          className="group h-4 flex items-center justify-center relative"
+          draggable
+          onDragStart={(e) => onDragStart?.(e, item.id)}
+          onDragOver={onDragOver}
+          onDrop={(e) => onDrop?.(e, item.id)}
+          data-item-id={item.id}
+        >
+          {/* Drag Handle for divider */}
+          <div className="absolute left-0 flex items-center justify-center w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity duration-fast">
+            <GripVertical 
+              className="w-4 h-4 text-foreground-subtle cursor-grab active:cursor-grabbing" 
+              onMouseDown={(e) => {
+                e.currentTarget.style.cursor = 'grabbing';
+              }}
+              onMouseUp={(e) => {
+                e.currentTarget.style.cursor = 'grab';
+              }}
+            />
+          </div>
+          
+          {/* Divider line */}
           <div className="w-full h-px bg-border opacity-30"></div>
+          
+          {/* Delete button for divider */}
+          <button
+            onClick={() => onDeleteConfirm?.(item.id)}
+            className="absolute right-0 w-4 h-4 rounded-full bg-accent-red/20 hover:bg-accent-red/40 opacity-0 group-hover:opacity-100 transition-all duration-fast flex items-center justify-center"
+          >
+            <X className="w-2.5 h-2.5 text-accent-red" />
+          </button>
         </div>
       </div>
     );
