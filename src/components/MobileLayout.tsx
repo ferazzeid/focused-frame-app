@@ -149,7 +149,7 @@ export const MobileLayout = () => {
 
         {/* Fixed Bottom Navigation */}
         <nav className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm border-t border-border z-10 p-md">
-          <div className={`grid gap-xs ${showSecondList ? 'grid-cols-5' : 'grid-cols-4'}`}>
+          <div className={`grid gap-xs transition-all duration-300 ${showSecondList ? 'grid-cols-5' : 'grid-cols-4'}`}>
             {/* List Tab */}
             <button
               onClick={() => setActiveTab("free")}
