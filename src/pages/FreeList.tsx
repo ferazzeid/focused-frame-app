@@ -16,10 +16,12 @@ export const FreeList = () => {
   }, []);
 
   const saveItems = (newItems: ListItemData[]) => {
+    console.log("saveItems called with:", newItems.length, "items");
     const data = loadData();
     data.freeList = newItems;
     saveData(data);
     setItems(newItems);
+    console.log("Items saved and state updated");
   };
 
   const validateBoldItemRules = (newItems: ListItemData[]): boolean => {
@@ -57,13 +59,22 @@ export const FreeList = () => {
   };
 
   const addTextItem = () => {
+    console.log("addTextItem clicked, current items:", items.length);
     const newItem = createTextItem("");
+    console.log("Created new item:", newItem);
     const newItems = [...items, newItem];
     
-    if (validateBoldItemRules(newItems) && validateEmptyLineRules(newItems)) {
+    const boldValid = validateBoldItemRules(newItems);
+    const emptyValid = validateEmptyLineRules(newItems);
+    console.log("Validation results - bold:", boldValid, "empty:", emptyValid);
+    
+    if (boldValid && emptyValid) {
+      console.log("Validation passed, saving items and setting editing");
       saveItems(newItems);
       setEditingId(newItem.id);
+      console.log("Set editing ID to:", newItem.id);
     } else {
+      console.log("Validation failed");
       toast({
         title: "Cannot add item",
         description: "This would violate formatting rules",
@@ -88,13 +99,16 @@ export const FreeList = () => {
   };
 
   const updateItem = (id: string, content: string) => {
+    console.log("updateItem called for id:", id, "with content:", content);
     const newItems = items.map(item => 
       item.id === id ? { ...item, content: content.trim() } : item
     );
     
     if (validateBoldItemRules(newItems)) {
+      console.log("Item update validation passed, saving");
       saveItems(newItems);
     } else {
+      console.log("Item update validation failed");
       toast({
         title: "Invalid formatting",
         description: "Bold items must be preceded by a blank line and cannot be consecutive",
