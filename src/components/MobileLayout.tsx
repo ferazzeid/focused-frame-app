@@ -2,8 +2,9 @@ import { useState } from "react";
 import { FreeList } from "@/pages/FreeList";
 import { PremiumList } from "@/pages/PremiumList";
 import { Archive } from "@/pages/Archive";
+import { Settings } from "@/pages/Settings";
 
-export type TabType = "free" | "premium" | "archive";
+export type TabType = "free" | "premium" | "archive" | "settings";
 
 export const MobileLayout = () => {
   const [activeTab, setActiveTab] = useState<TabType>("free");
@@ -17,6 +18,8 @@ export const MobileLayout = () => {
         return <PremiumList isLocked={!isPremium} />;
       case "archive":
         return <Archive isPremium={isPremium} />;
+      case "settings":
+        return <Settings />;
       default:
         return <FreeList />;
     }
@@ -72,6 +75,16 @@ export const MobileLayout = () => {
             }`}
           >
             Archive
+          </button>
+          <button
+            onClick={() => setActiveTab("settings")}
+            className={`flex-1 py-md px-sm text-sm font-medium transition-colors duration-normal ${
+              activeTab === "settings"
+                ? "text-foreground border-t-2 border-accent-green"
+                : "text-foreground-muted hover:text-foreground"
+            }`}
+          >
+            ⚙️
           </button>
         </div>
       </nav>
