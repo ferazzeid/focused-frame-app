@@ -44,6 +44,7 @@ export class SpeechService {
 
   async generateSummary(transcript: string): Promise<string> {
     const apiKey = this.getApiKey();
+    const selectedModel = localStorage.getItem('openai_model') || 'gpt-4o-mini';
     
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -52,7 +53,7 @@ export class SpeechService {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
+        model: selectedModel,
         messages: [
           {
             role: 'system',
