@@ -127,7 +127,7 @@ export const ListItem = ({
         <div className="absolute -top-1 left-0 right-0 h-0.5 bg-accent-green animate-pulse"></div>
       )}
       <div
-        className={`group flex items-start gap-sm p-sm rounded-md border border-border transition-colors duration-fast ${
+        className={`group flex items-center gap-sm p-sm rounded-md border border-border transition-colors duration-fast min-h-[3rem] ${
           item.isBold ? "mt-md" : ""
         } ${isChild ? "ml-lg" : ""}`}
         draggable
@@ -137,7 +137,7 @@ export const ListItem = ({
         data-item-id={item.id}
       >
         {/* Drag Handle */}
-        <div className="flex items-center justify-center w-6 h-6 mt-0.5">
+        <div className="flex items-center justify-center w-6 h-6 flex-shrink-0">
           <GripVertical 
             className="w-5 h-5 text-foreground-subtle transition-opacity duration-fast cursor-grab active:cursor-grabbing" 
             onMouseDown={(e) => {
@@ -150,9 +150,9 @@ export const ListItem = ({
         </div>
 
         {/* Content */}
-        <div className="flex-1 min-w-0 ml-xs">
+        <div className="flex-1 min-w-0 ml-xs flex items-center">
           {isEditing ? (
-            <div className="relative">
+            <div className="relative w-full">
               <input
                 type="text"
                 value={localTitle}
@@ -165,67 +165,71 @@ export const ListItem = ({
                 onBlur={handleSave}
                 onKeyDown={handleKeyDown}
                 placeholder="Title..."
-                className={`w-full bg-input border border-input-border rounded-sm px-sm py-sm text-sm transition-colors duration-fast focus:border-input-border focus:ring-0 focus:ring-offset-0 focus:outline-none pr-10 ${
+                className={`w-full bg-input border border-input-border rounded-sm px-sm py-sm text-sm transition-colors duration-fast focus:border-input-border focus:ring-0 focus:ring-offset-0 focus:outline-none ${
                   item.isBold ? "font-bold text-base" : "font-normal"
                 }`}
                 autoFocus
               />
-              {/* Voice Edit Button */}
-              <button
-                onClick={() => toggleVoiceEdit(handleVoiceTranscription)}
-                disabled={isProcessing}
-                className={`absolute right-2 top-1/2 transform -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center transition-colors duration-fast ${
-                  isRecording 
-                    ? "bg-accent-red text-white animate-pulse" 
-                    : "text-foreground-muted hover:text-foreground hover:bg-background-subtle"
-                } ${isProcessing ? "opacity-50" : ""}`}
-              >
-                {isProcessing ? (
-                  <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <Mic className="w-3 h-3" />
-                )}
-              </button>
-              {/* Cancel Voice Edit Button */}
-              {isRecording && (
-                <button
-                  onClick={cancelVoiceEdit}
-                  className="absolute -right-1 -top-1 w-4 h-4 bg-accent-red rounded-full flex items-center justify-center hover:bg-accent-red/90 transition-colors duration-fast"
-                >
-                  <X className="w-2.5 h-2.5 text-white" />
-                </button>
-              )}
+              {/* Voice Edit Button - positioned as sibling */}
             </div>
           ) : (
-            <div className="flex items-center gap-sm">
-              <div
-                onClick={() => onEdit?.(item.id)}
-                className={`flex-1 cursor-text p-sm -m-sm rounded transition-colors duration-fast hover:bg-background-subtle flex items-center ${
-                  item.isBold
-                    ? "font-bold text-base text-foreground"
-                    : "font-light text-sm text-foreground leading-tight"
-                }`}
-              >
-                {item.title ? (
-                  <span>
-                    {item.title}
-                    {item.content && item.content.trim() && (
-                      <span className="text-foreground-subtle ml-xs">*</span>
-                    )}
-                  </span>
-                ) : (
-                  <span className="text-foreground-subtle italic">Click to add title...</span>
-                )}
-              </div>
+            <div
+              onClick={() => onEdit?.(item.id)}
+              className={`flex-1 cursor-text py-sm rounded transition-colors duration-fast hover:bg-background-subtle flex items-center ${
+                item.isBold
+                  ? "font-bold text-base text-foreground"
+                  : "font-light text-sm text-foreground leading-tight"
+              }`}
+            >
+              {item.title ? (
+                <span>
+                  {item.title}
+                  {item.content && item.content.trim() && (
+                    <span className="text-foreground-subtle ml-xs">*</span>
+                  )}
+                </span>
+              ) : (
+                <span className="text-foreground-subtle italic">Click to add title...</span>
+              )}
             </div>
           )}
         </div>
 
+        {/* Voice Edit Button - only show when editing */}
+        {isEditing && (
+          <div className="flex-shrink-0 ml-xs">
+            <button
+              onClick={() => toggleVoiceEdit(handleVoiceTranscription)}
+              disabled={isProcessing}
+              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors duration-fast touch-manipulation ${
+                isRecording 
+                  ? "bg-accent-red text-white animate-pulse" 
+                  : "text-foreground-muted hover:text-foreground hover:bg-background-subtle border border-border"
+              } ${isProcessing ? "opacity-50" : ""}`}
+            >
+              {isProcessing ? (
+                <div className="w-4 h-4 border border-current border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Mic className="w-4 h-4" />
+              )}
+            </button>
+            {/* Cancel Voice Edit Button */}
+            {isRecording && (
+              <button
+                onClick={cancelVoiceEdit}
+                className="absolute -top-1 -right-1 w-5 h-5 bg-accent-red rounded-full flex items-center justify-center hover:bg-accent-red/90 transition-colors duration-fast touch-manipulation z-10"
+              >
+                <X className="w-3 h-3 text-white" />
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Actions - Three Dots Menu */}
-        <div className="relative">
+        <div className="relative flex-shrink-0">
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="w-8 h-8 rounded-md border border-transparent hover:border-border text-foreground-subtle hover:text-foreground transition-colors duration-fast flex items-center justify-center"
+            className="w-8 h-8 rounded-md border border-transparent hover:border-border text-foreground-subtle hover:text-foreground transition-colors duration-fast flex items-center justify-center touch-manipulation"
           >
             <MoreVertical className="w-4 h-4" />
           </button>

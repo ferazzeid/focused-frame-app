@@ -121,7 +121,7 @@ export const MobileLayout = () => {
             {/* List Tab */}
             <button
               onClick={() => setActiveTab("free")}
-              className={`flex flex-col items-center justify-center py-sm text-xs font-medium transition-colors duration-fast rounded-md border border-border ${
+              className={`flex flex-col items-center justify-center h-12 text-xs font-medium transition-colors duration-fast rounded-md border border-border ${
                 activeTab === "free"
                   ? "bg-accent-green text-background border-accent-green"
                   : "text-foreground-muted hover:text-foreground bg-background-card"
@@ -133,20 +133,20 @@ export const MobileLayout = () => {
             {/* Second List Tab */}
             <button
               onClick={() => setActiveTab("second")}
-              className={`flex flex-col items-center justify-center py-sm text-xs font-medium transition-colors duration-fast rounded-md border border-border ${
+              className={`flex flex-col items-center justify-center h-12 text-xs font-medium transition-colors duration-fast rounded-md border border-border whitespace-nowrap ${
                 activeTab === "second"
                   ? "bg-accent-green text-background border-accent-green"
                   : "text-foreground-muted hover:text-foreground bg-background-card"
               }`}
             >
-              2<span className="text-xs">nd</span>
+              2nd
             </button>
 
             {/* Add Item Button */}
             <button
               onClick={handleAddItem}
               disabled={activeTab === "settings"}
-              className={`flex flex-col items-center justify-center py-sm text-xs font-medium transition-colors duration-fast rounded-md border border-border ${
+              className={`flex flex-col items-center justify-center h-12 text-xs font-medium transition-colors duration-fast rounded-md border border-border ${
                 activeTab === "settings"
                   ? "text-foreground-subtle bg-background-card border-border opacity-50 cursor-not-allowed"
                   : "text-foreground-muted hover:text-foreground bg-background-card hover:bg-background-hover"
@@ -160,64 +160,64 @@ export const MobileLayout = () => {
             <button
               onClick={handleAddSpace}
               disabled={activeTab === "settings"}
-              className={`flex flex-col items-center justify-center py-sm text-xs font-medium transition-colors duration-fast rounded-md border border-border ${
+              className={`flex flex-col items-center justify-center h-12 text-xs font-medium transition-colors duration-fast rounded-md border border-border ${
                 activeTab === "settings"
                   ? "text-foreground-subtle bg-background-card border-border opacity-50 cursor-not-allowed"
                   : "text-foreground-muted hover:text-foreground bg-background-card hover:bg-background-hover"
               }`}
             >
-              <Minus className="w-4 h-4 mb-0.5" />
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="w-4 h-4 mb-0.5">
+                <line x1="2" y1="8" x2="14" y2="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
               Space
             </button>
 
             {/* Recording Button */}
-            <div className="relative">
-              <button
-                onClick={toggleRecording}
-                disabled={isProcessing}
-                className={`w-full flex flex-col items-center justify-center py-sm text-xs font-medium transition-all duration-300 rounded-md border relative ${
-                  isRecording
-                    ? "text-white border-red-500 bg-red-500 animate-pulse"
-                    : isProcessing
-                      ? "text-background border-border/30 bg-accent-green/50 opacity-50"
-                      : "text-background border-accent-green bg-accent-green hover:bg-accent-green/90"
-                }`}
-                style={{
-                  animationDuration: isRecording ? "2s" : undefined,
-                }}
-              >
-                {isRecording ? (
-                  <>
-                    <Square className="w-4 h-4 mb-0.5" />
-                    <span className="text-xs font-mono leading-none">
-                      {formatTime(recordingTimeLeft)}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <Mic className={`w-4 h-4 mb-0.5 ${isProcessing ? 'animate-pulse' : ''}`} />
-                    <span className="leading-none">Rec</span>
-                  </>
-                )}
-                {pendingRecordings.length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-accent-red rounded-full text-xs text-white flex items-center justify-center">
-                    {pendingRecordings.length}
+            <button
+              onClick={toggleRecording}
+              disabled={isProcessing}
+              className={`flex flex-col items-center justify-center h-12 text-xs font-medium transition-all duration-300 rounded-md border relative ${
+                isRecording
+                  ? "text-white border-red-500 bg-red-500 animate-pulse"
+                  : isProcessing
+                    ? "text-background border-border/30 bg-accent-green/50 opacity-50"
+                    : "text-background border-accent-green bg-accent-green hover:bg-accent-green/90"
+              }`}
+              style={{
+                animationDuration: isRecording ? "2s" : undefined,
+              }}
+            >
+              {isRecording ? (
+                <>
+                  <Square className="w-4 h-4 mb-0.5" />
+                  <span className="text-xs font-mono leading-none">
+                    {formatTime(recordingTimeLeft)}
                   </span>
-                )}
-                {/* Cancel Recording Button */}
-                {isRecording && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      cancelRecording();
-                    }}
-                    className="absolute -top-1 -right-1 w-5 h-5 bg-accent-red rounded-full flex items-center justify-center hover:bg-accent-red/90 transition-colors duration-fast z-10"
-                  >
-                    <X className="w-3 h-3 text-white" />
-                  </button>
-                )}
-              </button>
-            </div>
+                </>
+              ) : (
+                <>
+                  <Mic className={`w-4 h-4 mb-0.5 ${isProcessing ? 'animate-pulse' : ''}`} />
+                  <span className="leading-none">Rec</span>
+                </>
+              )}
+              {pendingRecordings.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-accent-red rounded-full text-xs text-white flex items-center justify-center">
+                  {pendingRecordings.length}
+                </span>
+              )}
+              {/* Cancel Recording Button */}
+              {isRecording && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    cancelRecording();
+                  }}
+                  className="absolute -top-1 -right-1 w-5 h-5 bg-accent-red rounded-full flex items-center justify-center hover:bg-accent-red/90 transition-colors duration-fast z-10"
+                >
+                  <X className="w-3 h-3 text-white" />
+                </button>
+              )}
+            </button>
           </div>
         </nav>
       </div>
