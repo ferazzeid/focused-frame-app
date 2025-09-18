@@ -228,19 +228,6 @@ export const SecondList = () => {
       });
     }
   };
-    const newItem = createEmptyItem();
-    const newItems = [...items, newItem];
-    
-    if (validateEmptyLineRules(newItems)) {
-      saveItems(newItems);
-    } else {
-      toast({
-        title: "Cannot add empty line",
-        description: "No two consecutive empty lines allowed",
-        variant: "destructive",
-      });
-    }
-  };
 
   const updateItem = (id: string, title: string, content: string) => {
     console.log("updateItem called for id:", id, "with title:", title, "and content:", content);
