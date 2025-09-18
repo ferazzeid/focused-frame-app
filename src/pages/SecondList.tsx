@@ -444,10 +444,8 @@ export const SecondList = () => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col h-full">
-        <div className="flex-1 flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-        </div>
+      <div className="fixed inset-0 flex items-center justify-center bg-background z-50">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -460,7 +458,6 @@ export const SecondList = () => {
           <div className="text-center py-xl text-foreground-muted">
             <FileText className="w-12 h-12 mx-auto mb-md opacity-50" />
             <p className="text-sm">Your second list is empty</p>
-            <p className="text-xs mt-xs">Add your first item to get started</p>
           </div>
         ) : (
           items.map((item, index) => (
