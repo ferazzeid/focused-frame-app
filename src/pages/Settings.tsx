@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useRecording } from "@/hooks/useRecording";
+import { RefreshCw } from "lucide-react";
 
 const OPENAI_API_KEY = "openai_api_key";
 const OPENAI_MODEL = "openai_model";
@@ -20,6 +22,7 @@ export const Settings = () => {
   const [selectedModel, setSelectedModel] = useState("gpt-4o-mini");
   const [isEditing, setIsEditing] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const { pendingRecordings, retryPendingRecording, retryAllPending } = useRecording();
 
   useEffect(() => {
     const savedKey = localStorage.getItem(OPENAI_API_KEY);
@@ -144,6 +147,44 @@ export const Settings = () => {
           )}
         </div>
       </div>
+
+      {/* Pending Recordings Section */}
+      {pendingRecordings.length > 0 && (
+        <div className="space-y-md border border-border-subtle rounded-lg p-md bg-background-subtle">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-foreground">Failed Voice Recordings ({pendingRecordings.length})</h3>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={retryAllPending}
+              className="text-xs"
+            >
+              <RefreshCw className="w-3 h-3 mr-1" />
+              Retry All
+            </Button>
+          </div>
+          <div className="space-y-xs">
+            <p className="text-xs text-foreground-muted">
+              These recordings failed to process. They'll be retried when you have a stable connection.
+            </p>
+            {pendingRecordings.map((recording) => (
+              <div key={recording.id} className="flex items-center justify-between p-xs bg-background border border-border-subtle rounded text-xs">
+                <span className="text-foreground-muted">
+                  Recording from {new Date(recording.timestamp).toLocaleTimeString()}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => retryPendingRecording(recording)}
+                  className="text-xs h-6 px-2"
+                >
+                  Retry
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

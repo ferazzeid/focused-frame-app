@@ -1,24 +1,60 @@
-import React, { useState, useRef } from 'react';
-import { MobileButton } from '@/components/ui/mobile-button';
-import { Mic, MicOff, Square } from 'lucide-react';
+import { useState, useRef } from 'react';
 import { speechService, TranscriptionResult } from '@/lib/speechService';
-import { createTextItem } from '@/lib/storage';
-import { loadData, saveData } from '@/lib/storage';
+import { createTextItem, loadData, saveData, generateId } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
 
-export const Speech = () => {
+interface PendingRecording {
+  id: string;
+  audioBlob: Blob;
+  timestamp: number;
+}
+
+export const useRecording = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [pendingRecordings, setPendingRecordings] = useState<PendingRecording[]>([]);
+  
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const { toast } = useToast();
 
-  const requestMicrophonePermission = async () => {
+  // Load pending recordings from localStorage on initialization
+  const loadPendingRecordings = () => {
+    try {
+      const stored = localStorage.getItem('pending_recordings');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // Note: We can't restore Blob objects from localStorage, so we'll just clear them
+        localStorage.removeItem('pending_recordings');
+      }
+    } catch (error) {
+      console.error('Failed to load pending recordings:', error);
+    }
+  };
+
+  const savePendingRecording = (audioBlob: Blob) => {
+    const recording: PendingRecording = {
+      id: generateId(),
+      audioBlob,
+      timestamp: Date.now(),
+    };
+    
+    // We can't store Blob in localStorage, so we'll keep it in memory for now
+    // In a real app, you'd want to use IndexedDB for this
+    setPendingRecordings(prev => [...prev, recording]);
+    return recording.id;
+  };
+
+  const removePendingRecording = (id: string) => {
+    setPendingRecordings(prev => prev.filter(r => r.id !== id));
+  };
+
+  const requestMicrophonePermission = async (): Promise<boolean> => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       setHasPermission(true);
-      stream.getTracks().forEach(track => track.stop()); // Clean up
+      stream.getTracks().forEach(track => track.stop());
       return true;
     } catch (error) {
       setHasPermission(false);
@@ -77,16 +113,18 @@ export const Speech = () => {
     }
   };
 
-  const processRecording = async (audioBlob: Blob) => {
+  const processRecording = async (audioBlob: Blob, recordingId?: string) => {
     setIsProcessing(true);
     
     try {
       // Check if API key exists
       const apiKey = localStorage.getItem('openai_api_key');
       if (!apiKey) {
+        // Save for later retry
+        const id = recordingId || savePendingRecording(audioBlob);
         toast({
           title: "API Key Missing",
-          description: "Please set your OpenAI API key in Settings first.",
+          description: "Please set your OpenAI API key in Settings first. Recording saved for retry.",
           variant: "destructive",
         });
         setIsProcessing(false);
@@ -111,99 +149,67 @@ export const Speech = () => {
       };
       saveData(updatedData);
 
+      // Remove from pending if it was a retry
+      if (recordingId) {
+        removePendingRecording(recordingId);
+      }
+
       toast({
         title: "Voice Note Created",
         description: `Added: "${result.summary}"`,
       });
 
-      // Reset state
       setIsProcessing(false);
     } catch (error) {
       console.error('Processing failed:', error);
-      toast({
-        title: "Processing Failed",
-        description: error instanceof Error ? error.message : "Failed to process audio. Please try again.",
-        variant: "destructive",
-      });
+      
+      // Save for retry if not already saved
+      if (!recordingId) {
+        const id = savePendingRecording(audioBlob);
+        toast({
+          title: "Processing Failed",
+          description: "Recording saved. You can retry from pending recordings.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Processing Failed",
+          description: error instanceof Error ? error.message : "Failed to process audio. Please try again.",
+          variant: "destructive",
+        });
+      }
+      
       setIsProcessing(false);
     }
   };
 
-  const getButtonState = () => {
-    if (isProcessing) {
-      return {
-        text: "Processing...",
-        variant: "outline" as const,
-        disabled: true,
-        icon: <Mic className="w-6 h-6 animate-pulse" />
-      };
-    }
-    
-    if (isRecording) {
-      return {
-        text: "Stop Recording",
-        variant: "destructive" as const,
-        disabled: false,
-        icon: <Square className="w-6 h-6" />
-      };
-    }
-    
-    return {
-      text: "Start Recording",
-      variant: "primary" as const,
-      disabled: false,
-      icon: <Mic className="w-6 h-6" />
-    };
+  const retryPendingRecording = (recording: PendingRecording) => {
+    processRecording(recording.audioBlob, recording.id);
   };
 
-  const buttonState = getButtonState();
+  const retryAllPending = () => {
+    pendingRecordings.forEach(recording => {
+      retryPendingRecording(recording);
+    });
+  };
 
-  return (
-    <div className="flex flex-col items-center justify-center h-full p-lg">
-      <div className="flex flex-col items-center gap-xl max-w-sm mx-auto text-center">
-        <div className="space-y-md">
-          <h2 className="text-xl font-medium text-foreground">Voice Notes</h2>
-          <p className="text-sm text-foreground-muted font-normal">
-            Record your ideas and they'll be automatically transcribed with a 3-word summary as the title.
-          </p>
-        </div>
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
 
-        {hasPermission === false && (
-          <div className="p-md bg-background-subtle border border-border-subtle rounded-lg">
-            <p className="text-sm text-foreground-muted">
-              Microphone access is required for voice recording. Please allow access when prompted.
-            </p>
-          </div>
-        )}
-
-        <div className="flex flex-col items-center gap-lg">
-          <div className={`w-24 h-24 rounded-full flex items-center justify-center transition-all duration-300 ${
-            isRecording 
-              ? "bg-accent-red/20 border-2 border-accent-red animate-pulse" 
-              : isProcessing 
-                ? "bg-accent-blue/20 border-2 border-accent-blue" 
-                : "bg-background-subtle border-2 border-border"
-          }`}>
-            {buttonState.icon}
-          </div>
-
-          <MobileButton
-            variant={buttonState.variant}
-            size="lg"
-            onClick={isRecording ? stopRecording : startRecording}
-            disabled={buttonState.disabled}
-            className="min-w-40 font-normal"
-          >
-            {buttonState.text}
-          </MobileButton>
-        </div>
-
-        <div className="text-xs text-foreground-muted space-y-xs">
-          <p>• Tap to start recording your voice</p>
-          <p>• Tap again to stop and process</p>
-          <p>• Your note will be added to your list automatically</p>
-        </div>
-      </div>
-    </div>
-  );
+  return {
+    isRecording,
+    isProcessing,
+    hasPermission,
+    pendingRecordings,
+    startRecording,
+    stopRecording,
+    toggleRecording,
+    retryPendingRecording,
+    retryAllPending,
+  };
 };
