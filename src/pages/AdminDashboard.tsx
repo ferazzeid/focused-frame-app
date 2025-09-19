@@ -156,12 +156,28 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
           </div>
           <div className="bg-background-card border border-border rounded-md p-md space-y-md">
             {sharedKeyStatus.hasKey && (
-              <div className="p-sm bg-background-subtle rounded-md border border-border">
+              <div className="p-sm bg-success/10 border border-success/20 rounded-md">
+                <div className="flex items-center gap-xs mb-xs">
+                  <div className="w-2 h-2 bg-success rounded-full"></div>
+                  <p className="text-sm font-medium text-foreground">Shared API Key Active</p>
+                </div>
                 <p className="text-sm text-foreground">
-                  <span className="font-medium">Current shared key:</span> {sharedKeyStatus.keyPreview}
+                  <span className="font-medium">Key Preview:</span> {sharedKeyStatus.keyPreview}
                 </p>
                 <p className="text-xs text-foreground-subtle mt-xs">
-                  This key is available to all premium users
+                  This key is available to all premium users for AI features
+                </p>
+              </div>
+            )}
+            
+            {!sharedKeyStatus.hasKey && (
+              <div className="p-sm bg-warning/10 border border-warning/20 rounded-md">
+                <div className="flex items-center gap-xs mb-xs">
+                  <div className="w-2 h-2 bg-warning rounded-full"></div>
+                  <p className="text-sm font-medium text-foreground">No Shared API Key</p>
+                </div>
+                <p className="text-xs text-foreground-subtle">
+                  Premium users will need to use their own API keys until a shared key is configured
                 </p>
               </div>
             )}
@@ -186,7 +202,9 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
               variant="primary"
               className="w-full"
             >
-              {sharedApiKey ? "Update Shared API Key" : "Save Shared API Key"}
+              {sharedApiKey.trim() ? 
+                (sharedKeyStatus.hasKey ? "Update Shared API Key" : "Save Shared API Key") : 
+                "Remove Shared API Key"}
             </MobileButton>
           </div>
         </div>
