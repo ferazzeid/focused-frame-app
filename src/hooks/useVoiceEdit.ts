@@ -93,17 +93,6 @@ export const useVoiceEdit = () => {
     setIsProcessing(true);
     
     try {
-      // Check if API key exists
-      const apiKey = localStorage.getItem('openai_api_key');
-      if (!apiKey) {
-        toast({
-          title: "API Key Missing",
-          description: "Please set your OpenAI API key in Settings first.",
-          variant: "destructive",
-        });
-        setIsProcessing(false);
-        return;
-      }
 
       toast({
         title: "Processing Voice",

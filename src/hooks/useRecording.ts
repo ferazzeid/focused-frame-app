@@ -169,20 +169,6 @@ export const useRecording = (onItemAdded?: () => void) => {
     setIsProcessing(true);
     
     try {
-      // Check if API key exists
-      const apiKey = localStorage.getItem('openai_api_key');
-      if (!apiKey) {
-        // Save for later retry
-        const id = recordingId || savePendingRecording(audioBlob);
-        toast({
-          title: "API Key Missing",
-          description: "Please set your OpenAI API key in Settings first. Recording saved for retry.",
-          variant: "destructive",
-        });
-        setIsProcessing(false);
-        return;
-      }
-
       // Check if multi-item is enabled
       const multiItemEnabled = localStorage.getItem('multi_item_enabled') === 'true';
       
