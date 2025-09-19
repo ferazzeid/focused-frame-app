@@ -98,3 +98,43 @@
     background: hsl(var(--border-focus));
   }
 }
+
+/* Animation keyframes */
+@keyframes slide-out-left {
+  to {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Microphone button isolation for mobile */
+.mic-button-container .mic-button-zone {
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+}
+
+.mic-button-container .mic-button-zone * {
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+}
+
+/* Ensure proper layering */
+.mic-button-zone {
+  isolation: isolate;
+}
+
+.mic-button-zone button {
+  position: relative;
+  z-index: 10;
+}

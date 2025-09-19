@@ -236,13 +236,15 @@ export const ListItem = ({
         )}
         
         <div
-          className={`group flex items-center gap-sm p-sm rounded-md transition-all duration-fast min-h-[3rem] ${
+          className={`group flex items-center gap-sm p-sm rounded-md transition-all duration-fast min-h-[3rem] relative ${
             isSelected
               ? "border-2 border-accent-red bg-accent-red/5"
               : "border border-border"
           } ${isChild ? "ml-lg" : ""} ${
             isDeleting ? "animate-slide-out-left" : ""
-          } ${isDragging ? "opacity-50 scale-95 rotate-1 shadow-lg" : ""}`}
+          } ${isDragging ? "opacity-50 scale-95 rotate-1 shadow-lg" : ""} ${
+            isEditing ? "mic-button-container" : ""
+          }`}
           draggable={!isTouch}
           onDragStart={(e) => onDragStart?.(e, item.id)}
           onDragOver={onDragOver}
@@ -250,16 +252,27 @@ export const ListItem = ({
           onDrop={(e) => onDrop?.(e, item.id)}
           onTouchStart={(e) => onTouchStart?.(e, item.id)}
           onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
+          onTouchEnd={(e) => {
+            // Special handling for mobile touch to prevent interference with mic button
+            if ((e.target as HTMLElement).closest('.mic-button-zone')) {
+              e.stopPropagation();
+              return;
+            }
+            onTouchEnd?.(e);
+          }}
           onClick={(e) => {
-            // Don't trigger selection if clicking on interactive elements
-            if (isEditing || e.target !== e.currentTarget && 
-                !(e.target as HTMLElement).closest('.content-area')) {
+            // Don't trigger selection if clicking on microphone button or interactive elements
+            if (isEditing || 
+                (e.target as HTMLElement).closest('.mic-button-zone') ||
+                (e.target !== e.currentTarget && !(e.target as HTMLElement).closest('.content-area'))) {
               return;
             }
             onSelect?.(item.id);
           }}
           data-item-id={item.id}
+          style={{
+            pointerEvents: isEditing ? 'auto' : 'auto'
+          }}
         >
         {/* Enhanced Drag Handle */}
         <div className={`flex items-center justify-center flex-shrink-0 transition-all duration-fast ${
@@ -324,43 +337,79 @@ export const ListItem = ({
           )}
         </div>
 
-        {/* Voice Edit Button - only show when editing */}
+        {/* Voice Edit Button - Absolutely positioned for mobile isolation */}
         {isEditing && (
-          <div className="flex-shrink-0 ml-xs relative">
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                toggleVoiceEdit(handleVoiceTranscription);
-              }}
-              disabled={isProcessing}
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors duration-fast touch-manipulation min-w-12 min-h-12 ${
-                isRecording 
-                  ? "bg-accent-red text-white animate-pulse" 
-                  : "text-foreground-muted hover:text-foreground hover:bg-background-subtle border-2 border-border bg-background-card"
-              } ${isProcessing ? "opacity-50" : ""}`}
-              type="button"
-            >
-              {isProcessing ? (
-                <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <Mic className="w-6 h-6" />
-              )}
-            </button>
-            {/* Cancel Voice Edit Button */}
-            {isRecording && (
+          <div 
+            className="mic-button-zone absolute right-12 top-1/2 -translate-y-1/2 z-20"
+            style={{
+              pointerEvents: 'auto',
+              touchAction: 'manipulation'
+            }}
+          >
+            <div className="relative">
               <button
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  cancelVoiceEdit();
+                  console.log('Microphone button clicked');
+                  toggleVoiceEdit(handleVoiceTranscription);
                 }}
-                className="absolute -top-1 -right-1 w-6 h-6 bg-accent-red rounded-full flex items-center justify-center hover:bg-accent-red/90 transition-colors duration-fast touch-manipulation z-10"
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Microphone button touched');
+                  toggleVoiceEdit(handleVoiceTranscription);
+                }}
+                disabled={isProcessing}
+                className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-fast shadow-lg min-w-14 min-h-14 ${
+                  isRecording 
+                    ? "bg-accent-red text-white animate-pulse shadow-accent-red/40 scale-105" 
+                    : "text-foreground-muted hover:text-foreground hover:bg-background-subtle border-2 border-border bg-background-card hover:shadow-xl hover:scale-105 active:scale-95"
+                } ${isProcessing ? "opacity-75 cursor-wait" : "cursor-pointer"}`}
                 type="button"
+                style={{
+                  pointerEvents: 'auto',
+                  touchAction: 'manipulation',
+                  zIndex: 30
+                }}
+                aria-label={isRecording ? "Stop recording" : "Start voice recording"}
               >
-                <X className="w-4 h-4 text-white" />
+                {isProcessing ? (
+                  <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Mic className={`transition-all duration-fast ${isRecording ? 'w-7 h-7' : 'w-6 h-6'}`} />
+                )}
               </button>
-            )}
+              {/* Cancel Voice Edit Button */}
+              {isRecording && (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Cancel voice button clicked');
+                    cancelVoiceEdit();
+                  }}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    cancelVoiceEdit();
+                  }}
+                  className="absolute -top-2 -right-2 w-7 h-7 bg-accent-red rounded-full flex items-center justify-center hover:bg-accent-red/90 transition-all duration-fast shadow-lg z-40 border border-white"
+                  type="button"
+                  style={{
+                    pointerEvents: 'auto',
+                    touchAction: 'manipulation'
+                  }}
+                  aria-label="Cancel voice recording"
+                >
+                  <X className="w-4 h-4 text-white" />
+                </button>
+              )}
+            </div>
           </div>
         )}
 
