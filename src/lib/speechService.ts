@@ -97,7 +97,7 @@ export class SpeechService {
     const apiKey = await this.getApiKey();
     const selectedModel = localStorage.getItem('openai_model') || 'gpt-5-nano-2025-08-07';
     const summaryPrompt = localStorage.getItem('summary_prompt') || 
-      'You are a helpful assistant that creates concise 3-word summaries. Respond with exactly 3 words, no punctuation, no extra text.';
+      'You are an expert at creating meaningful 3-word summaries that capture the essence and main action/topic of content. Focus on the core meaning, not just the first words. Examples: "Fix Trash Icon", "Track Food Weight", "Implement Summary Feature", "Discuss App Changes". Respond with exactly 3 words that best represent the main point, no punctuation, no extra text.';
     
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -194,19 +194,50 @@ export class SpeechService {
   }
 
   private generateQuickSummary(transcript: string): string {
-    // Simple local summarization - take meaningful words and create a proper title
-    const words = transcript.trim().split(/\s+/).filter(word => 
-      word.length > 2 && !['the', 'and', 'but', 'for', 'are', 'was', 'were', 'been', 'have', 'has', 'had', 'will', 'would', 'could', 'should', 'this', 'that', 'with', 'from', 'they', 'them', 'what', 'when', 'where', 'who', 'how', 'why'].includes(word.toLowerCase())
-    );
+    // Intelligent local summarization - extract key actions, objects, and topics
+    const text = transcript.toLowerCase().trim();
     
-    if (words.length === 0) {
-      // Extract first few words regardless if no meaningful words found
-      const allWords = transcript.trim().split(/\s+/);
-      return allWords.slice(0, 3).join(' ') || 'Voice Note';
+    // Look for action words and key topics
+    const actionWords = ['fix', 'create', 'implement', 'add', 'remove', 'update', 'change', 'track', 'make', 'build', 'test', 'check', 'discuss', 'review', 'plan', 'need', 'should', 'want'];
+    const words = text.split(/\s+/).filter(word => word.length > 2);
+    
+    let keyWords: string[] = [];
+    
+    // Find action words first
+    const foundAction = words.find(word => actionWords.includes(word));
+    if (foundAction) {
+      keyWords.push(foundAction);
     }
     
-    // Take the first 3 meaningful words and capitalize them properly
-    const summary = words.slice(0, 3).map(word => 
+    // Look for important nouns/topics (avoid common words)
+    const stopWords = ['the', 'and', 'but', 'for', 'are', 'was', 'were', 'been', 'have', 'has', 'had', 'will', 'would', 'could', 'should', 'this', 'that', 'with', 'from', 'they', 'them', 'what', 'when', 'where', 'who', 'how', 'why', 'need', 'want', 'think', 'know', 'mean', 'just', 'really', 'actually', 'probably', 'maybe'];
+    
+    const meaningfulWords = words.filter(word => 
+      !stopWords.includes(word) && 
+      !keyWords.includes(word) &&
+      word.length > 2
+    );
+    
+    // Add the most meaningful words
+    keyWords = keyWords.concat(meaningfulWords.slice(0, 3 - keyWords.length));
+    
+    // If still not enough words, take first few non-stop words
+    if (keyWords.length < 3) {
+      const remainingWords = words.filter(word => 
+        !stopWords.includes(word) && 
+        !keyWords.includes(word)
+      );
+      keyWords = keyWords.concat(remainingWords.slice(0, 3 - keyWords.length));
+    }
+    
+    // Fallback to first words if nothing meaningful found
+    if (keyWords.length === 0) {
+      const allWords = transcript.trim().split(/\s+/);
+      keyWords = allWords.slice(0, 3);
+    }
+    
+    // Capitalize and format
+    const summary = keyWords.slice(0, 3).map(word => 
       word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
     ).join(' ');
     
