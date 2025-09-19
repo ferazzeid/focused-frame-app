@@ -23,6 +23,7 @@ interface ListItemProps {
   sendToSecondListLabel?: string;
   onDragStart?: (e: React.DragEvent, id: string) => void;
   onDragOver?: (e: React.DragEvent) => void;
+  onDragEnd?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent, targetId: string) => void;
   isEditing?: boolean;
   isSelected?: boolean;
@@ -44,6 +45,7 @@ export const ListItem = ({
   sendToSecondListLabel = "Send to 2nd List",
   onDragStart,
   onDragOver,
+  onDragEnd,
   onDrop,
   isEditing = false,
   isSelected = false,
@@ -161,6 +163,7 @@ export const ListItem = ({
           draggable
           onDragStart={(e) => onDragStart?.(e, item.id)}
           onDragOver={onDragOver}
+          onDragEnd={onDragEnd}
           onDrop={(e) => onDrop?.(e, item.id)}
           data-item-id={item.id}
         >
@@ -216,6 +219,7 @@ export const ListItem = ({
         draggable
         onDragStart={(e) => onDragStart?.(e, item.id)}
         onDragOver={onDragOver}
+        onDragEnd={onDragEnd}
         onDrop={(e) => onDrop?.(e, item.id)}
         onClick={(e) => {
           // Don't trigger selection if clicking on interactive elements

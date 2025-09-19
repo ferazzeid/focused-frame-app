@@ -529,9 +529,22 @@ export const SecondList = () => {
     }
   };
 
+  const clearDragState = () => {
+    setDraggedItem(null);
+    setDragOverItem(null);
+  };
+
   const handleDragStart = (e: React.DragEvent, id: string) => {
     setDraggedItem(id);
     e.dataTransfer.effectAllowed = 'move';
+    
+    // Set a fallback timeout to clear state in case drag gets stuck
+    setTimeout(() => {
+      if (draggedItem === id) {
+        console.log("Drag timeout - clearing stuck state");
+        clearDragState();
+      }
+    }, 10000); // 10 second timeout
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -540,7 +553,6 @@ export const SecondList = () => {
     
     // Find which item we're hovering over by looking at the target element
     const target = e.currentTarget as HTMLElement;
-    const rect = target.getBoundingClientRect();
     const itemId = target.closest('[data-item-id]')?.getAttribute('data-item-id');
     
     if (itemId && itemId !== draggedItem) {
@@ -548,12 +560,22 @@ export const SecondList = () => {
     }
   };
 
+  const handleDragEnd = (e: React.DragEvent) => {
+    // Always clear drag state when drag ends, regardless of success/failure
+    console.log("Drag ended - clearing all drag state");
+    clearDragState();
+  };
+
   const handleDrop = (e: React.DragEvent, targetId: string) => {
     e.preventDefault();
+    console.log("Drop event triggered for target:", targetId);
+    
+    // Clear drag over state immediately
     setDragOverItem(null);
     
     if (!draggedItem || draggedItem === targetId) {
-      setDraggedItem(null);
+      console.log("Invalid drop - no dragged item or same target");
+      clearDragState();
       return;
     }
 
@@ -561,7 +583,8 @@ export const SecondList = () => {
     const targetIndex = items.findIndex(item => item.id === targetId);
     
     if (draggedIndex === -1 || targetIndex === -1) {
-      setDraggedItem(null);
+      console.log("Invalid indices - clearing drag state");
+      clearDragState();
       return;
     }
 
@@ -615,7 +638,8 @@ export const SecondList = () => {
       });
     }
     
-    setDraggedItem(null);
+    // Always clear all drag state at end of drop
+    clearDragState();
   };
 
   if (isLoading) {
@@ -653,6 +677,7 @@ export const SecondList = () => {
               onViewContent={handleViewContent}
               onDragStart={handleDragStart}
               onDragOver={handleDragOver}
+              onDragEnd={handleDragEnd}
               onDrop={handleDrop}
               isDragOver={dragOverItem === item.id}
               isChild={childFlags[index]}
