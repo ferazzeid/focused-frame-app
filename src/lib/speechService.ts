@@ -19,18 +19,11 @@ export class SpeechService {
   }
 
   private getEffectiveApiKey(): string | null {
-    // Priority: Personal Key → Legacy Key (backwards compatibility) → null
+    // Only check for personal API key
     const personalKey = localStorage.getItem('personal_openai_api_key');
     if (personalKey) {
       console.log('Using personal OpenAI API key');
       return personalKey;
-    }
-
-    // Backwards compatibility with existing localStorage key
-    const legacyKey = localStorage.getItem('openai_api_key');
-    if (legacyKey) {
-      console.log('Using legacy OpenAI API key');
-      return legacyKey;
     }
 
     return null;
@@ -61,7 +54,7 @@ export class SpeechService {
   }
 
   private async getApiKey(): Promise<string> {
-    // Try local keys first (personal, then legacy)
+    // Try personal key first
     const localKey = this.getEffectiveApiKey();
     if (localKey) {
       return localKey;

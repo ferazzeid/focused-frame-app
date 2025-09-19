@@ -64,10 +64,6 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
         
         if (error) throw error;
         
-        toast({
-          title: "Success",
-          description: "Shared OpenAI API key saved successfully. Please update the OPENAI_API_KEY secret in Supabase dashboard.",
-        });
         setSharedApiKey("");
         loadSharedKeyStatus();
       } catch (error) {
@@ -86,10 +82,6 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
         
         if (error) throw error;
         
-        toast({
-          title: "Success",
-          description: "Shared OpenAI API key removed. Please remove the OPENAI_API_KEY secret from Supabase dashboard.",
-        });
         loadSharedKeyStatus();
       } catch (error) {
         console.error('Error removing shared key:', error);
