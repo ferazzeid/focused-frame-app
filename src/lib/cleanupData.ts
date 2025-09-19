@@ -6,6 +6,7 @@ import { ListItemData } from "@/components/ListItem";
 export const cleanupItems = (items: ListItemData[]): ListItemData[] => {
   console.log("=== Starting cleanup process ===");
   console.log("Original items:", items.length);
+  console.log("Items before cleanup:", items.map((item, i) => ({ index: i, title: item.title, isEmpty: item.isEmpty })));
   
   const cleaned: ListItemData[] = [];
   
@@ -18,11 +19,11 @@ export const cleanupItems = (items: ListItemData[]): ListItemData[] => {
       continue;
     }
     
-    // Skip consecutive dividers
+    // Skip consecutive dividers - HARD RULE ENFORCEMENT
     if (item.isEmpty) {
       const lastItem = cleaned[cleaned.length - 1];
       if (lastItem && lastItem.isEmpty) {
-        console.log(`Removing consecutive divider at index ${i}`);
+        console.log(`REMOVING CONSECUTIVE DIVIDER at index ${i} - HARD RULE VIOLATION`);
         continue; // Skip this divider
       }
     }
@@ -31,6 +32,7 @@ export const cleanupItems = (items: ListItemData[]): ListItemData[] => {
   }
   
   console.log("Cleaned items:", cleaned.length);
+  console.log("Items after cleanup:", cleaned.map((item, i) => ({ index: i, title: item.title, isEmpty: item.isEmpty })));
   console.log("=== Cleanup complete ===");
   return cleaned;
 };

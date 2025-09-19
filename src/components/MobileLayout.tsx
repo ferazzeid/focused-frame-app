@@ -38,10 +38,15 @@ export const MobileLayout = () => {
   const { isAdmin, isLoading } = useUserRole();
   
   useEffect(() => {
-    // Load second list setting on mount
+    // Load settings on mount
     const savedSecondListSetting = localStorage.getItem("show_second_list");
     if (savedSecondListSetting !== null) {
       setShowSecondList(JSON.parse(savedSecondListSetting));
+    }
+    
+    const savedButtonPosition = localStorage.getItem("button_position");
+    if (savedButtonPosition) {
+      setButtonPosition(savedButtonPosition);
     }
   }, []);
   
@@ -101,6 +106,26 @@ export const MobileLayout = () => {
               <h1 className="text-xl font-medium text-foreground">Second List</h1>
             </div>
             <div className="flex items-center gap-sm">
+              {/* Header Action Buttons - Only show when buttonPosition is "header" and not in settings/admin */}
+              {buttonPosition === "header" && activeTab !== "settings" && activeTab !== "admin" && (
+                <>
+                  <button
+                    onClick={handleAddItem}
+                    className="p-sm transition-colors duration-fast rounded-md text-foreground-muted hover:text-foreground border border-border bg-background-card"
+                    title="Add Item"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={handleAddSpace}
+                    className="p-sm transition-colors duration-fast rounded-md text-foreground-muted hover:text-foreground border border-border bg-background-card"
+                    title="Add Divider"
+                  >
+                    <MoreHorizontal className="w-4 h-4" />
+                  </button>
+                </>
+              )}
+              
               {/* Admin Dashboard Button - Only visible to admins and only in settings */}
               {!isLoading && isAdmin && activeTab === "settings" && (
                 <button
@@ -146,7 +171,11 @@ export const MobileLayout = () => {
 
         {/* Fixed Bottom Navigation */}
         <nav className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm z-10 p-md">
-          <div className={`grid gap-xs transition-all duration-300 ${showSecondList ? 'grid-cols-5' : 'grid-cols-4'}`}>
+          <div className={`grid gap-xs transition-all duration-300 ${
+            buttonPosition === "header" 
+              ? showSecondList ? 'grid-cols-3' : 'grid-cols-2' 
+              : showSecondList ? 'grid-cols-5' : 'grid-cols-4'
+          }`}>
             {/* List Tab */}
             <button
               onClick={() => setActiveTab("free")}
@@ -173,31 +202,36 @@ export const MobileLayout = () => {
               </button>
             )}
 
-            {/* Add Item Button */}
-            <button
-              onClick={handleAddItem}
-              disabled={activeTab === "settings" || activeTab === "admin"}
-              className={`flex flex-col items-center justify-center h-12 text-xs font-medium transition-colors duration-fast rounded-md border border-border ${
-                activeTab === "settings" || activeTab === "admin"
-                  ? "text-foreground-subtle bg-background-card border-border opacity-50 cursor-not-allowed"
-                  : "text-foreground hover:text-foreground bg-background-card hover:bg-background-card border-border"
-              }`}
-            >
-              <Plus className="w-5 h-5" />
-            </button>
+            {/* Action Buttons - Only show when buttonPosition is "bottom" */}
+            {buttonPosition === "bottom" && (
+              <>
+                {/* Add Item Button */}
+                <button
+                  onClick={handleAddItem}
+                  disabled={activeTab === "settings" || activeTab === "admin"}
+                  className={`flex flex-col items-center justify-center h-12 text-xs font-medium transition-colors duration-fast rounded-md border border-border ${
+                    activeTab === "settings" || activeTab === "admin"
+                      ? "text-foreground-subtle bg-background-card border-border opacity-50 cursor-not-allowed"
+                      : "text-foreground hover:text-foreground bg-background-card hover:bg-background-card border-border"
+                  }`}
+                >
+                  <Plus className="w-5 h-5" />
+                </button>
 
-            {/* Space Button */}
-            <button
-              onClick={handleAddSpace}
-              disabled={activeTab === "settings" || activeTab === "admin"}
-              className={`flex flex-col items-center justify-center h-12 text-xs font-medium transition-colors duration-fast rounded-md border border-border ${
-                activeTab === "settings" || activeTab === "admin"
-                  ? "text-foreground-subtle bg-background-card border-border opacity-50 cursor-not-allowed"
-                  : "text-foreground hover:text-foreground bg-background-card hover:bg-background-card border-border"
-              }`}
-            >
-              <MoreHorizontal className="w-5 h-5" />
-            </button>
+                {/* Space Button */}
+                <button
+                  onClick={handleAddSpace}
+                  disabled={activeTab === "settings" || activeTab === "admin"}
+                  className={`flex flex-col items-center justify-center h-12 text-xs font-medium transition-colors duration-fast rounded-md border border-border ${
+                    activeTab === "settings" || activeTab === "admin"
+                      ? "text-foreground-subtle bg-background-card border-border opacity-50 cursor-not-allowed"
+                      : "text-foreground hover:text-foreground bg-background-card hover:bg-background-card border-border"
+                  }`}
+                >
+                  <MoreHorizontal className="w-5 h-5" />
+                </button>
+              </>
+            )}
 
             {/* Recording Button */}
             <button
