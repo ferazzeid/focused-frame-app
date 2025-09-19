@@ -286,37 +286,57 @@ export const SecondList = () => {
     console.log("Deleting item with id:", id);
     
     const itemToDelete = items.find(item => item.id === id);
-    console.log("Item to delete:", itemToDelete);
+    console.log("Item to delete:", itemToDelete?.title || "Empty item", "- isEmpty:", itemToDelete?.isEmpty);
     
     if (!itemToDelete) {
       console.log("Item not found, aborting delete");
       return;
     }
 
+    // Store original state for potential rollback
+    const originalItems = [...items];
+    
     try {
-      console.log("Starting delete process...");
+      console.log("Starting optimistic update...");
       
-      // Archive the item (treating as delete for now)
+      // OPTIMISTIC UPDATE: Update UI immediately
+      const newItems = items.filter(item => item.id !== id);
+      const cleanedItems = cleanupItems(newItems); // Clean up any consecutive dividers
+      
+      console.log("Items before delete:", items.length);
+      console.log("Items after filter:", newItems.length); 
+      console.log("Items after cleanup:", cleanedItems.length);
+      
+      // Update UI state immediately
+      setItems(cleanedItems);
+      console.log("UI updated optimistically");
+      
+      // Now do the async operations
+      console.log("Archiving item...");
       await archiveItem(itemToDelete);
       console.log("Item archived successfully");
 
-      // Remove from current list  
-      const newItems = items.filter(item => item.id !== id);
-      console.log("Items before save:", items.length);
-      console.log("Items after filter:", newItems.length);
-      
-      await saveItems(newItems);
-      console.log("Delete completed successfully");
+      // Save to database without reloading data to avoid overwriting our state
+      console.log("Saving to database...");
+      const currentData = await loadData();
+      currentData.secondList = cleanedItems;
+      await saveData(currentData);
+      console.log("Database updated successfully");
 
       toast({
         title: "Item deleted",
-        description: "Item has been removed",
+        description: "Item has been successfully deleted.",
       });
     } catch (error) {
       console.error("Error deleting item:", error);
+      
+      // ROLLBACK: Restore original state if anything failed
+      console.log("Rolling back to original state");
+      setItems(originalItems);
+      
       toast({
-        title: "Error deleting item",
-        description: "Failed to delete the item",
+        title: "Error",
+        description: "Failed to delete item. Please try again.",
         variant: "destructive",
       });
     }
