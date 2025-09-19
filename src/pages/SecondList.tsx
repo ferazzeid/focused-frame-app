@@ -101,7 +101,7 @@ export const SecondList = () => {
     console.log("saveItems called with:", newItems.length, "items");
     try {
       const data = await loadData();
-      data.freeList = newItems;
+      data.secondList = newItems;
       await saveData(data);
       setItems(newItems);
       console.log("Items saved and state updated");
@@ -277,16 +277,16 @@ export const SecondList = () => {
     if (!itemToDelete) return;
 
     try {
-      // Archive the item
+      // Archive the item (treating as delete for now)
       await archiveItem(itemToDelete);
 
-      // Remove from current list
+      // Remove from current list  
       const newItems = items.filter(item => item.id !== id);
       await saveItems(newItems);
 
       toast({
-        title: "Item archived",
-        description: "Item moved to archive (cannot be permanently deleted in free version)",
+        title: "Item deleted",
+        description: "Item has been removed",
       });
     } catch (error) {
       console.error("Error deleting item:", error);
