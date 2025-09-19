@@ -95,13 +95,13 @@ export const ListItem = ({
         }
       }
       
+      // Only update the title (not content), and stay in editing mode
       setLocalTitle(processedText);
       
-      // CRITICAL: Mark this as a successful voice update
-      setTimeout(() => {
-        onUpdate(item.id, processedText, localContent, true); // Pass fromVoice=true
-        onSave?.(item.id, true); // Pass fromVoice=true
-      }, 100);
+      // Update the parent state but DON'T exit editing mode
+      onUpdate(item.id, processedText, localContent, true); // Pass fromVoice=true
+      
+      // Don't call onSave here - let user manually save when they're done editing
       
     } catch (error) {
       console.error("Voice transcription processing failed:", error);
