@@ -733,20 +733,6 @@ export const SecondList = () => {
               onViewContent={handleViewContent}
               isDragOver={dragOverItem === item.id}
               isDragging={touchDragHandlers.dragState.isDragging && touchDragHandlers.dragState.draggedItem === item.id}
-            />
-              onSendToSecondList={handleSendToFreeList}
-              sendToSecondListLabel="Send to List"
-              isEditing={editingId === item.id}
-              isSelected={selectedItemId === item.id}
-              onEdit={handleEdit}
-              onSave={handleSave}
-              onSelect={handleItemSelect}
-              onViewContent={handleViewContent}
-              onDragStart={handleDragStart}
-              onDragOver={handleDragOver}
-              onDragEnd={handleDragEnd}
-              onDrop={handleDrop}
-              isDragOver={dragOverItem === item.id}
               isChild={childFlags[index]}
             />
           ))
