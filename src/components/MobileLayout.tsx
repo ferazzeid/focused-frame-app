@@ -122,7 +122,7 @@ export const MobileLayout = () => {
                 }}
                 className={`p-sm transition-colors duration-fast rounded-md ${
                   activeTab === "settings"
-                    ? "bg-accent-green text-background"
+                    ? "bg-background-card text-foreground border border-border"
                     : "text-foreground-muted hover:text-foreground"
                 }`}
               >
@@ -151,7 +151,7 @@ export const MobileLayout = () => {
               onClick={() => setActiveTab("free")}
               className={`flex flex-col items-center justify-center h-12 text-xs font-medium transition-colors duration-fast rounded-md border border-border ${
                 activeTab === "free"
-                  ? "bg-accent-green text-background border-accent-green"
+                  ? "bg-background-card text-foreground border-border"
                   : "text-foreground-muted hover:text-foreground bg-background-card"
               }`}
             >
@@ -164,7 +164,7 @@ export const MobileLayout = () => {
                 onClick={() => setActiveTab("second")}
                 className={`flex flex-col items-center justify-center h-12 text-xs font-medium transition-colors duration-fast rounded-md border border-border whitespace-nowrap ${
                   activeTab === "second"
-                    ? "bg-accent-green text-background border-accent-green"
+                    ? "bg-background-card text-foreground border-border"
                     : "text-foreground-muted hover:text-foreground bg-background-card"
                 }`}
               >
@@ -178,8 +178,8 @@ export const MobileLayout = () => {
               disabled={activeTab === "settings" || activeTab === "admin"}
               className={`flex flex-col items-center justify-center h-12 text-xs font-medium transition-colors duration-fast rounded-md border border-border ${
                 activeTab === "settings" || activeTab === "admin"
-                  ? "text-foreground-subtle bg-background-subtle border-border opacity-50 cursor-not-allowed"
-                  : "text-foreground hover:text-foreground bg-background-subtle hover:bg-background-card border-border"
+                  ? "text-foreground-subtle bg-background-card border-border opacity-50 cursor-not-allowed"
+                  : "text-foreground hover:text-foreground bg-background-card hover:bg-background-card border-border"
               }`}
             >
               <Plus className="w-5 h-5" />
@@ -191,8 +191,8 @@ export const MobileLayout = () => {
               disabled={activeTab === "settings" || activeTab === "admin"}
               className={`flex flex-col items-center justify-center h-12 text-xs font-medium transition-colors duration-fast rounded-md border border-border ${
                 activeTab === "settings" || activeTab === "admin"
-                  ? "text-foreground-subtle bg-background-subtle border-border opacity-50 cursor-not-allowed"
-                  : "text-foreground hover:text-foreground bg-background-subtle hover:bg-background-card border-border"
+                  ? "text-foreground-subtle bg-background-card border-border opacity-50 cursor-not-allowed"
+                  : "text-foreground hover:text-foreground bg-background-card hover:bg-background-card border-border"
               }`}
             >
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="w-5 h-5">
