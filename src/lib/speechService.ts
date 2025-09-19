@@ -97,7 +97,20 @@ export class SpeechService {
     const apiKey = await this.getApiKey();
     const selectedModel = localStorage.getItem('openai_model') || 'gpt-5-nano-2025-08-07';
     const summaryPrompt = localStorage.getItem('summary_prompt') || 
-      'You are an expert at creating meaningful 3-word summaries that capture the essence and main action/topic of content. Focus on the core meaning, not just the first words. Examples: "Fix Trash Icon", "Track Food Weight", "Implement Summary Feature", "Discuss App Changes". Respond with exactly 3 words that best represent the main point, no punctuation, no extra text.';
+      `You are an expert at creating meaningful 3-word summaries that capture the CORE ESSENCE and main concept of content. 
+
+FOCUS ON: Main subject + Primary action + Key object/goal
+AVOID: Random words, filler words, chronological order
+
+EXAMPLES:
+"we need to implement Google Play Store payment functionality" → "Payment Store Implementation"
+"let's fix the trash icon issue" → "Fix Trash Icon"  
+"we should track food weight feature" → "Track Food Weight"
+"make sure we start the login system" → "Start Login System"
+"discuss app changes for users" → "Discuss App Changes"
+"add new dashboard component" → "Add Dashboard Component"
+
+Extract the most important CONCEPT, not just first words. Respond with exactly 3 words that capture the essence, no punctuation, no extra text.`;
     
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -194,54 +207,140 @@ export class SpeechService {
   }
 
   private generateQuickSummary(transcript: string): string {
-    // Intelligent local summarization - extract key actions, objects, and topics
     const text = transcript.toLowerCase().trim();
     
-    // Look for action words and key topics
-    const actionWords = ['fix', 'create', 'implement', 'add', 'remove', 'update', 'change', 'track', 'make', 'build', 'test', 'check', 'discuss', 'review', 'plan', 'need', 'should', 'want'];
-    const words = text.split(/\s+/).filter(word => word.length > 2);
+    // Concept mapping for compound terms and technical phrases
+    const conceptMap: { [key: string]: string } = {
+      'google play store': 'Play Store',
+      'app store': 'App Store',
+      'payment functionality': 'Payment',
+      'payment system': 'Payment',
+      'payment solution': 'Payment',
+      'login system': 'Login',
+      'authentication': 'Auth',
+      'user interface': 'UI',
+      'user experience': 'UX',
+      'dashboard': 'Dashboard',
+      'database': 'Database',
+      'api': 'API',
+      'backend': 'Backend',
+      'frontend': 'Frontend'
+    };
     
-    let keyWords: string[] = [];
+    // Pattern-based extraction for common structures
+    const patterns = [
+      // "need to/should/want to implement/create/fix X" → "Implement/Create/Fix X"
+      { regex: /(?:need to|should|want to|have to|going to|plan to)\s+(implement|create|fix|add|build|make|update|change)\s+(.+?)(?:\s+(?:especially|specifically|particularly))?(?:\s+(?:the|a|an))?\s*([^.]*)/i, 
+        extract: (match: RegExpMatchArray) => {
+          const action = match[1];
+          const keyNouns = this.extractKeyNouns(match[2] + ' ' + match[3]);
+          return [action, ...keyNouns.slice(0, 2)];
+        }
+      },
+      
+      // "make sure we start/do X" → "Start/Do X"  
+      { regex: /make sure (?:we|i|they)\s+(start|begin|do|implement|create|fix|add)\s+(.+)/i, 
+        extract: (match: RegExpMatchArray) => {
+          const action = match[1];
+          const keyNouns = this.extractKeyNouns(match[2]);
+          return [action, ...keyNouns.slice(0, 2)];
+        }
+      },
+        
+      // "let's implement/fix/create X" → "Implement/Fix/Create X"
+      { regex: /let'?s\s+(implement|fix|create|add|build|make|update|change)\s+(.+)/i, 
+        extract: (match: RegExpMatchArray) => {
+          const action = match[1];
+          const keyNouns = this.extractKeyNouns(match[2]);
+          return [action, ...keyNouns.slice(0, 2)];
+        }
+      },
+        
+      // "we also need to X" → focus on X
+      { regex: /we also (?:need to|should|want to)\s+(.+)/i, 
+        extract: (match: RegExpMatchArray) => this.extractActionAndObject(match[1]) }
+    ];
     
-    // Find action words first
-    const foundAction = words.find(word => actionWords.includes(word));
-    if (foundAction) {
-      keyWords.push(foundAction);
+    // Try pattern matching first
+    for (const pattern of patterns) {
+      const match = text.match(pattern.regex);
+      if (match) {
+        const extracted = pattern.extract(match);
+        if (extracted && extracted.length > 0) {
+          return this.formatSummary(extracted.slice(0, 3));
+        }
+      }
     }
     
-    // Look for important nouns/topics (avoid common words)
-    const stopWords = ['the', 'and', 'but', 'for', 'are', 'was', 'were', 'been', 'have', 'has', 'had', 'will', 'would', 'could', 'should', 'this', 'that', 'with', 'from', 'they', 'them', 'what', 'when', 'where', 'who', 'how', 'why', 'need', 'want', 'think', 'know', 'mean', 'just', 'really', 'actually', 'probably', 'maybe'];
+    // Apply concept mapping
+    let processedText = text;
+    for (const [phrase, concept] of Object.entries(conceptMap)) {
+      if (processedText.includes(phrase)) {
+        processedText = processedText.replace(new RegExp(phrase, 'g'), concept);
+      }
+    }
     
-    const meaningfulWords = words.filter(word => 
-      !stopWords.includes(word) && 
-      !keyWords.includes(word) &&
-      word.length > 2
+    // Extract action + key concepts
+    const actionWords = ['fix', 'create', 'implement', 'add', 'remove', 'update', 'change', 'track', 'make', 'build', 'test', 'check', 'discuss', 'review', 'plan', 'start', 'begin', 'setup', 'configure'];
+    const words = processedText.split(/\s+/).filter(word => word.length > 1);
+    
+    const foundAction = words.find(word => actionWords.includes(word));
+    const keyNouns = this.extractKeyNouns(processedText);
+    
+    const result = [];
+    if (foundAction) result.push(foundAction);
+    result.push(...keyNouns.slice(0, 3 - result.length));
+    
+    // Final fallback
+    if (result.length === 0) {
+      const meaningfulWords = words.filter(word => 
+        !this.isStopWord(word) && word.length > 2
+      );
+      result.push(...meaningfulWords.slice(0, 3));
+    }
+    
+    return this.formatSummary(result.slice(0, 3)) || 'Voice Note';
+  }
+  
+  private extractActionAndObject(text: string): string[] {
+    const actionWords = ['implement', 'create', 'fix', 'add', 'build', 'make', 'update', 'start', 'setup'];
+    const words = text.toLowerCase().split(/\s+/);
+    
+    const action = words.find(word => actionWords.includes(word)) || 'work';
+    const keyNouns = this.extractKeyNouns(text);
+    
+    return [action, ...keyNouns.slice(0, 2)];
+  }
+  
+  private extractKeyNouns(text: string): string[] {
+    const words = text.toLowerCase().split(/\s+/).filter(word => word.length > 1);
+    
+    // Priority technical/business terms
+    const priorityTerms = ['payment', 'store', 'play', 'google', 'api', 'database', 'login', 'auth', 'dashboard', 'ui', 'ux', 'app', 'system', 'feature', 'functionality', 'component', 'service', 'integration'];
+    
+    const meaningful = words.filter(word => 
+      !this.isStopWord(word) && 
+      (priorityTerms.includes(word) || word.length > 3)
     );
     
-    // Add the most meaningful words
-    keyWords = keyWords.concat(meaningfulWords.slice(0, 3 - keyWords.length));
+    // Prioritize technical terms, then other meaningful words
+    const priority = meaningful.filter(word => priorityTerms.includes(word));
+    const regular = meaningful.filter(word => !priorityTerms.includes(word));
     
-    // If still not enough words, take first few non-stop words
-    if (keyWords.length < 3) {
-      const remainingWords = words.filter(word => 
-        !stopWords.includes(word) && 
-        !keyWords.includes(word)
-      );
-      keyWords = keyWords.concat(remainingWords.slice(0, 3 - keyWords.length));
-    }
-    
-    // Fallback to first words if nothing meaningful found
-    if (keyWords.length === 0) {
-      const allWords = transcript.trim().split(/\s+/);
-      keyWords = allWords.slice(0, 3);
-    }
-    
-    // Capitalize and format
-    const summary = keyWords.slice(0, 3).map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-    ).join(' ');
-    
-    return summary || 'Voice Note';
+    return [...priority, ...regular].slice(0, 3);
+  }
+  
+  private isStopWord(word: string): boolean {
+    const stopWords = ['the', 'and', 'but', 'for', 'are', 'was', 'were', 'been', 'have', 'has', 'had', 'will', 'would', 'could', 'should', 'this', 'that', 'with', 'from', 'they', 'them', 'what', 'when', 'where', 'who', 'how', 'why', 'need', 'want', 'think', 'know', 'mean', 'just', 'really', 'actually', 'probably', 'maybe', 'also', 'sure', 'make', 'start', 'begin', 'lets', 'well', 'now', 'then', 'here', 'there', 'way', 'get', 'going', 'especially', 'specifically', 'particularly'];
+    return stopWords.includes(word);
+  }
+  
+  private formatSummary(words: string[]): string {
+    return words
+      .filter(word => word && word.length > 0)
+      .slice(0, 3)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
   }
 
   async processAudio(audioBlob: Blob): Promise<TranscriptionResult> {
