@@ -24,6 +24,7 @@ export const FreeList = () => {
   const { user } = useAuth();
   const { setAddTextItem, setAddEmptyLine } = useAddFunctions();
 
+  // Handle deselect all event
   useEffect(() => {
     const handleDeselectAll = () => {
       setSelectedItemId(null);
