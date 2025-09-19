@@ -4,13 +4,17 @@ import { ListItemData } from "@/components/ListItem";
  * Clean up data to remove invalid items and fix consecutive dividers
  */
 export const cleanupItems = (items: ListItemData[]): ListItemData[] => {
+  console.log("=== Starting cleanup process ===");
+  console.log("Original items:", items.length);
+  
   const cleaned: ListItemData[] = [];
   
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
     
-    // Skip empty text items (not dividers)
+    // Skip empty text items (not dividers) - these are the "Click to add item..." items
     if (!item.isEmpty && item.title.trim() === "" && item.content.trim() === "") {
+      console.log(`Removing empty text item at index ${i}: "${item.title}"`);
       continue;
     }
     
@@ -18,6 +22,7 @@ export const cleanupItems = (items: ListItemData[]): ListItemData[] => {
     if (item.isEmpty) {
       const lastItem = cleaned[cleaned.length - 1];
       if (lastItem && lastItem.isEmpty) {
+        console.log(`Removing consecutive divider at index ${i}`);
         continue; // Skip this divider
       }
     }
@@ -25,6 +30,8 @@ export const cleanupItems = (items: ListItemData[]): ListItemData[] => {
     cleaned.push(item);
   }
   
+  console.log("Cleaned items:", cleaned.length);
+  console.log("=== Cleanup complete ===");
   return cleaned;
 };
 

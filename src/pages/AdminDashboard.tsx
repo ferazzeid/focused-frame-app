@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Key, MessageSquare, ArrowLeft, Zap, Brain, Mic2, Settings2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useVisualFeedback } from "@/hooks/useVisualFeedback";
 import { supabase } from "@/integrations/supabase/client";
 
 interface AdminDashboardProps {
@@ -26,6 +27,8 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const [buttonPosition, setButtonPosition] = useState("");
   const { toast } = useToast();
   const { isAdmin, isLoading } = useUserRole();
+  const { feedbackState: aiFeedback, showSuccess: showAISuccess, showError: showAIError, showProcessing: showAIProcessing } = useVisualFeedback();
+  const { feedbackState: interfaceFeedback, showSuccess: showInterfaceSuccess, showError: showInterfaceError, showProcessing: showInterfaceProcessing } = useVisualFeedback();
 
   useEffect(() => {    
     const savedMultiItem = localStorage.getItem("multi_item_enabled");
@@ -126,22 +129,44 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   };
 
   const handleSaveAISettings = () => {
-    localStorage.setItem("openai_model", selectedModel);
-    localStorage.setItem("use_local_speech", useLocalSpeech.toString());
-    localStorage.setItem("quick_mode", quickMode.toString());
-    toast({
-      title: "AI Settings Saved",
-      description: "Your AI processing settings have been updated.",
-    });
+    showAIProcessing();
+    try {
+      localStorage.setItem("openai_model", selectedModel);
+      localStorage.setItem("use_local_speech", useLocalSpeech.toString());
+      localStorage.setItem("quick_mode", quickMode.toString());
+      showAISuccess();
+      toast({
+        title: "AI Settings Saved",
+        description: "Your AI processing settings have been updated.",
+      });
+    } catch (error) {
+      showAIError();
+      toast({
+        title: "Error",
+        description: "Failed to save AI settings",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSaveInterfaceSettings = () => {
-    localStorage.setItem("button_position", buttonPosition);
-    localStorage.setItem("notification_mode", notificationMode);
-    toast({
-      title: "Interface Settings Saved",
-      description: "Your interface preferences have been updated.",
-    });
+    showInterfaceProcessing();
+    try {
+      localStorage.setItem("button_position", buttonPosition);
+      localStorage.setItem("notification_mode", notificationMode);
+      showInterfaceSuccess();
+      toast({
+        title: "Interface Settings Saved",
+        description: "Your interface preferences have been updated.",
+      });
+    } catch (error) {
+      showInterfaceError();
+      toast({
+        title: "Error",
+        description: "Failed to save interface settings",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isLoading) {
@@ -297,17 +322,20 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
           <div className="bg-background-card border border-border rounded-md p-md space-y-md">
             <div className="space-y-sm">
               <Label className="text-sm font-medium text-foreground">OpenAI Model</Label>
+              <div className="text-xs text-foreground-subtle mb-xs">
+                Current: <span className="font-medium text-foreground">{selectedModel === "gpt-5-nano-2025-08-07" ? "GPT-5 Nano (Default)" : selectedModel}</span>
+              </div>
               <Select value={selectedModel} onValueChange={setSelectedModel}>
-                <SelectTrigger className="bg-input border border-input-border">
+                <SelectTrigger className="bg-background-card border border-border text-foreground">
                   <SelectValue placeholder="Select AI model" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="gpt-5-nano-2025-08-07">GPT-5 Nano (Fastest, Default)</SelectItem>
-                  <SelectItem value="gpt-5-mini-2025-08-07">GPT-5 Mini (Balanced)</SelectItem>
-                  <SelectItem value="gpt-5-2025-08-07">GPT-5 (Most Capable)</SelectItem>
-                  <SelectItem value="gpt-4.1-2025-04-14">GPT-4.1 (Reliable)</SelectItem>
-                  <SelectItem value="gpt-4o-mini">GPT-4o Mini (Legacy)</SelectItem>
-                  <SelectItem value="gpt-4o">GPT-4o (Legacy)</SelectItem>
+                <SelectContent className="bg-background-card border border-border shadow-lg z-50">
+                  <SelectItem value="gpt-5-nano-2025-08-07" className="text-foreground hover:bg-background-subtle">GPT-5 Nano (Fastest, Default)</SelectItem>
+                  <SelectItem value="gpt-5-mini-2025-08-07" className="text-foreground hover:bg-background-subtle">GPT-5 Mini (Balanced)</SelectItem>
+                  <SelectItem value="gpt-5-2025-08-07" className="text-foreground hover:bg-background-subtle">GPT-5 (Most Capable)</SelectItem>
+                  <SelectItem value="gpt-4.1-2025-04-14" className="text-foreground hover:bg-background-subtle">GPT-4.1 (Reliable)</SelectItem>
+                  <SelectItem value="gpt-4o-mini" className="text-foreground hover:bg-background-subtle">GPT-4o Mini (Legacy)</SelectItem>
+                  <SelectItem value="gpt-4o" className="text-foreground hover:bg-background-subtle">GPT-4o (Legacy)</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-xs text-foreground-subtle">
@@ -319,7 +347,7 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
               <div className="space-y-xs">
                 <Label className="text-sm font-medium text-foreground">Speech-to-Text Method</Label>
                 <p className="text-xs text-foreground-subtle">
-                  {useLocalSpeech ? "Using browser's built-in speech recognition (instant)" : "Using OpenAI Whisper (higher accuracy)"}
+                  Current: <span className="font-medium text-foreground">{useLocalSpeech ? "Browser Speech Recognition (instant)" : "OpenAI Whisper (higher accuracy)"}</span>
                 </p>
               </div>
               <Switch
@@ -332,7 +360,7 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
               <div className="space-y-xs">
                 <Label className="text-sm font-medium text-foreground">Quick Mode</Label>
                 <p className="text-xs text-foreground-subtle">
-                  Skip AI summarization, use first few words as title for faster processing
+                  Current: <span className="font-medium text-foreground">{quickMode ? "Enabled (faster processing)" : "Disabled (AI summarization)"}</span>
                 </p>
               </div>
               <Switch
@@ -341,13 +369,25 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
               />
             </div>
 
-            <MobileButton
-              onClick={handleSaveAISettings}
-              variant="primary"
-              className="w-full"
-            >
-              Save AI Settings
-            </MobileButton>
+            <div className="relative">
+              <MobileButton
+                onClick={handleSaveAISettings}
+                variant="primary"
+                className="w-full"
+                disabled={aiFeedback === 'processing'}
+              >
+                {aiFeedback === 'processing' && (
+                  <div className="w-4 h-4 border border-white border-t-transparent rounded-full animate-spin mr-sm" />
+                )}
+                {aiFeedback === 'success' && (
+                  <div className="w-4 h-4 mr-sm text-green-400">✓</div>
+                )}
+                {aiFeedback === 'error' && (
+                  <div className="w-4 h-4 mr-sm text-red-400">✗</div>
+                )}
+                Save AI Settings
+              </MobileButton>
+            </div>
           </div>
         </div>
 
@@ -360,13 +400,16 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
           <div className="bg-background-card border border-border rounded-md p-md space-y-md">
             <div className="space-y-sm">
               <Label className="text-sm font-medium text-foreground">Action Button Position</Label>
+              <div className="text-xs text-foreground-subtle mb-xs">
+                Current: <span className="font-medium text-foreground">{buttonPosition === "bottom" ? "Bottom Toolbar" : "Header Area"}</span>
+              </div>
               <Select value={buttonPosition} onValueChange={setButtonPosition}>
-                <SelectTrigger className="bg-input border border-input-border">
+                <SelectTrigger className="bg-background-card border border-border text-foreground">
                   <SelectValue placeholder="Select button position" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="bottom">Bottom (Current Position)</SelectItem>
-                  <SelectItem value="header">Header (Near Settings)</SelectItem>
+                <SelectContent className="bg-background-card border border-border shadow-lg z-50">
+                  <SelectItem value="bottom" className="text-foreground hover:bg-background-subtle">Bottom (Current Position)</SelectItem>
+                  <SelectItem value="header" className="text-foreground hover:bg-background-subtle">Header (Near Settings)</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-xs text-foreground-subtle">
@@ -377,14 +420,17 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
 
             <div className="space-y-sm">
               <Label className="text-sm font-medium text-foreground">Notification Mode</Label>
+              <div className="text-xs text-foreground-subtle mb-xs">
+                Current: <span className="font-medium text-foreground">{notificationMode === "minimal" ? "Minimal (Visual only)" : notificationMode === "reduced" ? "Reduced (Errors only)" : "Verbose (All messages)"}</span>
+              </div>
               <Select value={notificationMode} onValueChange={setNotificationMode}>
-                <SelectTrigger className="bg-input border border-input-border">
+                <SelectTrigger className="bg-background-card border border-border text-foreground">
                   <SelectValue placeholder="Select notification style" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="minimal">Minimal (Visual feedback only)</SelectItem>
-                  <SelectItem value="reduced">Reduced (Critical errors only)</SelectItem>
-                  <SelectItem value="verbose">Verbose (All notifications)</SelectItem>
+                <SelectContent className="bg-background-card border border-border shadow-lg z-50">
+                  <SelectItem value="minimal" className="text-foreground hover:bg-background-subtle">Minimal (Visual feedback only)</SelectItem>
+                  <SelectItem value="reduced" className="text-foreground hover:bg-background-subtle">Reduced (Critical errors only)</SelectItem>
+                  <SelectItem value="verbose" className="text-foreground hover:bg-background-subtle">Verbose (All notifications)</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-xs text-foreground-subtle">
@@ -394,13 +440,25 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
               </p>
             </div>
 
-            <MobileButton
-              onClick={handleSaveInterfaceSettings}
-              variant="primary"
-              className="w-full"
-            >
-              Save Interface Settings
-            </MobileButton>
+            <div className="relative">
+              <MobileButton
+                onClick={handleSaveInterfaceSettings}
+                variant="primary"
+                className="w-full"
+                disabled={interfaceFeedback === 'processing'}
+              >
+                {interfaceFeedback === 'processing' && (
+                  <div className="w-4 h-4 border border-white border-t-transparent rounded-full animate-spin mr-sm" />
+                )}
+                {interfaceFeedback === 'success' && (
+                  <div className="w-4 h-4 mr-sm text-green-400">✓</div>
+                )}
+                {interfaceFeedback === 'error' && (
+                  <div className="w-4 h-4 mr-sm text-red-400">✗</div>
+                )}
+                Save Interface Settings
+              </MobileButton>
+            </div>
           </div>
         </div>
 

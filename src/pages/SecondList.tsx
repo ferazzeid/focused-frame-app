@@ -30,17 +30,18 @@ export const SecondList = () => {
         try {
           setIsLoading(true);
           const data = await loadData();
-        {/* Apply cleanup on data load */}
-        const cleanedItems = cleanupItems(data.secondList);
-        if (cleanedItems.length !== data.secondList.length) {
-          console.log(`Cleaned up ${data.secondList.length - cleanedItems.length} invalid items`);
-          // Save cleaned data back
-          const updatedData = { ...data, secondList: cleanedItems };
-          await saveData(updatedData);
-          setItems(cleanedItems);
-        } else {
-          setItems(data.secondList);
-        }
+          
+          // Force cleanup on data load - remove existing problematic items
+          const cleanedItems = cleanupItems(data.secondList);
+          if (cleanedItems.length !== data.secondList.length) {
+            console.log(`Forced cleanup: removed ${data.secondList.length - cleanedItems.length} invalid items on load`);
+            // Save cleaned data back immediately
+            const updatedData = { ...data, secondList: cleanedItems };
+            await saveData(updatedData);
+            setItems(cleanedItems);
+          } else {
+            setItems(data.secondList);
+          }
         } catch (error) {
           console.error("Error loading data:", error);
           toast({
