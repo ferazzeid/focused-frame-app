@@ -11,6 +11,7 @@ export interface ListItemData {
   isBold: boolean;
   isEmpty: boolean;
   createdAt: Date;
+  isChild?: boolean;
 }
 
 interface ListItemProps {

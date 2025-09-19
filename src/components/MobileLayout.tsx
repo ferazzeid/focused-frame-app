@@ -202,6 +202,30 @@ export const MobileLayout = () => {
               </button>
             )}
 
+            {/* Deselect Button - Only show when not in settings/admin */}
+            {activeTab !== "settings" && activeTab !== "admin" && (
+              <button
+                onClick={() => {
+                  // Call deselect function for current active tab
+                  if (activeTab === "free" && addTextItem) {
+                    // Access the deselect function through a context or direct call
+                    // We'll need to add this functionality to the FreeList component
+                    window.dispatchEvent(new CustomEvent('deselect-all-items'));
+                  } else if (activeTab === "second" && addTextItem) {
+                    window.dispatchEvent(new CustomEvent('deselect-all-items'));
+                  }
+                }}
+                className="flex flex-col items-center justify-center h-12 text-xs font-medium transition-colors duration-fast rounded-md border border-border text-foreground-muted hover:text-foreground bg-background-card"
+                title="Deselect All"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 2C9.38 2 7.25 4.13 7.25 6.75c0 2.57 2.01 4.65 4.63 4.74-.08-.49-.13-.99-.13-1.49 0-4.28 3.47-7.75 7.75-7.75.5 0 1 .05 1.49.13C20.87 4.26 18.79 2.25 16.22 2.25 14.66 2.09 13.34 2 12 2z"/>
+                  <circle cx="12" cy="12" r="2"/>
+                  <path d="M18 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/>
+                </svg>
+              </button>
+            )}
+
             {/* Action Buttons - Only show when buttonPosition is "bottom" */}
             {buttonPosition === "bottom" && (
               <>

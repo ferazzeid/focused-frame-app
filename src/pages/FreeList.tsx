@@ -10,8 +10,8 @@ import { useAddFunctions } from "@/components/MobileLayout";
 
 export const FreeList = () => {
   const [items, setItems] = useState<ListItemData[]>([]);
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [viewingItem, setViewingItem] = useState<ListItemData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
@@ -23,6 +23,15 @@ export const FreeList = () => {
   const { showSuccess: showNotificationSuccess, showError: showNotificationError } = useNotification();
   const { user } = useAuth();
   const { setAddTextItem, setAddEmptyLine } = useAddFunctions();
+
+  useEffect(() => {
+    const handleDeselectAll = () => {
+      setSelectedItemId(null);
+    };
+
+    window.addEventListener('deselect-all-items', handleDeselectAll);
+    return () => window.removeEventListener('deselect-all-items', handleDeselectAll);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -173,7 +182,26 @@ export const FreeList = () => {
     // Use functional state update to get current items
     setItems(currentItems => {
       console.log("Current items in addTextItem:", currentItems.length);
-      const newItems = [...currentItems, newItem];
+      let newItems;
+      
+      // If an item is selected, add as child (with indentation logic)
+      if (selectedItemId) {
+        const selectedIndex = currentItems.findIndex(item => item.id === selectedItemId);
+        if (selectedIndex !== -1) {
+          // Insert after the selected item
+          newItems = [
+            ...currentItems.slice(0, selectedIndex + 1),
+            { ...newItem, isChild: true }, // Mark as child for styling
+            ...currentItems.slice(selectedIndex + 1)
+          ];
+        } else {
+          // Fallback to append if selected item not found
+          newItems = [...currentItems, newItem];
+        }
+      } else {
+        // No selection, add normally at the end
+        newItems = [...currentItems, newItem];
+      }
       
       const boldValid = validateBoldItemRules(newItems);
       const emptyValid = validateEmptyLineRules(newItems);

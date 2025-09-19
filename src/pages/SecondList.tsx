@@ -11,8 +11,8 @@ import { cleanupItems } from "@/lib/cleanupData";
 
 export const SecondList = () => {
   const [items, setItems] = useState<ListItemData[]>([]);
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [viewingItem, setViewingItem] = useState<ListItemData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
@@ -64,6 +64,16 @@ export const SecondList = () => {
 
     fetchData();
   }, [user, toast]);
+
+  // Handle deselect all event
+  useEffect(() => {
+    const handleDeselectAll = () => {
+      setSelectedItemId(null);
+    };
+
+    window.addEventListener('deselect-all-items', handleDeselectAll);
+    return () => window.removeEventListener('deselect-all-items', handleDeselectAll);
+  }, []);
 
   // Register add functions with the context
   useEffect(() => {
@@ -203,7 +213,27 @@ export const SecondList = () => {
     
     const newItem = createTextItem("", "");
     console.log("Created new item:", newItem);
-    const newItems = [...cleanedItems, newItem];
+    
+    let newItems: ListItemData[];
+    
+    // If an item is selected, add as child (with indentation logic)
+    if (selectedItemId) {
+      const selectedIndex = cleanedItems.findIndex(item => item.id === selectedItemId);
+      if (selectedIndex !== -1) {
+        // Insert after the selected item
+        newItems = [
+          ...cleanedItems.slice(0, selectedIndex + 1),
+          { ...newItem, isChild: true }, // Mark as child for styling
+          ...cleanedItems.slice(selectedIndex + 1)
+        ];
+      } else {
+        // Fallback to append if selected item not found
+        newItems = [...cleanedItems, newItem];
+      }
+    } else {
+      // No selection, add normally at the end
+      newItems = [...cleanedItems, newItem];
+    }
     
     const boldValid = validateBoldItemRules(newItems);
     const emptyValid = validateEmptyLineRules(newItems);
