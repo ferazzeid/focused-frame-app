@@ -15,13 +15,31 @@ export class SpeechService {
   private apiKey: string | null;
 
   constructor() {
-    this.apiKey = localStorage.getItem('openai_api_key');
+    this.apiKey = this.getEffectiveApiKey();
+  }
+
+  private getEffectiveApiKey(): string | null {
+    // Priority: Personal Key → Legacy Key (backwards compatibility) → null
+    const personalKey = localStorage.getItem('personal_openai_api_key');
+    if (personalKey) {
+      console.log('Using personal OpenAI API key');
+      return personalKey;
+    }
+
+    // Backwards compatibility with existing localStorage key
+    const legacyKey = localStorage.getItem('openai_api_key');
+    if (legacyKey) {
+      console.log('Using legacy OpenAI API key');
+      return legacyKey;
+    }
+
+    return null;
   }
 
   private getApiKey(): string {
-    const key = localStorage.getItem('openai_api_key');
+    const key = this.getEffectiveApiKey();
     if (!key) {
-      throw new Error('OpenAI API key not found. Please set it in Settings.');
+      throw new Error('OpenAI API key not found. Please add your personal API key in Settings, or contact your administrator for shared key access.');
     }
     return key;
   }

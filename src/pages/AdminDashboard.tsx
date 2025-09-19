@@ -7,24 +7,21 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Key, MessageSquare, ArrowLeft, Zap } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AdminDashboardProps {
   onBack: () => void;
 }
 
 export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
-  const [openaiApiKey, setOpenaiApiKey] = useState("");
+  const [sharedApiKey, setSharedApiKey] = useState("");
+  const [sharedKeyStatus, setSharedKeyStatus] = useState<{ hasKey: boolean; keyPreview: string | null }>({ hasKey: false, keyPreview: null });
   const [multiItemEnabled, setMultiItemEnabled] = useState(false);
   const [multiItemPrompt, setMultiItemPrompt] = useState("");
   const { toast } = useToast();
   const { isAdmin, isLoading } = useUserRole();
 
-  useEffect(() => {
-    const savedKey = localStorage.getItem("openai_api_key");
-    if (savedKey) {
-      setOpenaiApiKey(savedKey);
-    }
-    
+  useEffect(() => {    
     const savedMultiItem = localStorage.getItem("multi_item_enabled");
     setMultiItemEnabled(savedMultiItem === "true");
     
@@ -34,21 +31,74 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
     } else {
       setMultiItemPrompt('Analyze this transcript and break it down into distinct, actionable items. Each item should be a separate task, idea, or note. If the content naturally contains multiple distinct items, return them as separate entries. If it\'s really just one cohesive item, return only one. For each item, provide a 3-word title (no punctuation) and the relevant content. Respond in JSON format: {"items": [{"title": "Three Word Title", "content": "detailed content"}], "is_single_item": false}');
     }
+    
+    // Load shared OpenAI key status
+    loadSharedKeyStatus();
   }, []);
 
-  const handleSaveApiKey = () => {
-    if (openaiApiKey.trim()) {
-      localStorage.setItem("openai_api_key", openaiApiKey.trim());
-      toast({
-        title: "API Key Saved",
-        description: "Your OpenAI API key has been saved securely.",
+  const loadSharedKeyStatus = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('manage-shared-openai-key', {
+        method: 'GET'
       });
+      
+      if (error) throw error;
+      setSharedKeyStatus(data);
+    } catch (error) {
+      console.error('Error loading shared key status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load shared API key status",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSaveSharedApiKey = async () => {
+    if (sharedApiKey.trim()) {
+      try {
+        const { data, error } = await supabase.functions.invoke('manage-shared-openai-key', {
+          method: 'POST',
+          body: { apiKey: sharedApiKey.trim() }
+        });
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Success",
+          description: "Shared OpenAI API key saved successfully. Please update the OPENAI_API_KEY secret in Supabase dashboard.",
+        });
+        setSharedApiKey("");
+        loadSharedKeyStatus();
+      } catch (error) {
+        console.error('Error saving shared key:', error);
+        toast({
+          title: "Error",
+          description: "Failed to save shared API key",
+          variant: "destructive",
+        });
+      }
     } else {
-      localStorage.removeItem("openai_api_key");
-      toast({
-        title: "API Key Removed",
-        description: "Your OpenAI API key has been removed.",
-      });
+      try {
+        const { data, error } = await supabase.functions.invoke('manage-shared-openai-key', {
+          method: 'DELETE'
+        });
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Success",
+          description: "Shared OpenAI API key removed. Please remove the OPENAI_API_KEY secret from Supabase dashboard.",
+        });
+        loadSharedKeyStatus();
+      } catch (error) {
+        console.error('Error removing shared key:', error);
+        toast({
+          title: "Error", 
+          description: "Failed to remove shared API key",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -98,35 +148,45 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
       </div>
 
       <div className="flex-1 overflow-y-auto px-md py-md space-y-lg">
-        {/* OpenAI API Configuration */}
+        {/* Shared OpenAI API Configuration */}
         <div className="space-y-md">
           <div className="flex items-center gap-sm">
             <Key className="w-5 h-5 text-foreground-muted" />
-            <h2 className="text-lg font-semibold text-foreground">OpenAI Configuration</h2>
+            <h2 className="text-lg font-semibold text-foreground">Shared OpenAI Configuration</h2>
           </div>
           <div className="bg-background-card border border-border rounded-md p-md space-y-md">
+            {sharedKeyStatus.hasKey && (
+              <div className="p-sm bg-background-subtle rounded-md border border-border">
+                <p className="text-sm text-foreground">
+                  <span className="font-medium">Current shared key:</span> {sharedKeyStatus.keyPreview}
+                </p>
+                <p className="text-xs text-foreground-subtle mt-xs">
+                  This key is available to all premium users
+                </p>
+              </div>
+            )}
             <div className="space-y-sm">
-              <Label htmlFor="openai-key" className="text-sm font-medium text-foreground">
-                OpenAI API Key
+              <Label htmlFor="shared-openai-key" className="text-sm font-medium text-foreground">
+                Shared OpenAI API Key
               </Label>
               <Input
-                id="openai-key"
+                id="shared-openai-key"
                 type="password"
-                value={openaiApiKey}
-                onChange={(e) => setOpenaiApiKey(e.target.value)}
+                value={sharedApiKey}
+                onChange={(e) => setSharedApiKey(e.target.value)}
                 placeholder="sk-..."
                 className="bg-input border border-input-border"
               />
               <p className="text-xs text-foreground-subtle">
-                Required for voice transcription and AI features. Your key is stored locally and never shared.
+                This shared key will be used by all premium users for AI transcription and processing features. Users can still override this with their personal "Bring Your Own Key" option.
               </p>
             </div>
             <MobileButton
-              onClick={handleSaveApiKey}
+              onClick={handleSaveSharedApiKey}
               variant="primary"
               className="w-full"
             >
-              {openaiApiKey ? "Update API Key" : "Save API Key"}
+              {sharedApiKey ? "Update Shared API Key" : "Save Shared API Key"}
             </MobileButton>
           </div>
         </div>

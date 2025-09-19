@@ -10,16 +10,16 @@ import { Archive as ArchivePage } from "@/pages/Archive";
 import { PermissionStatus } from "@/components/PermissionStatus";
 
 export const Settings = () => {
-  const [openaiApiKey, setOpenaiApiKey] = useState("");
+  const [personalApiKey, setPersonalApiKey] = useState("");
   const [showArchive, setShowArchive] = useState(false);
   const [showSecondList, setShowSecondList] = useState(true);
   const { toast } = useToast();
   const { user, signOut, isAuthenticated } = useAuth();
 
   useEffect(() => {
-    const savedKey = localStorage.getItem("openai_api_key");
-    if (savedKey) {
-      setOpenaiApiKey(savedKey);
+    const savedPersonalKey = localStorage.getItem("personal_openai_api_key");
+    if (savedPersonalKey) {
+      setPersonalApiKey(savedPersonalKey);
     }
     
     // Load second list setting
@@ -29,18 +29,18 @@ export const Settings = () => {
     }
   }, []);
 
-  const handleSaveApiKey = () => {
-    if (openaiApiKey.trim()) {
-      localStorage.setItem("openai_api_key", openaiApiKey.trim());
+  const handleSavePersonalApiKey = () => {
+    if (personalApiKey.trim()) {
+      localStorage.setItem("personal_openai_api_key", personalApiKey.trim());
       toast({
-        title: "API Key Saved",
-        description: "Your OpenAI API key has been saved securely.",
+        title: "Personal API Key Saved",
+        description: "Your personal OpenAI API key has been saved securely.",
       });
     } else {
-      localStorage.removeItem("openai_api_key");
+      localStorage.removeItem("personal_openai_api_key");
       toast({
-        title: "API Key Removed",
-        description: "Your OpenAI API key has been removed.",
+        title: "Personal API Key Removed",
+        description: "Your personal OpenAI API key has been removed.",
       });
     }
   };
@@ -95,6 +95,39 @@ export const Settings = () => {
       <div className="flex-1 overflow-y-auto px-md py-md space-y-lg">
         {/* Microphone Permission Status */}
         <PermissionStatus />
+        
+        {/* Personal OpenAI API Key */}
+        <div className="space-y-md">
+          <div className="flex items-center gap-sm">
+            <Key className="w-5 h-5 text-foreground-muted" />
+            <h2 className="text-lg font-semibold text-foreground">Personal OpenAI API Key (BYOK)</h2>
+          </div>
+          <div className="bg-background-card border border-border rounded-md p-md space-y-md">
+            <div className="space-y-sm">
+              <Label htmlFor="personal-openai-key" className="text-sm font-medium text-foreground">
+                Your Personal API Key
+              </Label>
+              <Input
+                id="personal-openai-key"
+                type="password"
+                value={personalApiKey}
+                onChange={(e) => setPersonalApiKey(e.target.value)}
+                placeholder="sk-..."
+                className="bg-input border border-input-border"
+              />
+              <p className="text-xs text-foreground-subtle">
+                Bring Your Own Key: Use your personal OpenAI API key. This will override the shared key for your account and give you full control over your AI usage and costs.
+              </p>
+            </div>
+            <MobileButton
+              onClick={handleSavePersonalApiKey}
+              variant="primary"
+              className="w-full"
+            >
+              {personalApiKey ? "Update Personal API Key" : "Save Personal API Key"}
+            </MobileButton>
+          </div>
+        </div>
         
         {/* 2nd List Toggle */}
         <div className="space-y-md">

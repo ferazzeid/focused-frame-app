@@ -1,1 +1,4 @@
 project_id = "epsxwhiapixfhjecrkip"
+
+[functions.manage-shared-openai-key]
+verify_jwt = true
