@@ -34,14 +34,18 @@ export const MobileLayout = () => {
   const [addTextItem, setAddTextItem] = useState<(() => void) | null>(null);
   const [addEmptyLine, setAddEmptyLine] = useState<(() => void) | null>(null);
   const [buttonPosition, setButtonPosition] = useState("bottom");
-  const [showSecondList, setShowSecondList] = useState(true);
+  const [showSecondList, setShowSecondList] = useState(false); // Default to false
   const { isAdmin, isLoading } = useUserRole();
   
   useEffect(() => {
-    // Load settings on mount
+    // Load settings on mount - only show second list if explicitly enabled
     const savedSecondListSetting = localStorage.getItem("show_second_list");
-    if (savedSecondListSetting !== null) {
-      setShowSecondList(JSON.parse(savedSecondListSetting));
+    if (savedSecondListSetting === "true") {
+      setShowSecondList(true);
+    } else {
+      setShowSecondList(false);
+      // Clear any old localStorage values that might be causing issues
+      localStorage.setItem("show_second_list", "false");
     }
     
     const savedButtonPosition = localStorage.getItem("button_position");
