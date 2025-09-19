@@ -32,36 +32,53 @@ serve(async (req) => {
       throw new Error('Invalid authentication');
     }
 
-    // Check if user is admin
+    // Check if user is admin for management operations
     const { data: userRoles, error: roleError } = await supabaseClient
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
       .eq('role', 'admin');
 
-    if (roleError || !userRoles || userRoles.length === 0) {
-      throw new Error('Admin access required');
-    }
+    const isAdmin = !roleError && userRoles && userRoles.length > 0;
 
     if (req.method === 'GET') {
       // Get the shared OpenAI API key
       try {
         const sharedKey = Deno.env.get('OPENAI_API_KEY');
-        return new Response(JSON.stringify({ 
-          hasKey: !!sharedKey,
-          keyPreview: sharedKey ? `${sharedKey.substring(0, 8)}...` : null
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        
+        if (isAdmin) {
+          // Admin gets full information including preview
+          return new Response(JSON.stringify({ 
+            hasKey: !!sharedKey,
+            keyPreview: sharedKey ? `${sharedKey.substring(0, 8)}...` : null,
+            key: sharedKey // Include actual key for speech service
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } else {
+          // Regular authenticated users just get the key for speech service
+          return new Response(JSON.stringify({ 
+            hasKey: !!sharedKey,
+            key: sharedKey
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
       } catch (error) {
         console.error('Error getting shared key:', error);
         return new Response(JSON.stringify({ 
           hasKey: false,
-          keyPreview: null 
+          keyPreview: null,
+          key: null
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
+    }
+
+    // Management operations (POST, DELETE) require admin access
+    if (!isAdmin) {
+      throw new Error('Admin access required for management operations');
     }
 
     if (req.method === 'POST') {

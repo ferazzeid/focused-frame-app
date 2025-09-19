@@ -36,16 +36,48 @@ export class SpeechService {
     return null;
   }
 
-  private getApiKey(): string {
-    const key = this.getEffectiveApiKey();
-    if (!key) {
-      throw new Error('OpenAI API key not found. Please add your personal API key in Settings, or contact your administrator for shared key access.');
+  private async getSharedApiKey(): Promise<string | null> {
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data, error } = await supabase.functions.invoke('manage-shared-openai-key', {
+        method: 'GET'
+      });
+      
+      if (error) {
+        console.error('Error fetching shared API key:', error);
+        return null;
+      }
+      
+      if (data?.hasKey && data?.key) {
+        console.log('Using shared OpenAI API key');
+        return data.key;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Failed to fetch shared API key:', error);
+      return null;
     }
-    return key;
+  }
+
+  private async getApiKey(): Promise<string> {
+    // Try local keys first (personal, then legacy)
+    const localKey = this.getEffectiveApiKey();
+    if (localKey) {
+      return localKey;
+    }
+
+    // Try shared key from Supabase
+    const sharedKey = await this.getSharedApiKey();
+    if (sharedKey) {
+      return sharedKey;
+    }
+
+    throw new Error('OpenAI API key not found. Please add your personal API key in Settings, or contact your administrator for shared key access.');
   }
 
   async transcribeAudio(audioBlob: Blob): Promise<string> {
-    const apiKey = this.getApiKey();
+    const apiKey = await this.getApiKey();
     
     const formData = new FormData();
     formData.append('file', audioBlob, 'audio.wav');
@@ -69,7 +101,7 @@ export class SpeechService {
   }
 
   async generateSummary(transcript: string): Promise<string> {
-    const apiKey = this.getApiKey();
+    const apiKey = await this.getApiKey();
     const selectedModel = localStorage.getItem('openai_model') || 'gpt-4o-mini';
     
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -105,7 +137,7 @@ export class SpeechService {
   }
 
   async generateMultipleItems(transcript: string): Promise<MultiItemResult> {
-    const apiKey = this.getApiKey();
+    const apiKey = await this.getApiKey();
     const selectedModel = localStorage.getItem('openai_model') || 'gpt-4o-mini';
     const multiItemPrompt = localStorage.getItem('multi_item_prompt') || 
       'Analyze this transcript and break it down into distinct, actionable items. Each item should be a separate task, idea, or note. If the content naturally contains multiple distinct items, return them as separate entries. If it\'s really just one cohesive item, return only one. For each item, provide a 3-word title (no punctuation) and the relevant content. Respond in JSON format: {"items": [{"title": "Three Word Title", "content": "detailed content"}], "is_single_item": false}';
