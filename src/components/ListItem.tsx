@@ -208,7 +208,7 @@ export const ListItem = ({
       <div
         className={`group flex items-center gap-sm p-sm rounded-md transition-colors duration-fast min-h-[3rem] ${
           isSelected
-            ? "border border-border-focus"
+            ? "border-2 border-accent-red bg-accent-red/5"
             : "border border-border"
         } ${isChild ? "ml-lg" : ""} ${
           isDeleting ? "animate-slide-out-left" : ""
@@ -288,29 +288,39 @@ export const ListItem = ({
 
         {/* Voice Edit Button - only show when editing */}
         {isEditing && (
-          <div className="flex-shrink-0 ml-xs">
+          <div className="flex-shrink-0 ml-xs relative">
             <button
-              onClick={() => toggleVoiceEdit(handleVoiceTranscription)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleVoiceEdit(handleVoiceTranscription);
+              }}
               disabled={isProcessing}
-              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors duration-fast touch-manipulation ${
+              className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors duration-fast touch-manipulation min-w-12 min-h-12 ${
                 isRecording 
                   ? "bg-accent-red text-white animate-pulse" 
-                  : "text-foreground-muted hover:text-foreground hover:bg-background-subtle border border-border"
+                  : "text-foreground-muted hover:text-foreground hover:bg-background-subtle border-2 border-border bg-background-card"
               } ${isProcessing ? "opacity-50" : ""}`}
+              type="button"
             >
               {isProcessing ? (
-                <div className="w-4 h-4 border border-current border-t-transparent rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
               ) : (
-                <Mic className="w-4 h-4" />
+                <Mic className="w-6 h-6" />
               )}
             </button>
             {/* Cancel Voice Edit Button */}
             {isRecording && (
               <button
-                onClick={cancelVoiceEdit}
-                className="absolute -top-1 -right-1 w-5 h-5 bg-accent-red rounded-full flex items-center justify-center hover:bg-accent-red/90 transition-colors duration-fast touch-manipulation z-10"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  cancelVoiceEdit();
+                }}
+                className="absolute -top-1 -right-1 w-6 h-6 bg-accent-red rounded-full flex items-center justify-center hover:bg-accent-red/90 transition-colors duration-fast touch-manipulation z-10"
+                type="button"
               >
-                <X className="w-3 h-3 text-white" />
+                <X className="w-4 h-4 text-white" />
               </button>
             )}
           </div>

@@ -171,133 +171,84 @@ export const MobileLayout = () => {
 
         {/* Fixed Bottom Navigation */}
         <nav className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm z-10 p-md">
-          <div className={`grid gap-xs transition-all duration-300 ${
-            buttonPosition === "header" 
-              ? showSecondList ? 'grid-cols-3' : 'grid-cols-2' 
-              : showSecondList ? 'grid-cols-5' : 'grid-cols-4'
+          <div className={`flex gap-xs transition-all duration-300 ${
+            showSecondList ? 'justify-center' : 'justify-center'
           }`}>
-            {/* List Tab */}
-            <button
-              onClick={() => setActiveTab("free")}
-              className={`flex flex-col items-center justify-center h-12 text-xs font-medium transition-colors duration-fast rounded-md border border-border ${
-                activeTab === "free"
-                  ? "bg-background-card text-foreground border-border"
-                  : "text-foreground-muted hover:text-foreground bg-background-card"
-              }`}
-            >
-              <List className="w-5 h-5" />
-            </button>
-
-            {/* Second List Tab - Only show if enabled */}
+            
+            {/* Show list tabs only when second list is enabled */}
             {showSecondList && (
-              <button
-                onClick={() => setActiveTab("second")}
-                className={`flex flex-col items-center justify-center h-12 text-xs font-medium transition-colors duration-fast rounded-md border border-border whitespace-nowrap ${
-                  activeTab === "second"
-                    ? "bg-background-card text-foreground border-border"
-                    : "text-foreground-muted hover:text-foreground bg-background-card"
-                }`}
-              >
-                2nd
-              </button>
-            )}
-
-            {/* Deselect Button - Only show when not in settings/admin */}
-            {activeTab !== "settings" && activeTab !== "admin" && (
-              <button
-                onClick={() => {
-                  // Call deselect function for current active tab
-                  if (activeTab === "free" && addTextItem) {
-                    // Access the deselect function through a context or direct call
-                    // We'll need to add this functionality to the FreeList component
-                    window.dispatchEvent(new CustomEvent('deselect-all-items'));
-                  } else if (activeTab === "second" && addTextItem) {
-                    window.dispatchEvent(new CustomEvent('deselect-all-items'));
-                  }
-                }}
-                className="flex flex-col items-center justify-center h-12 text-xs font-medium transition-colors duration-fast rounded-md border border-border text-foreground-muted hover:text-foreground bg-background-card"
-                title="Deselect All"
-              >
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 2C9.38 2 7.25 4.13 7.25 6.75c0 2.57 2.01 4.65 4.63 4.74-.08-.49-.13-.99-.13-1.49 0-4.28 3.47-7.75 7.75-7.75.5 0 1 .05 1.49.13C20.87 4.26 18.79 2.25 16.22 2.25 14.66 2.09 13.34 2 12 2z"/>
-                  <circle cx="12" cy="12" r="2"/>
-                  <path d="M18 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/>
-                </svg>
-              </button>
-            )}
-
-            {/* Action Buttons - Only show when buttonPosition is "bottom" */}
-            {buttonPosition === "bottom" && (
               <>
-                {/* Add Item Button */}
+                {/* List 1 Tab */}
                 <button
-                  onClick={handleAddItem}
-                  disabled={activeTab === "settings" || activeTab === "admin"}
-                  className={`flex flex-col items-center justify-center h-12 text-xs font-medium transition-colors duration-fast rounded-md border border-border ${
-                    activeTab === "settings" || activeTab === "admin"
-                      ? "text-foreground-subtle bg-background-card border-border opacity-50 cursor-not-allowed"
-                      : "text-foreground hover:text-foreground bg-background-card hover:bg-background-card border-border"
+                  onClick={() => setActiveTab("free")}
+                  className={`flex flex-col items-center justify-center h-12 px-6 text-xs font-medium transition-colors duration-fast rounded-md border border-border ${
+                    activeTab === "free"
+                      ? "bg-background-card text-foreground border-border"
+                      : "text-foreground-muted hover:text-foreground bg-background-card"
                   }`}
                 >
-                  <Plus className="w-5 h-5" />
+                  List 1
                 </button>
 
-                {/* Space Button */}
+                {/* List 2 Tab */}
                 <button
-                  onClick={handleAddSpace}
-                  disabled={activeTab === "settings" || activeTab === "admin"}
-                  className={`flex flex-col items-center justify-center h-12 text-xs font-medium transition-colors duration-fast rounded-md border border-border ${
-                    activeTab === "settings" || activeTab === "admin"
-                      ? "text-foreground-subtle bg-background-card border-border opacity-50 cursor-not-allowed"
-                      : "text-foreground hover:text-foreground bg-background-card hover:bg-background-card border-border"
+                  onClick={() => setActiveTab("second")}
+                  className={`flex flex-col items-center justify-center h-12 px-6 text-xs font-medium transition-colors duration-fast rounded-md border border-border whitespace-nowrap ${
+                    activeTab === "second"
+                      ? "bg-background-card text-foreground border-border"
+                      : "text-foreground-muted hover:text-foreground bg-background-card"
                   }`}
                 >
-                  <MoreHorizontal className="w-5 h-5" />
+                  List 2
                 </button>
               </>
             )}
 
-            {/* Recording Button */}
-            <button
-              onClick={toggleRecording}
-              disabled={isProcessing || !canRequestPermission}
-              className={`flex flex-col items-center justify-center h-12 text-xs font-medium transition-all duration-300 rounded-md border relative ${
-                isRecording
-                  ? "text-white border-red-500 bg-red-500 animate-pulse"
-                  : isProcessing
-                    ? "text-white border-border/30 bg-accent-red/50 opacity-50"
-                    : !canRequestPermission
-                      ? "text-white border-border/30 bg-accent-red/30 opacity-50 cursor-not-allowed"
-                      : "text-white border-accent-red bg-accent-red hover:bg-accent-red/90"
-              }`}
-              title={!canRequestPermission ? "Microphone requires HTTPS or supported browser" : ""}
-              style={{
-                animationDuration: isRecording ? "2s" : undefined,
-              }}
-            >
-              {isRecording ? (
-                <Square className="w-5 h-5" />
-              ) : (
-                <Mic className={`w-5 h-5 ${isProcessing ? 'animate-pulse' : ''}`} />
-              )}
-              {pendingRecordings.length > 0 && (
-                <span className="absolute -bottom-1 -right-1 w-3 h-3 bg-accent-red rounded-full text-xs text-white flex items-center justify-center">
-                  {pendingRecordings.length}
-                </span>
-              )}
-              {/* Cancel Recording Button */}
-              {isRecording && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    cancelRecording();
-                  }}
-                  className="absolute -top-1 -right-1 w-5 h-5 bg-red-700 rounded-full flex items-center justify-center hover:bg-red-800 transition-colors duration-fast z-10"
-                >
-                  <X className="w-3 h-3 text-white" />
-                </button>
-              )}
-            </button>
+            {/* Recording Button - Always visible, with background for single-button mode */}
+            <div className={`${!showSecondList ? 'bg-background-card border border-border rounded-md' : ''} flex`}>
+              <button
+                onClick={toggleRecording}
+                disabled={isProcessing || !canRequestPermission}
+                className={`flex flex-col items-center justify-center h-12 px-6 text-xs font-medium transition-all duration-300 rounded-md relative ${
+                  showSecondList ? 'border border-border' : 'border-0'
+                } ${
+                  isRecording
+                    ? "text-white bg-accent-red animate-pulse"
+                    : isProcessing
+                      ? "text-white bg-accent-red/50 opacity-50"
+                      : !canRequestPermission
+                        ? "text-white bg-accent-red/30 opacity-50 cursor-not-allowed"
+                        : "text-white bg-accent-red hover:bg-accent-red/90"
+                }`}
+                title={!canRequestPermission ? "Microphone requires HTTPS or supported browser" : ""}
+                style={{
+                  animationDuration: isRecording ? "2s" : undefined,
+                }}
+              >
+                {isRecording ? (
+                  <Square className="w-6 h-6" />
+                ) : (
+                  <Mic className={`w-6 h-6 ${isProcessing ? 'animate-pulse' : ''}`} />
+                )}
+                {pendingRecordings.length > 0 && (
+                  <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-accent-red rounded-full text-xs text-white flex items-center justify-center">
+                    {pendingRecordings.length}
+                  </span>
+                )}
+                {/* Cancel Recording Button */}
+                {isRecording && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      cancelRecording();
+                    }}
+                    className="absolute -top-1 -right-1 w-6 h-6 bg-red-700 rounded-full flex items-center justify-center hover:bg-red-800 transition-colors duration-fast z-10"
+                  >
+                    <X className="w-4 h-4 text-white" />
+                  </button>
+                )}
+              </button>
+            </div>
           </div>
         </nav>
       </div>
