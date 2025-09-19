@@ -125,11 +125,13 @@ export const EditableText = ({
         </div>
         
         {/* Voice Input Button */}
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 mic-button-zone relative" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={handleMicrophoneClick}
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
             disabled={isProcessing}
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-fast shadow-lg border-2 touch-manipulation ${
+            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-fast shadow-lg border-2 touch-manipulation relative z-20 ${
               isRecording 
                 ? "bg-accent-red text-white animate-pulse shadow-accent-red/40 scale-105 border-accent-red" 
                 : "text-accent-red hover:text-white hover:bg-accent-red border-accent-red bg-background-card hover:shadow-xl hover:scale-105"
@@ -148,7 +150,9 @@ export const EditableText = ({
           {isRecording && (
             <button
               onClick={cancelVoiceEdit}
-              className="absolute -top-1 -right-1 w-4 h-4 bg-accent-red rounded-full flex items-center justify-center hover:bg-accent-red/90 transition-all duration-fast shadow-lg border border-white touch-manipulation"
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              className="absolute -top-1 -right-1 w-4 h-4 bg-accent-red rounded-full flex items-center justify-center hover:bg-accent-red/90 transition-all duration-fast shadow-lg border border-white touch-manipulation z-30"
               type="button"
               aria-label="Cancel voice recording"
             >

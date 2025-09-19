@@ -35,7 +35,7 @@ export const DraggableWrapper = ({
   const handleTouchStart = (e: React.TouchEvent) => {
     // Only handle touch events on the drag handle, not on interactive elements
     const target = e.target as HTMLElement;
-    if (target.closest('.drag-handle') && !target.closest('button, input')) {
+    if (target.closest('.drag-handle') && !target.closest('button, input, .mic-button-zone')) {
       onTouchStart?.(e, id);
     }
   };

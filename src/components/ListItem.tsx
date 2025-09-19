@@ -186,7 +186,7 @@ export const ListItem = ({
         </div>
       )}
       
-      <div className="relative mb-xs">
+      <div className="relative mb-sm">
         <DraggableWrapper
           id={item.id}
           isDragging={isDragging}
