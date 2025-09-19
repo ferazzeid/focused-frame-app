@@ -113,8 +113,19 @@ export const ListItem = ({
 
   // Simple click handler - always enters edit mode
   const handleItemClick = (e: React.MouseEvent) => {
-    // Don't trigger if already editing or clicking interactive elements
-    if (isEditing || e.target !== e.currentTarget) {
+    const target = e.target as HTMLElement;
+    
+    // Don't trigger if already editing
+    if (isEditing) {
+      return;
+    }
+    
+    // Don't trigger if clicking on interactive elements (buttons, inputs, drag handle)
+    if (target.closest('button') || 
+        target.closest('input') || 
+        target.closest('.grip-vertical') ||
+        target.tagName === 'BUTTON' ||
+        target.tagName === 'INPUT') {
       return;
     }
     
@@ -289,7 +300,7 @@ export const ListItem = ({
           isTouch || isMobile ? 'w-8 h-8' : 'w-6 h-6'
         } ${isDragging ? 'scale-110' : ''}`}>
           <GripVertical 
-            className={`text-foreground-subtle transition-all duration-fast cursor-grab active:cursor-grabbing touch-manipulation ${
+            className={`grip-vertical text-foreground-subtle transition-all duration-fast cursor-grab active:cursor-grabbing touch-manipulation ${
               isTouch || isMobile ? 'w-6 h-6 opacity-80' : 'w-5 h-5 opacity-60 group-hover:opacity-100'
             } ${isDragging ? 'text-accent-green scale-110 opacity-100' : ''}`}
             onMouseDown={(e) => {
