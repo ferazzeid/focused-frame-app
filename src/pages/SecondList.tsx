@@ -33,6 +33,9 @@ export const SecondList = () => {
           
           // Force cleanup on data load - remove existing problematic items
           const cleanedItems = cleanupItems(data.secondList);
+          console.log("Original secondList length:", data.secondList.length);
+          console.log("Cleaned items length:", cleanedItems.length);
+          
           if (cleanedItems.length !== data.secondList.length) {
             console.log(`Forced cleanup: removed ${data.secondList.length - cleanedItems.length} invalid items on load`);
             // Save cleaned data back immediately
@@ -40,6 +43,7 @@ export const SecondList = () => {
             await saveData(updatedData);
             setItems(cleanedItems);
           } else {
+            console.log("No cleanup needed, setting items as-is");
             setItems(data.secondList);
           }
         } catch (error) {
@@ -99,11 +103,16 @@ export const SecondList = () => {
 
   const saveItems = async (newItems: ListItemData[]) => {
     console.log("saveItems called with:", newItems.length, "items");
+    
+    // Force cleanup before saving to remove any consecutive dividers
+    const cleanedItems = cleanupItems(newItems);
+    console.log("Items after cleanup:", cleanedItems.length);
+    
     try {
       const data = await loadData();
-      data.secondList = newItems;
+      data.secondList = cleanedItems;
       await saveData(data);
-      setItems(newItems);
+      setItems(cleanedItems);
       console.log("Items saved and state updated");
     } catch (error) {
       console.error("Error saving items:", error);
@@ -273,16 +282,31 @@ export const SecondList = () => {
   };
 
   const deleteItem = async (id: string) => {
+    console.log("=== DELETE ITEM CALLED ===");
+    console.log("Deleting item with id:", id);
+    
     const itemToDelete = items.find(item => item.id === id);
-    if (!itemToDelete) return;
+    console.log("Item to delete:", itemToDelete);
+    
+    if (!itemToDelete) {
+      console.log("Item not found, aborting delete");
+      return;
+    }
 
     try {
+      console.log("Starting delete process...");
+      
       // Archive the item (treating as delete for now)
       await archiveItem(itemToDelete);
+      console.log("Item archived successfully");
 
       // Remove from current list  
       const newItems = items.filter(item => item.id !== id);
+      console.log("Items before save:", items.length);
+      console.log("Items after filter:", newItems.length);
+      
       await saveItems(newItems);
+      console.log("Delete completed successfully");
 
       toast({
         title: "Item deleted",
@@ -371,10 +395,15 @@ export const SecondList = () => {
   };
 
   const handleDeleteExecute = () => {
+    console.log("=== HANDLE DELETE EXECUTE CALLED ===");
+    console.log("deleteItemId:", deleteItemId);
+    
     if (deleteItemId) {
       deleteItem(deleteItemId);
       setDeleteItemId(null);
       setIsDeleteModalOpen(false);
+    } else {
+      console.log("No deleteItemId found, aborting");
     }
   };
 
