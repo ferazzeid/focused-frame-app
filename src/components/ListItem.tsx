@@ -70,9 +70,19 @@ export const ListItem = ({
   const [localContent, setLocalContent] = useState(item.content);
   const [showMenu, setShowMenu] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isInternalEdit, setIsInternalEdit] = useState(false); // Internal editing state
   const { isRecording, isProcessing, toggleVoiceEdit, cancelVoiceEdit } = useVoiceEdit();
   const { toast } = useToast();
   const { isMobile, isTouch } = useDeviceDetection();
+
+  // Sync local state when item changes
+  useState(() => {
+    setLocalTitle(item.title);
+    setLocalContent(item.content);
+  });
+
+  // Combined editing state - true if either parent says we're editing OR we're internally editing
+  const actuallyEditing = isEditing || isInternalEdit;
 
   const handleVoiceTranscription = async (transcribedText: string) => {
     console.log("Voice transcription received:", transcribedText);
@@ -111,16 +121,17 @@ export const ListItem = ({
     }
   };
 
-  // Simple text area click handler - only triggers on text content
-  const handleTextAreaClick = (e: React.MouseEvent) => {
-    // Don't trigger if already editing
-    if (isEditing) {
-      return;
-    }
-    
-    e.stopPropagation();
-    console.log('Text area clicked, entering edit mode:', item.id);
+  // Simple and robust edit mode trigger
+  const handleStartEdit = () => {
+    console.log('Starting edit mode for item:', item.id);
+    setIsInternalEdit(true);
     onEdit?.(item.id);
+  };
+
+  const handleStopEdit = () => {
+    console.log('Stopping edit mode for item:', item.id);
+    setIsInternalEdit(false);
+    onSave?.(item.id);
   };
 
   const handleMicrophoneClick = (e: React.MouseEvent | React.TouchEvent) => {
@@ -159,9 +170,10 @@ export const ListItem = ({
   };
 
   const handleSave = () => {
+    console.log('Saving item:', item.id, 'with title:', localTitle);
     // Save whatever the user typed - no validation here
     onUpdate(item.id, localTitle, localContent);
-    onSave?.(item.id);
+    handleStopEdit();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -172,7 +184,7 @@ export const ListItem = ({
     if (e.key === "Escape") {
       setLocalTitle(item.title);
       setLocalContent(item.content);
-      onSave?.(item.id);
+      handleStopEdit();
     }
   };
 
@@ -307,7 +319,7 @@ export const ListItem = ({
 
         {/* Content */}
         <div className="flex-1 min-w-0 ml-xs flex items-center content-area">
-          {isEditing ? (
+          {actuallyEditing ? (
             <div className="relative w-full pr-16">
               <input
                 type="text"
@@ -320,8 +332,6 @@ export const ListItem = ({
                 }}
                 onBlur={handleSave}
                 onKeyDown={handleKeyDown}
-                onClick={(e) => e.stopPropagation()}
-                onFocus={(e) => e.stopPropagation()}
                 placeholder="Item..."
                 className={`w-full bg-input border border-input-border rounded-sm px-sm py-sm text-sm transition-colors duration-fast focus:border-input-border focus:ring-0 focus:ring-offset-0 focus:outline-none ${
                   item.isBold ? "font-bold text-base" : "font-normal"
@@ -336,7 +346,7 @@ export const ListItem = ({
                   ? "font-bold text-base text-foreground"
                   : "font-light text-sm text-foreground leading-tight"
               }`}
-              onClick={handleTextAreaClick}
+              onClick={handleStartEdit}
             >
               {item.title ? (
                 <span>
@@ -353,7 +363,7 @@ export const ListItem = ({
         </div>
 
         {/* Unified Voice Edit Button */}
-        {isEditing && (
+        {actuallyEditing && (
           <div className="flex-shrink-0 ml-xs">
             <div className="relative">
               <button
