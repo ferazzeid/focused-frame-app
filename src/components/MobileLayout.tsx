@@ -4,7 +4,7 @@ import { SecondList } from "@/pages/SecondList";
 import { Archive } from "@/pages/Archive";
 import { Settings } from "@/pages/Settings";
 import { AdminDashboard } from "@/pages/AdminDashboard";
-import { Mic, Square, X, Settings as SettingsIcon, Plus, Minus, Key } from "lucide-react";
+import { Mic, Square, X, Settings as SettingsIcon, Plus, List, MoreHorizontal, Key } from "lucide-react";
 import { useRecording } from "@/hooks/useRecording";
 import { useUserRole } from "@/hooks/useUserRole";
 
@@ -155,7 +155,7 @@ export const MobileLayout = () => {
                   : "text-foreground-muted hover:text-foreground bg-background-card"
               }`}
             >
-              List
+              <List className="w-5 h-5" />
             </button>
 
             {/* Second List Tab - Only show if enabled */}
@@ -195,9 +195,7 @@ export const MobileLayout = () => {
                   : "text-foreground hover:text-foreground bg-background-card hover:bg-background-card border-border"
               }`}
             >
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="w-5 h-5">
-                <line x1="3" y1="10" x2="17" y2="10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
+              <MoreHorizontal className="w-5 h-5" />
             </button>
 
             {/* Recording Button */}
@@ -224,7 +222,7 @@ export const MobileLayout = () => {
                 <Mic className={`w-5 h-5 ${isProcessing ? 'animate-pulse' : ''}`} />
               )}
               {pendingRecordings.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-accent-red rounded-full text-xs text-white flex items-center justify-center">
+                <span className="absolute -bottom-1 -right-1 w-3 h-3 bg-accent-red rounded-full text-xs text-white flex items-center justify-center">
                   {pendingRecordings.length}
                 </span>
               )}
