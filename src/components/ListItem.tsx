@@ -250,30 +250,42 @@ export const ListItem = ({
           onDragOver={onDragOver}
           onDragEnd={onDragEnd}
           onDrop={(e) => onDrop?.(e, item.id)}
-          onTouchStart={(e) => onTouchStart?.(e, item.id)}
+          onTouchStart={(e) => {
+            // Prevent touch conflicts with buttons
+            const target = e.target as HTMLElement;
+            if (target.closest('button') || target.closest('.mic-button-zone')) {
+              return;
+            }
+            onTouchStart?.(e, item.id);
+          }}
           onTouchMove={onTouchMove}
           onTouchEnd={(e) => {
-            // Special handling for mobile touch to prevent interference with mic button
-            if ((e.target as HTMLElement).closest('.mic-button-zone')) {
-              e.stopPropagation();
+            // Prevent touch conflicts with buttons
+            const target = e.target as HTMLElement;
+            if (target.closest('button') || target.closest('.mic-button-zone')) {
               return;
             }
             onTouchEnd?.(e);
           }}
           onClick={(e) => {
             // Don't trigger selection if clicking on input, microphone button, or menu
-            if (isEditing || 
-                (e.target as HTMLElement).closest('.mic-button-zone') ||
-                (e.target as HTMLElement).closest('input') ||
-                (e.target as HTMLElement).closest('button') ||
-                (e.target as HTMLElement).tagName === 'INPUT') {
+            if (isEditing) {
+              return;
+            }
+            const target = e.target as HTMLElement;
+            if (target.closest('button') || 
+                target.closest('.mic-button-zone') ||
+                target.closest('input') ||
+                target.tagName === 'INPUT' ||
+                target.tagName === 'BUTTON') {
               return;
             }
             onSelect?.(item.id);
           }}
           data-item-id={item.id}
           style={{
-            pointerEvents: isEditing ? 'auto' : 'auto'
+            pointerEvents: 'auto',
+            userSelect: 'none'
           }}
         >
         {/* Enhanced Drag Handle */}
@@ -310,13 +322,21 @@ export const ListItem = ({
                 onKeyDown={handleKeyDown}
                 onClick={(e) => {
                   e.stopPropagation();
+                  console.log('Input field clicked');
+                }}
+                onFocus={(e) => {
+                  console.log('Input field focused');
+                  e.stopPropagation();
                 }}
                 placeholder="Item..."
                 className={`w-full bg-input border border-input-border rounded-sm px-sm py-sm text-sm transition-colors duration-fast focus:border-input-border focus:ring-0 focus:ring-offset-0 focus:outline-none ${
                   item.isBold ? "font-bold text-base" : "font-normal"
                 }`}
                 autoFocus
-                style={{ pointerEvents: 'auto' }}
+                style={{ 
+                  pointerEvents: 'auto',
+                  zIndex: 5
+                }}
               />
             </div>
           ) : (
@@ -342,13 +362,14 @@ export const ListItem = ({
           )}
         </div>
 
-        {/* Voice Edit Button - Inline positioning */}
+        {/* Voice Edit Button - Mobile optimized */}
         {isEditing && (
           <div 
             className="mic-button-zone flex-shrink-0 ml-xs"
             style={{
               pointerEvents: 'auto',
-              touchAction: 'manipulation'
+              touchAction: 'manipulation',
+              zIndex: 20
             }}
           >
             <div className="relative">
@@ -356,37 +377,43 @@ export const ListItem = ({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  console.log('Microphone button clicked');
-                  toggleVoiceEdit(handleVoiceTranscription);
+                  console.log('Microphone button clicked - desktop');
+                  if (!isMobile && !isTouch) {
+                    toggleVoiceEdit(handleVoiceTranscription);
+                  }
                 }}
                 onTouchStart={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
+                  console.log('Microphone button touch start');
                 }}
                 onTouchEnd={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  console.log('Microphone button touched');
-                  toggleVoiceEdit(handleVoiceTranscription);
+                  console.log('Microphone button touch end - mobile');
+                  if (isMobile || isTouch) {
+                    toggleVoiceEdit(handleVoiceTranscription);
+                  }
                 }}
                 disabled={isProcessing}
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-fast shadow-lg ${
+                className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-fast shadow-lg border-2 ${
                   isRecording 
-                    ? "bg-accent-red text-white animate-pulse shadow-accent-red/40 scale-105" 
-                    : "text-foreground-muted hover:text-foreground hover:bg-background-subtle border-2 border-border bg-background-card hover:shadow-xl hover:scale-105 active:scale-95"
+                    ? "bg-accent-red text-white animate-pulse shadow-accent-red/40 scale-105 border-accent-red" 
+                    : "text-accent-red hover:text-white hover:bg-accent-red border-accent-red bg-background-card hover:shadow-xl hover:scale-105 active:scale-95"
                 } ${isProcessing ? "opacity-75 cursor-wait" : "cursor-pointer"}`}
                 type="button"
                 style={{
                   pointerEvents: 'auto',
                   touchAction: 'manipulation',
-                  zIndex: 10
+                  zIndex: 30,
+                  WebkitTapHighlightColor: 'transparent'
                 }}
                 aria-label={isRecording ? "Stop recording" : "Start voice recording"}
               >
                 {isProcessing ? (
-                  <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <Mic className={`transition-all duration-fast ${isRecording ? 'w-6 h-6' : 'w-5 h-5'}`} />
+                  <Mic className={`transition-all duration-fast ${isRecording ? 'w-7 h-7' : 'w-6 h-6'}`} />
                 )}
               </button>
               {/* Cancel Voice Edit Button */}
@@ -424,12 +451,24 @@ export const ListItem = ({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              console.log('Three dots menu clicked');
               setShowMenu(!showMenu);
             }}
-            className="w-8 h-8 rounded-md border border-transparent hover:border-border text-foreground-subtle hover:text-foreground transition-colors duration-fast flex items-center justify-center touch-manipulation"
-            style={{ pointerEvents: 'auto' }}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('Three dots menu touched');
+              setShowMenu(!showMenu);
+            }}
+            className="w-10 h-10 rounded-md border border-transparent hover:border-border text-foreground-subtle hover:text-foreground transition-colors duration-fast flex items-center justify-center"
+            style={{ 
+              pointerEvents: 'auto',
+              touchAction: 'manipulation',
+              zIndex: 10,
+              WebkitTapHighlightColor: 'transparent'
+            }}
           >
-            <MoreVertical className="w-4 h-4" />
+            <MoreVertical className="w-5 h-5" />
           </button>
           
           {/* Dropdown Menu */}
