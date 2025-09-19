@@ -118,23 +118,51 @@
   }
 }
 
-/* Microphone button isolation for mobile */
-.mic-button-container .mic-button-zone {
-  pointer-events: auto !important;
-  touch-action: manipulation !important;
+/* Mobile optimizations and interaction fixes */
+.mic-button-container {
+  pointer-events: auto;
+  user-select: none;
 }
 
-.mic-button-container .mic-button-zone * {
-  pointer-events: auto !important;
-  touch-action: manipulation !important;
+.mic-button-container input {
+  pointer-events: auto;
+  user-select: text;
 }
 
-/* Ensure proper layering */
 .mic-button-zone {
+  pointer-events: auto !important;
+  user-select: none;
   isolation: isolate;
+}
+
+.mic-button-zone * {
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
 }
 
 .mic-button-zone button {
   position: relative;
   z-index: 10;
+}
+
+/* Prevent text selection during drag operations */
+[draggable="true"] {
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+[data-item-id] {
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+}
+
+/* Allow text selection in input fields */
+input, textarea {
+  user-select: text !important;
+  -webkit-user-select: text !important;
 }

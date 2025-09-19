@@ -261,10 +261,12 @@ export const ListItem = ({
             onTouchEnd?.(e);
           }}
           onClick={(e) => {
-            // Don't trigger selection if clicking on microphone button or interactive elements
+            // Don't trigger selection if clicking on input, microphone button, or menu
             if (isEditing || 
                 (e.target as HTMLElement).closest('.mic-button-zone') ||
-                (e.target !== e.currentTarget && !(e.target as HTMLElement).closest('.content-area'))) {
+                (e.target as HTMLElement).closest('input') ||
+                (e.target as HTMLElement).closest('button') ||
+                (e.target as HTMLElement).tagName === 'INPUT') {
               return;
             }
             onSelect?.(item.id);
@@ -294,7 +296,7 @@ export const ListItem = ({
         {/* Content */}
         <div className="flex-1 min-w-0 ml-xs flex items-center content-area">
           {isEditing ? (
-            <div className="relative w-full">
+            <div className="relative w-full pr-16">
               <input
                 type="text"
                 value={localTitle}
@@ -306,13 +308,16 @@ export const ListItem = ({
                 }}
                 onBlur={handleSave}
                 onKeyDown={handleKeyDown}
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
                 placeholder="Item..."
                 className={`w-full bg-input border border-input-border rounded-sm px-sm py-sm text-sm transition-colors duration-fast focus:border-input-border focus:ring-0 focus:ring-offset-0 focus:outline-none ${
                   item.isBold ? "font-bold text-base" : "font-normal"
                 }`}
                 autoFocus
+                style={{ pointerEvents: 'auto' }}
               />
-              {/* Voice Edit Button - positioned as sibling */}
             </div>
           ) : (
             <div
@@ -337,10 +342,10 @@ export const ListItem = ({
           )}
         </div>
 
-        {/* Voice Edit Button - Absolutely positioned for mobile isolation */}
+        {/* Voice Edit Button - Inline positioning */}
         {isEditing && (
           <div 
-            className="mic-button-zone absolute right-12 top-1/2 -translate-y-1/2 z-20"
+            className="mic-button-zone flex-shrink-0 ml-xs"
             style={{
               pointerEvents: 'auto',
               touchAction: 'manipulation'
@@ -365,7 +370,7 @@ export const ListItem = ({
                   toggleVoiceEdit(handleVoiceTranscription);
                 }}
                 disabled={isProcessing}
-                className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-fast shadow-lg min-w-14 min-h-14 ${
+                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-fast shadow-lg ${
                   isRecording 
                     ? "bg-accent-red text-white animate-pulse shadow-accent-red/40 scale-105" 
                     : "text-foreground-muted hover:text-foreground hover:bg-background-subtle border-2 border-border bg-background-card hover:shadow-xl hover:scale-105 active:scale-95"
@@ -374,14 +379,14 @@ export const ListItem = ({
                 style={{
                   pointerEvents: 'auto',
                   touchAction: 'manipulation',
-                  zIndex: 30
+                  zIndex: 10
                 }}
                 aria-label={isRecording ? "Stop recording" : "Start voice recording"}
               >
                 {isProcessing ? (
-                  <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <Mic className={`transition-all duration-fast ${isRecording ? 'w-7 h-7' : 'w-6 h-6'}`} />
+                  <Mic className={`transition-all duration-fast ${isRecording ? 'w-6 h-6' : 'w-5 h-5'}`} />
                 )}
               </button>
               {/* Cancel Voice Edit Button */}
@@ -398,7 +403,7 @@ export const ListItem = ({
                     e.stopPropagation();
                     cancelVoiceEdit();
                   }}
-                  className="absolute -top-2 -right-2 w-7 h-7 bg-accent-red rounded-full flex items-center justify-center hover:bg-accent-red/90 transition-all duration-fast shadow-lg z-40 border border-white"
+                  className="absolute -top-1 -right-1 w-6 h-6 bg-accent-red rounded-full flex items-center justify-center hover:bg-accent-red/90 transition-all duration-fast shadow-lg z-20 border border-white"
                   type="button"
                   style={{
                     pointerEvents: 'auto',
@@ -406,7 +411,7 @@ export const ListItem = ({
                   }}
                   aria-label="Cancel voice recording"
                 >
-                  <X className="w-4 h-4 text-white" />
+                  <X className="w-3 h-3 text-white" />
                 </button>
               )}
             </div>
@@ -416,8 +421,13 @@ export const ListItem = ({
         {/* Actions - Three Dots Menu */}
         <div className="relative flex-shrink-0">
           <button
-            onClick={() => setShowMenu(!showMenu)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowMenu(!showMenu);
+            }}
             className="w-8 h-8 rounded-md border border-transparent hover:border-border text-foreground-subtle hover:text-foreground transition-colors duration-fast flex items-center justify-center touch-manipulation"
+            style={{ pointerEvents: 'auto' }}
           >
             <MoreVertical className="w-4 h-4" />
           </button>
