@@ -137,8 +137,28 @@ export const ListItem = ({
   const handleMicrophoneClick = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('Microphone button clicked');
-    toggleVoiceEdit(handleVoiceTranscription);
+    console.log('Microphone button clicked - preventing input blur');
+    
+    // Prevent the input from losing focus when clicking microphone
+    const inputElement = document.querySelector(`input[data-item-id="${item.id}"]`) as HTMLInputElement;
+    if (inputElement) {
+      // Store the current selection
+      const selectionStart = inputElement.selectionStart;
+      const selectionEnd = inputElement.selectionEnd;
+      
+      // Trigger the microphone
+      toggleVoiceEdit(handleVoiceTranscription);
+      
+      // Restore focus and selection after a small delay
+      setTimeout(() => {
+        inputElement.focus();
+        if (selectionStart !== null && selectionEnd !== null) {
+          inputElement.setSelectionRange(selectionStart, selectionEnd);
+        }
+      }, 10);
+    } else {
+      toggleVoiceEdit(handleVoiceTranscription);
+    }
   };
 
   const handleMenuToggle = (e: React.MouseEvent | React.TouchEvent) => {
@@ -324,13 +344,30 @@ export const ListItem = ({
               <input
                 type="text"
                 value={localTitle}
+                data-item-id={item.id}
                 onChange={(e) => {
                   const value = e.target.value;
                   // Auto-capitalize first letter
                   const capitalizedValue = value.length > 0 ? value.charAt(0).toUpperCase() + value.slice(1) : value;
                   setLocalTitle(capitalizedValue);
                 }}
-                onBlur={handleSave}
+                onBlur={(e) => {
+                  // Only save if the blur is NOT caused by clicking the microphone button
+                  const relatedTarget = e.relatedTarget as HTMLElement;
+                  const isMicrophoneClick = relatedTarget?.closest('[data-microphone-button]');
+                  
+                  console.log('Input blur event:', {
+                    relatedTarget: relatedTarget?.tagName,
+                    isMicrophoneClick,
+                    className: relatedTarget?.className
+                  });
+                  
+                  if (!isMicrophoneClick) {
+                    handleSave();
+                  } else {
+                    console.log('Blur caused by microphone click - not saving');
+                  }
+                }}
                 onKeyDown={handleKeyDown}
                 placeholder="Item..."
                 className={`w-full bg-input border border-input-border rounded-sm px-sm py-sm text-sm transition-colors duration-fast focus:border-input-border focus:ring-0 focus:ring-offset-0 focus:outline-none ${
@@ -369,7 +406,9 @@ export const ListItem = ({
               <button
                 onClick={handleMicrophoneClick}
                 onTouchEnd={handleMicrophoneClick}
+                onMouseDown={(e) => e.preventDefault()} // Prevent focus loss
                 disabled={isProcessing}
+                data-microphone-button="true"
                 className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-fast shadow-lg border-2 touch-manipulation ${
                   isRecording 
                     ? "bg-accent-red text-white animate-pulse shadow-accent-red/40 scale-105 border-accent-red" 
