@@ -103,11 +103,13 @@ export const MobileLayout = () => {
         <header className="fixed top-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm bg-background z-10 px-md py-lg">
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="text-xl font-medium text-foreground">Second List</h1>
+              <h1 className="text-xl font-medium text-foreground">
+                {activeTab === "second" ? "List 2" : activeTab === "settings" ? "Settings" : activeTab === "admin" ? "Admin" : "Your List"}
+              </h1>
             </div>
             <div className="flex items-center gap-sm">
-              {/* Header Action Buttons - Only show when buttonPosition is "header" and not in settings/admin */}
-              {buttonPosition === "header" && activeTab !== "settings" && activeTab !== "admin" && (
+              {/* Header Action Buttons - Show when not in settings/admin */}
+              {activeTab !== "settings" && activeTab !== "admin" && (
                 <>
                   <button
                     onClick={handleAddItem}
@@ -175,33 +177,18 @@ export const MobileLayout = () => {
             showSecondList ? 'justify-center' : 'justify-center'
           }`}>
             
-            {/* Show list tabs only when second list is enabled */}
+            {/* Show second list tab only when enabled */}
             {showSecondList && (
-              <>
-                {/* List 1 Tab */}
-                <button
-                  onClick={() => setActiveTab("free")}
-                  className={`flex flex-col items-center justify-center h-12 px-6 text-xs font-medium transition-colors duration-fast rounded-md border border-border ${
-                    activeTab === "free"
-                      ? "bg-background-card text-foreground border-border"
-                      : "text-foreground-muted hover:text-foreground bg-background-card"
-                  }`}
-                >
-                  List 1
-                </button>
-
-                {/* List 2 Tab */}
-                <button
-                  onClick={() => setActiveTab("second")}
-                  className={`flex flex-col items-center justify-center h-12 px-6 text-xs font-medium transition-colors duration-fast rounded-md border border-border whitespace-nowrap ${
-                    activeTab === "second"
-                      ? "bg-background-card text-foreground border-border"
-                      : "text-foreground-muted hover:text-foreground bg-background-card"
-                  }`}
-                >
-                  List 2
-                </button>
-              </>
+              <button
+                onClick={() => setActiveTab("second")}
+                className={`flex flex-col items-center justify-center h-12 px-6 text-xs font-medium transition-colors duration-fast rounded-md border border-border whitespace-nowrap ${
+                  activeTab === "second"
+                    ? "bg-background-card text-foreground border-border"
+                    : "text-foreground-muted hover:text-foreground bg-background-card"
+                }`}
+              >
+                <List className="w-5 h-5" />
+              </button>
             )}
 
             {/* Recording Button - Always visible, with background for single-button mode */}
