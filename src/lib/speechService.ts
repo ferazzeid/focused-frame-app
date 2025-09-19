@@ -95,7 +95,7 @@ export class SpeechService {
 
   async generateSummary(transcript: string): Promise<string> {
     const apiKey = await this.getApiKey();
-    const selectedModel = localStorage.getItem('openai_model') || 'gpt-4o-mini';
+    const selectedModel = localStorage.getItem('openai_model') || 'gpt-5-nano-2025-08-07';
     
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -115,8 +115,7 @@ export class SpeechService {
             content: `Summarize this text in exactly 3 words: "${transcript}"`
           }
         ],
-        max_tokens: 10,
-        temperature: 0.3,
+        max_completion_tokens: 10,
       }),
     });
 
@@ -131,7 +130,7 @@ export class SpeechService {
 
   async generateMultipleItems(transcript: string): Promise<MultiItemResult> {
     const apiKey = await this.getApiKey();
-    const selectedModel = localStorage.getItem('openai_model') || 'gpt-4o-mini';
+    const selectedModel = localStorage.getItem('openai_model') || 'gpt-5-nano-2025-08-07';
     const multiItemPrompt = localStorage.getItem('multi_item_prompt') || 
       'Analyze this transcript and break it down into distinct, actionable items. Each item should be a separate task, idea, or note. If the content naturally contains multiple distinct items, return them as separate entries. If it\'s really just one cohesive item, return only one. For each item, provide a 3-word title (no punctuation) and the relevant content. Respond in JSON format: {"items": [{"title": "Three Word Title", "content": "detailed content"}], "is_single_item": false}';
     
@@ -153,8 +152,7 @@ export class SpeechService {
             content: `Transcript: "${transcript}"`
           }
         ],
-        max_tokens: 500,
-        temperature: 0.3,
+        max_completion_tokens: 500,
       }),
     });
 

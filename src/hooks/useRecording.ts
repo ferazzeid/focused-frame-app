@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { speechService, TranscriptionResult, MultiItemResult } from '@/lib/speechService';
+import { hybridSpeechService } from '@/lib/hybridSpeechService';
 import { createTextItem, loadData, saveData, generateId } from '@/lib/storage';
-import { useToast } from '@/hooks/use-toast';
+import { useNotification } from '@/hooks/useNotification';
 import { useMicrophonePermission } from '@/hooks/useMicrophonePermission';
 
 interface PendingRecording {
@@ -21,7 +22,7 @@ export const useRecording = (onItemAdded?: () => void) => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const { toast } = useToast();
+  const { showSuccess, showError, showProcessing } = useNotification();
   const { hasPermission, requestPermission, canRequestPermission } = useMicrophonePermission();
 
   // Cleanup timer on unmount
@@ -90,11 +91,7 @@ export const useRecording = (onItemAdded?: () => void) => {
   const startRecording = async () => {
     // Check permission first
     if (!canRequestPermission) {
-      toast({
-        title: "Microphone Not Available",
-        description: "Microphone access requires HTTPS or a supported browser",
-        variant: "destructive",
-      });
+      showError("Microphone Not Available", "Microphone access requires HTTPS or a supported browser");
       return;
     }
 
@@ -127,17 +124,10 @@ export const useRecording = (onItemAdded?: () => void) => {
       setIsRecording(true);
       startTimer();
       
-      toast({
-        title: "Recording Started",
-        description: `Speak your idea now... (${RECORDING_TIME_LIMIT}s max)`,
-      });
+      // Use showInfo for recording start - brief notification in verbose mode only
     } catch (error) {
       console.error('Failed to start recording:', error);
-      toast({
-        title: "Recording Failed",
-        description: "Could not start recording. Please check your microphone.",
-        variant: "destructive",
-      });
+      showError("Recording Failed", "Could not start recording. Please check your microphone.");
     }
   };
 
@@ -158,10 +148,7 @@ export const useRecording = (onItemAdded?: () => void) => {
       // Clear audio chunks to prevent processing
       audioChunksRef.current = [];
       
-      toast({
-        title: "Recording Cancelled",
-        description: "Voice recording was cancelled",
-      });
+      // No toast for cancel - minimal feedback preferred
     }
   };
 
@@ -173,12 +160,9 @@ export const useRecording = (onItemAdded?: () => void) => {
       const multiItemEnabled = localStorage.getItem('multi_item_enabled') === 'true';
       
       if (multiItemEnabled) {
-        toast({
-          title: "Processing Audio",
-          description: "Analyzing for multiple items...",
-        });
+        showProcessing("Processing recording...");
 
-        const multiResult: MultiItemResult = await speechService.processAudioForMultipleItems(audioBlob);
+        const multiResult: MultiItemResult = await hybridSpeechService.processAudioForMultipleItems(audioBlob);
         
         // Create multiple items
         const currentData = await loadData();
@@ -195,20 +179,17 @@ export const useRecording = (onItemAdded?: () => void) => {
           removePendingRecording(recordingId);
         }
 
-        toast({
-          title: multiResult.items.length > 1 ? "Multiple Items Created" : "Voice Note Created",
-          description: multiResult.items.length > 1 
+        showSuccess(
+          multiResult.items.length > 1 ? "Multiple Items Created" : "Voice Note Created",
+          multiResult.items.length > 1 
             ? `Created ${multiResult.items.length} items from recording`
-            : `Added: "${multiResult.items[0].title}"`,
-        });
+            : `Added: "${multiResult.items[0].title}"`
+        );
 
       } else {
-        toast({
-          title: "Processing Audio",
-          description: "Transcribing and generating summary...",
-        });
+        showProcessing("Processing recording...");
 
-        const result: TranscriptionResult = await speechService.processAudio(audioBlob);
+        const result = await hybridSpeechService.processAudio(audioBlob);
         
         // Create new item with 3-word summary as title and transcript as content
         const newItem = createTextItem(result.summary, result.transcript);
@@ -226,10 +207,7 @@ export const useRecording = (onItemAdded?: () => void) => {
           removePendingRecording(recordingId);
         }
 
-        toast({
-          title: "Voice Note Created",
-          description: `Added: "${result.summary}"`,
-        });
+        showSuccess("Voice Note Created", `Added: "${result.summary}"`);
       }
 
       // Notify parent component that a new item was added
@@ -242,17 +220,9 @@ export const useRecording = (onItemAdded?: () => void) => {
       // Save for retry if not already saved
       if (!recordingId) {
         const id = savePendingRecording(audioBlob);
-        toast({
-          title: "Processing Failed",
-          description: "Recording saved. You can retry from pending recordings.",
-          variant: "destructive",
-        });
+        showError("Processing Failed", "Recording saved. You can retry from pending recordings.");
       } else {
-        toast({
-          title: "Processing Failed",
-          description: error instanceof Error ? error.message : "Failed to process audio. Please try again.",
-          variant: "destructive",
-        });
+        showError("Processing Failed", error instanceof Error ? error.message : "Failed to process audio. Please try again.");
       }
       
       setIsProcessing(false);

@@ -5,7 +5,8 @@ import { Label } from "@/components/ui/label";
 import { MobileButton } from "@/components/ui/mobile-button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Key, MessageSquare, ArrowLeft, Zap } from "lucide-react";
+import { Key, MessageSquare, ArrowLeft, Zap, Brain, Mic2, Settings2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -18,6 +19,10 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const [sharedKeyStatus, setSharedKeyStatus] = useState<{ hasKey: boolean; keyPreview: string | null }>({ hasKey: false, keyPreview: null });
   const [multiItemEnabled, setMultiItemEnabled] = useState(false);
   const [multiItemPrompt, setMultiItemPrompt] = useState("");
+  const [selectedModel, setSelectedModel] = useState("");
+  const [useLocalSpeech, setUseLocalSpeech] = useState(false);
+  const [notificationMode, setNotificationMode] = useState("");
+  const [quickMode, setQuickMode] = useState(false);
   const { toast } = useToast();
   const { isAdmin, isLoading } = useUserRole();
 
@@ -31,6 +36,19 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
     } else {
       setMultiItemPrompt('Analyze this transcript and break it down into distinct, actionable items. Each item should be a separate task, idea, or note. If the content naturally contains multiple distinct items, return them as separate entries. If it\'s really just one cohesive item, return only one. For each item, provide a 3-word title (no punctuation) and the relevant content. Respond in JSON format: {"items": [{"title": "Three Word Title", "content": "detailed content"}], "is_single_item": false}');
     }
+    
+    // Load AI model settings
+    const savedModel = localStorage.getItem("openai_model");
+    setSelectedModel(savedModel || "gpt-5-nano-2025-08-07");
+    
+    const savedLocalSpeech = localStorage.getItem("use_local_speech");
+    setUseLocalSpeech(savedLocalSpeech === "true");
+    
+    const savedNotificationMode = localStorage.getItem("notification_mode");
+    setNotificationMode(savedNotificationMode || "minimal");
+    
+    const savedQuickMode = localStorage.getItem("quick_mode");
+    setQuickMode(savedQuickMode === "true");
     
     // Load shared OpenAI key status
     loadSharedKeyStatus();
@@ -100,6 +118,17 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
     toast({
       title: "Multi-Item Settings Saved",
       description: "Your multi-item recording settings have been updated.",
+    });
+  };
+
+  const handleSaveAISettings = () => {
+    localStorage.setItem("openai_model", selectedModel);
+    localStorage.setItem("use_local_speech", useLocalSpeech.toString());
+    localStorage.setItem("notification_mode", notificationMode);
+    localStorage.setItem("quick_mode", quickMode.toString());
+    toast({
+      title: "AI Settings Saved",
+      description: "Your AI processing settings have been updated.",
     });
   };
 
@@ -244,6 +273,97 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
             >
               Save Multi-Item Settings
             </MobileButton>
+          </div>
+        </div>
+
+        {/* AI Processing Settings */}
+        <div className="space-y-md">
+          <div className="flex items-center gap-sm">
+            <Brain className="w-5 h-5 text-foreground-muted" />
+            <h2 className="text-lg font-semibold text-foreground">AI Processing Settings</h2>
+          </div>
+          <div className="bg-background-card border border-border rounded-md p-md space-y-md">
+            <div className="space-y-sm">
+              <Label className="text-sm font-medium text-foreground">OpenAI Model</Label>
+              <Select value={selectedModel} onValueChange={setSelectedModel}>
+                <SelectTrigger className="bg-input border border-input-border">
+                  <SelectValue placeholder="Select AI model" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="gpt-5-nano-2025-08-07">GPT-5 Nano (Fastest, Default)</SelectItem>
+                  <SelectItem value="gpt-5-mini-2025-08-07">GPT-5 Mini (Balanced)</SelectItem>
+                  <SelectItem value="gpt-5-2025-08-07">GPT-5 (Most Capable)</SelectItem>
+                  <SelectItem value="gpt-4.1-2025-04-14">GPT-4.1 (Reliable)</SelectItem>
+                  <SelectItem value="gpt-4o-mini">GPT-4o Mini (Legacy)</SelectItem>
+                  <SelectItem value="gpt-4o">GPT-4o (Legacy)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-foreground-subtle">
+                GPT-5 Nano is optimized for speed and efficiency while maintaining quality.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-xs">
+                <Label className="text-sm font-medium text-foreground">Speech-to-Text Method</Label>
+                <p className="text-xs text-foreground-subtle">
+                  {useLocalSpeech ? "Using browser's built-in speech recognition (instant)" : "Using OpenAI Whisper (higher accuracy)"}
+                </p>
+              </div>
+              <Switch
+                checked={useLocalSpeech}
+                onCheckedChange={setUseLocalSpeech}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-xs">
+                <Label className="text-sm font-medium text-foreground">Quick Mode</Label>
+                <p className="text-xs text-foreground-subtle">
+                  Skip AI summarization, use first few words as title for faster processing
+                </p>
+              </div>
+              <Switch
+                checked={quickMode}
+                onCheckedChange={setQuickMode}
+              />
+            </div>
+
+            <MobileButton
+              onClick={handleSaveAISettings}
+              variant="primary"
+              className="w-full"
+            >
+              Save AI Settings
+            </MobileButton>
+          </div>
+        </div>
+
+        {/* Notification Settings */}
+        <div className="space-y-md">
+          <div className="flex items-center gap-sm">
+            <Settings2 className="w-5 h-5 text-foreground-muted" />
+            <h2 className="text-lg font-semibold text-foreground">Notification Settings</h2>
+          </div>
+          <div className="bg-background-card border border-border rounded-md p-md space-y-md">
+            <div className="space-y-sm">
+              <Label className="text-sm font-medium text-foreground">Notification Mode</Label>
+              <Select value={notificationMode} onValueChange={setNotificationMode}>
+                <SelectTrigger className="bg-input border border-input-border">
+                  <SelectValue placeholder="Select notification style" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="minimal">Minimal (Visual feedback only)</SelectItem>
+                  <SelectItem value="reduced">Reduced (Critical errors only)</SelectItem>
+                  <SelectItem value="verbose">Verbose (All notifications)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-foreground-subtle">
+                {notificationMode === "minimal" && "Only visual indicators like checkmarks and spinners"}
+                {notificationMode === "reduced" && "Small toast notifications for errors only"}
+                {notificationMode === "verbose" && "Full toast notifications for all events"}
+              </p>
+            </div>
           </div>
         </div>
 
