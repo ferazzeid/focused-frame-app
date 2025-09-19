@@ -173,8 +173,24 @@ export const SecondList = () => {
   const addTextItem = () => {
     console.log("addTextItem clicked, current items:", items.length);
     
-    // Check if there's already an item with empty title
-    const hasEmptyTitleItem = items.some(item => !item.isEmpty && item.title.trim() === "");
+    // Clean up any existing empty items before adding a new one
+    const cleanedItems = items.filter(item => {
+      // Keep dividers (isEmpty = true)
+      if (item.isEmpty) return true;
+      // Keep items with content
+      if (item.title.trim() !== "" || item.content.trim() !== "") return true;
+      // Remove empty text items
+      return false;
+    });
+    
+    // Update state if we removed any items
+    if (cleanedItems.length !== items.length) {
+      console.log(`Cleaned up ${items.length - cleanedItems.length} empty items before adding new`);
+      setItems(cleanedItems);
+    }
+    
+    // Check if there's still an empty item after cleanup
+    const hasEmptyTitleItem = cleanedItems.some(item => !item.isEmpty && item.title.trim() === "");
     if (hasEmptyTitleItem) {
       toast({
         title: "Complete current item",
@@ -186,7 +202,7 @@ export const SecondList = () => {
     
     const newItem = createTextItem("", "");
     console.log("Created new item:", newItem);
-    const newItems = [...items, newItem];
+    const newItems = [...cleanedItems, newItem];
     
     const boldValid = validateBoldItemRules(newItems);
     const emptyValid = validateEmptyLineRules(newItems);
@@ -405,22 +421,8 @@ export const SecondList = () => {
     console.log("handleSave called for id:", id, "fromVoice:", fromVoice);
     setEditingId(null);
     
-    // CRITICAL: If item is empty and not from successful voice input, remove it
-    const item = items.find(item => item.id === id);
-    if (item && !item.isEmpty && item.title.trim() === "" && !fromVoice) {
-      console.log("Removing empty item that was not completed");
-      const newItems = items.filter(item => item.id !== id);
-      setItems(newItems);
-      // Don't save to database - this was a draft item
-      toast({
-        title: "Empty item removed",
-        description: "Items must have content to be saved",
-      });
-      return;
-    }
-    
-    // Remove any other empty items that were not properly completed
-    const newItems = items.filter(item => {
+    // ALWAYS clean up empty items after any save operation
+    const cleanedItems = items.filter(item => {
       // Keep dividers (isEmpty = true)
       if (item.isEmpty) return true;
       // Keep items with content
@@ -429,16 +431,23 @@ export const SecondList = () => {
       return false;
     });
     
-    if (newItems.length !== items.length) {
-      console.log("Removed empty items:", items.length - newItems.length);
-      setItems(newItems);
-      // Only save if we have content
-      if (newItems.some(item => !item.isEmpty && item.title.trim() !== "")) {
-        saveItems(newItems);
+    // Apply additional cleanup for consecutive dividers
+    const finalItems = cleanupItems(cleanedItems);
+    
+    if (finalItems.length !== items.length) {
+      console.log(`Cleaned up ${items.length - finalItems.length} empty items`);
+      setItems(finalItems);
+      
+      // Only save if we have actual content items
+      if (finalItems.some(item => !item.isEmpty && item.title.trim() !== "")) {
+        saveItems(finalItems);
       }
-    } else if (fromVoice || (item && item.title.trim() !== "")) {
-      // Save if it's from voice input or has content
-      saveItems(newItems);
+    } else {
+      // Still save if from voice or has content
+      const item = items.find(item => item.id === id);
+      if (fromVoice || (item && item.title.trim() !== "")) {
+        saveItems(finalItems);
+      }
     }
   };
 

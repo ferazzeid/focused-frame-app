@@ -177,13 +177,19 @@ export const ListItem = ({
       {isDragOver && (
         <div className="absolute -top-1 left-0 right-0 h-0.5 bg-accent-green animate-pulse"></div>
       )}
+      
+      {/* Divider line above bold items */}
+      {item.isBold && (
+        <div className="mb-sm">
+          <div className="w-full h-px bg-border opacity-30"></div>
+        </div>
+      )}
+      
       <div
         className={`group flex items-center gap-sm p-sm rounded-md transition-colors duration-fast min-h-[3rem] ${
           isSelected
             ? "border border-border-focus"
             : "border border-border"
-        } ${
-          item.isBold ? "mt-md" : ""
         } ${isChild ? "ml-lg" : ""}`}
         draggable
         onDragStart={(e) => onDragStart?.(e, item.id)}

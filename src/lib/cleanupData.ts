@@ -14,6 +14,7 @@ export const cleanupItems = (items: ListItemData[]): ListItemData[] => {
     const item = items[i];
     
     // Skip empty text items (not dividers) - these are the "Click to add item..." items
+    // Remove any non-divider item that has no title AND no content
     if (!item.isEmpty && item.title.trim() === "" && item.content.trim() === "") {
       console.log(`Removing empty text item at index ${i}: "${item.title}"`);
       continue;
