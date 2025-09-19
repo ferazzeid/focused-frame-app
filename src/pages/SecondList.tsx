@@ -4,6 +4,7 @@ import { ContentModal } from "@/components/ContentModal";
 import { FileText } from "lucide-react";
 import { loadData, saveData, createTextItem, createEmptyItem, archiveItem } from "@/lib/storage";
 import { useToast } from "@/hooks/use-toast";
+import { useNotification } from "@/hooks/useNotification";
 import { useAuth } from "@/hooks/useAuth";
 import { useAddFunctions } from "@/components/MobileLayout";
 import { cleanupItems } from "@/lib/cleanupData";
@@ -20,6 +21,7 @@ export const SecondList = () => {
   const [dragOverItem, setDragOverItem] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { showSuccess: showNotificationSuccess, showError: showNotificationError } = useNotification();
   const { user } = useAuth();
   const { setAddTextItem, setAddEmptyLine } = useAddFunctions();
 
@@ -352,10 +354,7 @@ export const SecondList = () => {
       await saveData(currentData);
       console.log("Database updated successfully");
 
-      toast({
-        title: "Item deleted",
-        description: "Item has been successfully deleted.",
-      });
+      showNotificationSuccess("Item deleted", "Item has been successfully deleted.");
     } catch (error) {
       console.error("Error deleting item:", error);
       
@@ -363,11 +362,7 @@ export const SecondList = () => {
       console.log("Rolling back to original state");
       setItems(originalItems);
       
-      toast({
-        title: "Error",
-        description: "Failed to delete item. Please try again.",
-        variant: "destructive",
-      });
+      showNotificationError("Error", "Failed to delete item. Please try again.");
     }
   };
 

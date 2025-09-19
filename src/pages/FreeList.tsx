@@ -4,6 +4,7 @@ import { ContentModal } from "@/components/ContentModal";
 import { FileText } from "lucide-react";
 import { loadData, saveData, createTextItem, createEmptyItem, archiveItem } from "@/lib/storage";
 import { useToast } from "@/hooks/use-toast";
+import { useNotification } from "@/hooks/useNotification";
 import { useAuth } from "@/hooks/useAuth";
 import { useAddFunctions } from "@/components/MobileLayout";
 
@@ -19,6 +20,7 @@ export const FreeList = () => {
   const [dragOverItem, setDragOverItem] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { showSuccess: showNotificationSuccess, showError: showNotificationError } = useNotification();
   const { user } = useAuth();
   const { setAddTextItem, setAddEmptyLine } = useAddFunctions();
 
@@ -334,17 +336,10 @@ export const FreeList = () => {
       await saveItems(newItems);
       console.log("Item deleted and saved successfully");
 
-      toast({
-        title: "Item archived",
-        description: "Item moved to archive (cannot be permanently deleted in free version)",
-      });
+      showNotificationSuccess("Item deleted", "Item moved to archive");
     } catch (error) {
       console.error("Error deleting item:", error);
-      toast({
-        title: "Error deleting item",
-        description: "Failed to delete the item",
-        variant: "destructive",
-      });
+      showNotificationError("Error deleting item", "Failed to delete the item");
     }
   };
 

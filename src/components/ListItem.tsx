@@ -327,14 +327,14 @@ export const ListItem = ({
           {/* Dropdown Menu */}
           {showMenu && (
             <>
-              {/* Overlay to close menu when clicking outside */}
-              <div 
-                className="fixed inset-0 z-10" 
-                onClick={() => setShowMenu(false)}
-              />
+               {/* Overlay to close menu when clicking outside */}
+               <div 
+                 className="fixed inset-0 z-[9998]" 
+                 onClick={() => setShowMenu(false)}
+               />
               
-              {/* Menu */}
-              <div className="absolute right-0 top-8 z-30 w-48 bg-background-card border border-border rounded-md shadow-lg animate-scale-in">
+               {/* Menu */}
+               <div className="absolute right-0 top-8 z-[9999] w-48 bg-background-card border border-border rounded-md shadow-lg animate-scale-in">
                 <div className="py-sm">
                   {/* View Content */}
                   {item.content && (
