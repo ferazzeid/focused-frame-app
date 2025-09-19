@@ -125,7 +125,8 @@ export const ListItem = ({
     }
     
     e.stopPropagation();
-    onSelect?.(item.id);
+    console.log('Item clicked, triggering edit mode for:', item.id);
+    onEdit?.(item.id);
   };
 
   const handleMicrophoneClick = (e: React.MouseEvent | React.TouchEvent) => {
@@ -337,7 +338,6 @@ export const ListItem = ({
             </div>
           ) : (
             <div
-              onClick={() => onEdit?.(item.id)}
               className={`flex-1 cursor-text py-sm rounded transition-colors duration-fast hover:bg-background-subtle flex items-center ${
                 item.isBold
                   ? "font-bold text-base text-foreground"
