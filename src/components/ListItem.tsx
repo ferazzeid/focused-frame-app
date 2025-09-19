@@ -159,7 +159,7 @@ export const ListItem = ({
           <div className="absolute -top-1 left-0 right-0 h-0.5 bg-accent-green animate-pulse"></div>
         )}
         <div 
-          className="group h-4 flex items-center justify-center relative"
+          className="group min-h-[3rem] flex items-center justify-center relative px-sm py-md border border-border/50 rounded-md bg-background-subtle/30 hover:bg-background-subtle/50 transition-colors duration-fast"
           draggable
           onDragStart={(e) => onDragStart?.(e, item.id)}
           onDragOver={onDragOver}
@@ -167,10 +167,10 @@ export const ListItem = ({
           onDrop={(e) => onDrop?.(e, item.id)}
           data-item-id={item.id}
         >
-          {/* Drag Handle for divider */}
-          <div className="absolute left-0 flex items-center justify-center w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity duration-fast">
+          {/* Drag Handle for divider - always visible on mobile */}
+          <div className="absolute left-0 flex items-center justify-center w-10 h-10 opacity-50 group-hover:opacity-100 transition-opacity duration-fast">
             <GripVertical 
-              className="w-4 h-4 text-foreground-subtle cursor-grab active:cursor-grabbing" 
+              className="w-6 h-6 text-foreground-subtle cursor-grab active:cursor-grabbing touch-manipulation" 
               onMouseDown={(e) => {
                 e.currentTarget.style.cursor = 'grabbing';
               }}
@@ -180,16 +180,24 @@ export const ListItem = ({
             />
           </div>
           
-          {/* Divider line */}
-          <div className="w-full h-px bg-border opacity-30"></div>
+          {/* Divider line - centered and more prominent */}
+          <div className="flex-1 flex items-center justify-center px-lg">
+            <div className="w-full h-px bg-border opacity-50"></div>
+            <span className="px-md text-xs text-foreground-muted font-medium bg-background-card rounded-full border border-border/30 mx-md opacity-70 group-hover:opacity-100 transition-opacity duration-fast">
+              DIVIDER
+            </span>
+            <div className="w-full h-px bg-border opacity-50"></div>
+          </div>
           
-          {/* Delete button for divider */}
-          <button
-            onClick={handleImmediateDelete}
-            className="absolute right-0 w-4 h-4 rounded-full bg-accent-red/20 hover:bg-accent-red/40 opacity-0 group-hover:opacity-100 transition-all duration-fast flex items-center justify-center"
-          >
-            <X className="w-2.5 h-2.5 text-accent-red" />
-          </button>
+          {/* Delete button for divider - larger and more accessible */}
+          <div className="absolute right-0 flex items-center justify-center w-10 h-10 opacity-50 group-hover:opacity-100 transition-opacity duration-fast">
+            <button
+              onClick={handleImmediateDelete}
+              className="w-8 h-8 rounded-full bg-accent-red/20 hover:bg-accent-red/40 transition-all duration-fast flex items-center justify-center touch-manipulation"
+            >
+              <X className="w-4 h-4 text-accent-red" />
+            </button>
+          </div>
         </div>
       </div>
     );
