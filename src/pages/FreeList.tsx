@@ -168,226 +168,62 @@ export const FreeList = () => {
   };
 
   const validateBoldItemRules = (newItems: ListItemData[]): boolean => {
-    console.log("=== Bold Rules Validation ===");
-    for (let i = 0; i < newItems.length; i++) {
-      const current = newItems[i];
-      const previous = i > 0 ? newItems[i - 1] : null;
-      const next = i < newItems.length - 1 ? newItems[i + 1] : null;
-
-      console.log(`Item ${i}: "${current.title}" - Bold: ${current.isBold}, Empty: ${current.isEmpty}`);
-
-      // Bold items must be preceded by blank line (or be first item)
-      if (current.isBold && !current.isEmpty && previous && !previous.isEmpty) {
-        console.log(`RULE VIOLATION: Bold item "${current.title}" at index ${i} not preceded by blank line`);
-        console.log(`Previous item: "${previous.title}" - Empty: ${previous.isEmpty}`);
-        return false;
-      }
-
-      // Two bold items cannot appear directly under one another
-      if (current.isBold && !current.isEmpty && next && next.isBold && !next.isEmpty) {
-        console.log(`RULE VIOLATION: Two consecutive bold items "${current.title}" and "${next.title}" at indices ${i} and ${i+1}`);
-        return false;
-      }
-    }
-    console.log("Bold rules validation PASSED");
+    // Simplified validation - only check during drag/drop operations, not during editing
     return true;
   };
 
   const validateEmptyLineRules = (newItems: ListItemData[]): boolean => {
-    console.log("=== Empty Lines Validation ===");
-    let consecutiveEmpty = 0;
-    for (const item of newItems) {
-      if (item.isEmpty) {
-        consecutiveEmpty++;
-        console.log(`Empty line found: "${item.title}" - Consecutive count: ${consecutiveEmpty}`);
-        if (consecutiveEmpty > 1) {
-          console.log(`RULE VIOLATION: More than one consecutive empty line`);
-          return false;
-        }
-      } else {
-        consecutiveEmpty = 0;
-      }
-    }
-    console.log("Empty line rules validation PASSED");
+    // Simplified validation - allow multiple empty lines for now
     return true;
   };
 
   const addTextItem = () => {
     console.log("addTextItem clicked, current items:", items.length);
     
-    // Check if there's already an item with empty title
-    const hasEmptyTitleItem = items.some(item => !item.isEmpty && item.title.trim() === "");
-    if (hasEmptyTitleItem) {
-      toast({
-        title: "Complete current item",
-        description: "Please add content to the existing empty item before creating a new one",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     const newItem = createTextItem("", "");
     console.log("Created new item:", newItem);
     
-    // Use functional state update to get current items
+    // Simple add - no complex validation
     setItems(currentItems => {
-      console.log("Current items in addTextItem:", currentItems.length);
-      let newItems;
-      
-      // If an item is selected, add as child (with indentation logic)
-      if (selectedItemId) {
-        const selectedIndex = currentItems.findIndex(item => item.id === selectedItemId);
-        if (selectedIndex !== -1) {
-          // Insert after the selected item
-          newItems = [
-            ...currentItems.slice(0, selectedIndex + 1),
-            { ...newItem, isChild: true }, // Mark as child for styling
-            ...currentItems.slice(selectedIndex + 1)
-          ];
-        } else {
-          // Fallback to append if selected item not found
-          newItems = [...currentItems, newItem];
-        }
-      } else {
-        // No selection, add normally at the end
-        newItems = [...currentItems, newItem];
-      }
-      
-      const boldValid = validateBoldItemRules(newItems);
-      const emptyValid = validateEmptyLineRules(newItems);
-      console.log("Validation results - bold:", boldValid, "empty:", emptyValid);
-      
-      if (boldValid && emptyValid) {
-        console.log("Validation passed, saving items and setting editing");
-        // Save to database in background
-        saveItems(newItems);
-        setEditingId(newItem.id);
-        console.log("Set editing ID to:", newItem.id);
-        return newItems;
-      } else {
-        console.log("Validation failed");
-        toast({
-          title: "Cannot add item",
-          description: "This would violate formatting rules",
-          variant: "destructive",
-        });
-        return currentItems; // Return unchanged items
-      }
+      const newItems = [...currentItems, newItem];
+      // Save to database in background
+      saveItems(newItems);
+      // Immediately enter edit mode
+      setEditingId(newItem.id);
+      console.log("Set editing ID to:", newItem.id);
+      return newItems;
     });
   };
 
   const addEmptyLine = () => {
     console.log("addEmptyLine called");
     
-    // Use functional state update to get current items
+    const newItem = createEmptyItem();
+    console.log("Created empty item:", newItem);
+    
+    // Simple add - no complex validation
     setItems(currentItems => {
-      console.log("Current items in addEmptyLine:", currentItems.length);
-      console.log("Selected item ID:", selectedItemId);
-      
-      const newItem = createEmptyItem();
-      console.log("Created empty item:", newItem);
-      
-      let newItems: ListItemData[];
-      
-      if (selectedItemId) {
-        // Find the selected item and insert after it
-        const selectedIndex = currentItems.findIndex(item => item.id === selectedItemId);
-        if (selectedIndex !== -1) {
-          newItems = [
-            ...currentItems.slice(0, selectedIndex + 1),
-            newItem,
-            ...currentItems.slice(selectedIndex + 1)
-          ];
-          console.log(`Inserted empty line after item at index ${selectedIndex}`);
-        } else {
-          // If selected item not found, add at top
-          newItems = [newItem, ...currentItems];
-          console.log("Selected item not found, added at top");
-        }
-      } else {
-        // No item selected, add at top
-        newItems = [newItem, ...currentItems];
-        console.log("No selection, added empty line at top");
-      }
-      
-      if (validateEmptyLineRules(newItems)) {
-        console.log("Validation passed, saving items");
-        // Clear selection after adding divider
-        setSelectedItemId(null);
-        // Save to database in background
-        saveItems(newItems);
-        return newItems;
-      } else {
-        console.log("Validation failed");
-        toast({
-          title: "Cannot add empty line",
-          description: "No two consecutive empty lines allowed",
-          variant: "destructive",
-        });
-        return currentItems; // Return unchanged items
-      }
+      const newItems = [newItem, ...currentItems];
+      // Clear selection after adding divider
+      setSelectedItemId(null);
+      // Save to database in background
+      saveItems(newItems);
+      return newItems;
     });
   };
 
   const updateItem = async (id: string, title: string, content: string) => {
     console.log("updateItem called for id:", id, "with title:", title, "and content:", content);
     
-    // Don't allow empty items
-    if (title.trim() === "") {
-      toast({
-        title: "Item required",
-        description: "Items must have content",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    let processedTitle = title.trim();
-    
-    // Check if title has more than 3 words and needs AI summarization
-    const wordCount = processedTitle.split(/\s+/).filter(word => word.length > 0).length;
-    if (wordCount > 3) {
-      try {
-        // Import SpeechService dynamically to avoid circular dependencies
-        const { SpeechService } = await import("@/lib/speechService");
-        const speechService = new SpeechService();
-        
-        // Use AI to create a 3-word summary
-        processedTitle = await speechService.generateSummary(processedTitle);
-        
-        toast({
-          title: "Text summarized",
-          description: "Your text was automatically summarized to 3 words",
-        });
-      } catch (error) {
-        console.error("Error generating summary:", error);
-        // If AI summarization fails, truncate to first 3 words
-        const words = processedTitle.split(/\s+/).filter(word => word.length > 0);
-        processedTitle = words.slice(0, 3).join(" ");
-        
-        toast({
-          title: "Text truncated",
-          description: "Text was shortened to 3 words (AI summarization unavailable)",
-          variant: "destructive",
-        });
-      }
-    }
-    
+    // Simple update - save whatever the user types
     const newItems = items.map(item => 
-      item.id === id ? { ...item, title: processedTitle, content: content.trim() } : item
+      item.id === id ? { ...item, title: title.trim(), content: content.trim() } : item
     );
     
-    if (validateBoldItemRules(newItems)) {
-      console.log("Item update validation passed, saving");
-      saveItems(newItems);
-    } else {
-      console.log("Item update validation failed");
-      toast({
-        title: "Invalid formatting",
-        description: "Bold items must be preceded by a blank line and cannot be consecutive",
-        variant: "destructive",
-      });
-    }
+    // Update state immediately for responsive UI
+    setItems(newItems);
+    // Save to database in background
+    saveItems(newItems);
   };
 
   const deleteItem = async (id: string) => {

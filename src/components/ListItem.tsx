@@ -111,21 +111,15 @@ export const ListItem = ({
     }
   };
 
-  // Unified event handlers
+  // Simple click handler - always enters edit mode
   const handleItemClick = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    
-    // Don't trigger if clicking on interactive elements
-    if (isEditing || 
-        target.closest('button') || 
-        target.closest('input') ||
-        target.tagName === 'INPUT' ||
-        target.tagName === 'BUTTON') {
+    // Don't trigger if already editing or clicking interactive elements
+    if (isEditing || e.target !== e.currentTarget) {
       return;
     }
     
     e.stopPropagation();
-    console.log('Item clicked, triggering edit mode for:', item.id);
+    console.log('Item clicked, entering edit mode:', item.id);
     onEdit?.(item.id);
   };
 
@@ -165,12 +159,7 @@ export const ListItem = ({
   };
 
   const handleSave = () => {
-    // Don't save if item content is empty
-    if (localTitle.trim() === "") {
-      // Delete the item instead of saving empty
-      onDelete(item.id);
-      return;
-    }
+    // Save whatever the user typed - no validation here
     onUpdate(item.id, localTitle, localContent);
     onSave?.(item.id);
   };
