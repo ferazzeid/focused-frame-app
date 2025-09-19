@@ -10,6 +10,7 @@ import { useAddFunctions } from "@/components/MobileLayout";
 import { cleanupItems } from "@/lib/cleanupData";
 import { useTouchDrag } from "@/hooks/useTouchDrag";
 import { useDeviceDetection } from "@/hooks/useDeviceDetection";
+import { useGroupDrag } from "@/hooks/useGroupDrag";
 
 export const SecondList = () => {
   const [items, setItems] = useState<ListItemData[]>([]);
@@ -22,28 +23,26 @@ export const SecondList = () => {
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const [dragOverItem, setDragOverItem] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [collapsedItems, setCollapsedItems] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   const { showSuccess: showNotificationSuccess, showError: showNotificationError } = useNotification();
   const { user } = useAuth();
   const { setAddTextItem, setAddEmptyLine } = useAddFunctions();
   const { isMobile, isTouch } = useDeviceDetection();
+  const { executeGroupMove, getChildrenOfParent } = useGroupDrag();
 
-  // Touch drag handlers for mobile compatibility
+  // Touch drag handlers for mobile compatibility with group drag support
   const touchDragHandlers = useTouchDrag({
     onDrop: (draggedId, targetId) => {
       console.log("Touch drop:", draggedId, "->", targetId);
       
-      const draggedIndex = items.findIndex(item => item.id === draggedId);
-      const targetIndex = items.findIndex(item => item.id === targetId);
+      // Use group drag logic for both single items and groups
+      const newItems = executeGroupMove(items, draggedId, targetId);
       
-      if (draggedIndex === -1 || targetIndex === -1) {
-        console.log("Invalid touch drop indices");
+      if (!newItems) {
+        console.log("Invalid touch drop - group move failed");
         return;
       }
-
-      const newItems = [...items];
-      const [draggedItemData] = newItems.splice(draggedIndex, 1);
-      newItems.splice(targetIndex, 0, draggedItemData);
       
       const boldValid = validateBoldItemRules(newItems);
       const emptyValid = validateEmptyLineRules(newItems);
@@ -160,6 +159,59 @@ export const SecondList = () => {
   };
 
   const childFlags = calculateChildItems(items);
+  
+  // Calculate which bold items have children
+  const getItemHasChildren = (itemId: string): boolean => {
+    const index = items.findIndex(item => item.id === itemId);
+    if (index === -1) return false;
+    
+    const item = items[index];
+    if (!item.isBold || item.isEmpty) return false;
+    
+    const children = getChildrenOfParent(items, index);
+    return children.length > 0;
+  };
+
+  // Handle collapse/expand
+  const handleToggleCollapse = (itemId: string) => {
+    setCollapsedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      } else {
+        newSet.add(itemId);
+      }
+      return newSet;
+    });
+  };
+
+  // Filter items for display based on collapse state
+  const getVisibleItems = (): ListItemData[] => {
+    const visibleItems: ListItemData[] = [];
+    let skipUntilNextParent = false;
+    let currentParentIndex = -1;
+    
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      
+      if (item.isBold && !item.isEmpty) {
+        // This is a parent item - always show it
+        currentParentIndex = i;
+        skipUntilNextParent = collapsedItems.has(item.id);
+        visibleItems.push(item);
+      } else if (skipUntilNextParent) {
+        // Skip children of collapsed parent
+        continue;
+      } else {
+        // Show this item (child or non-child)
+        visibleItems.push(item);
+      }
+    }
+    
+    return visibleItems;
+  };
+
+  const visibleItems = getVisibleItems();
 
   const saveItems = async (newItems: ListItemData[]) => {
     console.log("saveItems called with:", newItems.length, "items");
@@ -628,21 +680,35 @@ export const SecondList = () => {
       return;
     }
 
-    const draggedIndex = items.findIndex(item => item.id === draggedItem);
-    const targetIndex = items.findIndex(item => item.id === targetId);
+    // Use group drag logic for both single items and groups
+    const newItems = executeGroupMove(items, draggedItem, targetId);
     
-    if (draggedIndex === -1 || targetIndex === -1) {
-      console.log("Invalid indices - clearing drag state");
+    if (!newItems) {
+      console.log("Invalid drop - group move failed");
       clearDragState();
       return;
     }
-
-    const newItems = [...items];
-    const [draggedItemData] = newItems.splice(draggedIndex, 1);
-    newItems.splice(targetIndex, 0, draggedItemData);
     
     const boldValid = validateBoldItemRules(newItems);
     const emptyValid = validateEmptyLineRules(newItems);
+    
+    if (boldValid && emptyValid) {
+      setItems(newItems);
+      saveItems(newItems);
+      toast({
+        title: "Item moved",
+        description: "Item and children moved successfully",
+      });
+    } else {
+      toast({
+        title: "Invalid order",
+        description: "This arrangement would violate formatting rules",
+        variant: "destructive",
+      });
+    }
+    
+    clearDragState();
+  };
     
     console.log("Drag validation results:");
     console.log("- Bold rules valid:", boldValid);

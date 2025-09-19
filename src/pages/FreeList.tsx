@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAddFunctions } from "@/components/MobileLayout";
 import { useTouchDrag } from "@/hooks/useTouchDrag";
 import { useDeviceDetection } from "@/hooks/useDeviceDetection";
+import { useGroupDrag } from "@/hooks/useGroupDrag";
 
 export const FreeList = () => {
   const [items, setItems] = useState<ListItemData[]>([]);
@@ -21,28 +22,26 @@ export const FreeList = () => {
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const [dragOverItem, setDragOverItem] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [collapsedItems, setCollapsedItems] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   const { showSuccess: showNotificationSuccess, showError: showNotificationError } = useNotification();
   const { user } = useAuth();
   const { setAddTextItem, setAddEmptyLine } = useAddFunctions();
   const { isMobile, isTouch } = useDeviceDetection();
+  const { executeGroupMove, getChildrenOfParent } = useGroupDrag();
 
-  // Touch drag handlers for mobile compatibility
+  // Touch drag handlers for mobile compatibility with group drag support
   const touchDragHandlers = useTouchDrag({
     onDrop: (draggedId, targetId) => {
       console.log("Touch drop:", draggedId, "->", targetId);
       
-      const draggedIndex = items.findIndex(item => item.id === draggedId);
-      const targetIndex = items.findIndex(item => item.id === targetId);
+      // Use group drag logic for both single items and groups
+      const newItems = executeGroupMove(items, draggedId, targetId);
       
-      if (draggedIndex === -1 || targetIndex === -1) {
-        console.log("Invalid touch drop indices");
+      if (!newItems) {
+        console.log("Invalid touch drop - group move failed");
         return;
       }
-
-      const newItems = [...items];
-      const [draggedItemData] = newItems.splice(draggedIndex, 1);
-      newItems.splice(targetIndex, 0, draggedItemData);
       
       const boldValid = validateBoldItemRules(newItems);
       const emptyValid = validateEmptyLineRules(newItems);
@@ -148,6 +147,59 @@ export const FreeList = () => {
   };
 
   const childFlags = calculateChildItems(items);
+  
+  // Calculate which bold items have children
+  const getItemHasChildren = (itemId: string): boolean => {
+    const index = items.findIndex(item => item.id === itemId);
+    if (index === -1) return false;
+    
+    const item = items[index];
+    if (!item.isBold || item.isEmpty) return false;
+    
+    const children = getChildrenOfParent(items, index);
+    return children.length > 0;
+  };
+
+  // Handle collapse/expand
+  const handleToggleCollapse = (itemId: string) => {
+    setCollapsedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      } else {
+        newSet.add(itemId);
+      }
+      return newSet;
+    });
+  };
+
+  // Filter items for display based on collapse state
+  const getVisibleItems = (): ListItemData[] => {
+    const visibleItems: ListItemData[] = [];
+    let skipUntilNextParent = false;
+    let currentParentIndex = -1;
+    
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      
+      if (item.isBold && !item.isEmpty) {
+        // This is a parent item - always show it
+        currentParentIndex = i;
+        skipUntilNextParent = collapsedItems.has(item.id);
+        visibleItems.push(item);
+      } else if (skipUntilNextParent) {
+        // Skip children of collapsed parent
+        continue;
+      } else {
+        // Show this item (child or non-child)
+        visibleItems.push(item);
+      }
+    }
+    
+    return visibleItems;
+  };
+
+  const visibleItems = getVisibleItems();
 
   const saveItems = async (newItems: ListItemData[]) => {
     console.log("saveItems called with:", newItems.length, "items");
@@ -416,18 +468,14 @@ export const FreeList = () => {
       return;
     }
 
-    const draggedIndex = items.findIndex(item => item.id === draggedItem);
-    const targetIndex = items.findIndex(item => item.id === targetId);
+    // Use group drag logic for both single items and groups
+    const newItems = executeGroupMove(items, draggedItem, targetId);
     
-    if (draggedIndex === -1 || targetIndex === -1) {
-      console.log("Invalid indices - clearing drag state");
+    if (!newItems) {
+      console.log("Invalid drop - group move failed");
       clearDragState();
       return;
     }
-
-    const newItems = [...items];
-    const [draggedItemData] = newItems.splice(draggedIndex, 1);
-    newItems.splice(targetIndex, 0, draggedItemData);
     
     const boldValid = validateBoldItemRules(newItems);
     const emptyValid = validateEmptyLineRules(newItems);
@@ -440,35 +488,12 @@ export const FreeList = () => {
       // Everything is valid, proceed normally
       setItems(newItems); // Update UI immediately
       saveItems(newItems); // Save to database in background
-    } else if (!boldValid && emptyValid && draggedItemData.isBold) {
-      // Bold rules failed but empty rules passed, and the dragged item is bold
-      // Try converting the bold item to regular
-      const convertedItems = [...newItems];
-      const convertedItemIndex = convertedItems.findIndex(item => item.id === draggedItem);
-      if (convertedItemIndex !== -1) {
-        convertedItems[convertedItemIndex] = { ...convertedItems[convertedItemIndex], isBold: false };
-        
-        // Validate again with the converted item
-        if (validateBoldItemRules(convertedItems)) {
-          console.log("Converting bold item to regular to allow drag");
-          setItems(convertedItems); // Update UI immediately
-          saveItems(convertedItems); // Save to database in background
-          toast({
-            title: "Item converted",
-            description: "Bold item was converted to regular text to allow this arrangement",
-          });
-        } else {
-          // Still invalid even after conversion
-          console.log("VALIDATION FAILED - Even after converting bold to regular");
-          toast({
-            title: "Invalid order",
-            description: "This arrangement would violate formatting rules",
-            variant: "destructive",
-          });
-        }
-      }
+      toast({
+        title: "Item moved",
+        description: "Item and children moved successfully",
+      });
     } else {
-      // Other validation failures
+      // Validation failed
       console.log("VALIDATION FAILED - Bold valid:", boldValid, "Empty valid:", emptyValid);
       toast({
         title: "Invalid order",
@@ -492,39 +517,45 @@ export const FreeList = () => {
   return (
     <div className="flex flex-col h-full">
       {/* List Content */}
-      <div className="flex-1 overflow-y-auto px-md py-md space-y-xs min-h-[400px]">
+      <div className="flex-1 overflow-y-auto px-md py-md space-y-0 min-h-[400px]">
         {items.length === 0 ? (
           <div className="text-center py-xl text-foreground-muted">
             <FileText className="w-12 h-12 mx-auto mb-md opacity-50" />
             <p className="text-sm">Your list is empty</p>
           </div>
         ) : (
-          items.map((item, index) => (
-            <ListItem
-              key={item.id}
-              item={item}
-              onUpdate={updateItem}
-              onDelete={deleteItem}
-              onToggleBold={toggleBold}
-              onSendToSecondList={handleSendToSecondList}
-              onDragStart={handleDragStart}
-              onDragOver={handleDragOver}
-              onDragEnd={handleDragEnd}
-              onDrop={handleDrop}
-              onTouchStart={touchDragHandlers.onTouchStart}
-              onTouchMove={touchDragHandlers.onTouchMove}
-              onTouchEnd={touchDragHandlers.onTouchEnd}
-              isEditing={editingId === item.id}
-              isSelected={selectedItemId === item.id}
-              onEdit={handleEdit}
-              onSave={handleSave}
-              onSelect={handleItemSelect}
-              onViewContent={handleViewContent}
-              isDragOver={dragOverItem === item.id}
-              isDragging={touchDragHandlers.dragState.isDragging && touchDragHandlers.dragState.draggedItem === item.id}
-              isChild={childFlags[index]}
-            />
-          ))
+          visibleItems.map((item, index) => {
+            const originalIndex = items.findIndex(i => i.id === item.id);
+            return (
+              <ListItem
+                key={item.id}
+                item={item}
+                onUpdate={updateItem}
+                onDelete={deleteItem}
+                onToggleBold={toggleBold}
+                onSendToSecondList={handleSendToSecondList}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
+                onDrop={handleDrop}
+                onTouchStart={touchDragHandlers.onTouchStart}
+                onTouchMove={touchDragHandlers.onTouchMove}
+                onTouchEnd={touchDragHandlers.onTouchEnd}
+                isEditing={editingId === item.id}
+                isSelected={selectedItemId === item.id}
+                onEdit={handleEdit}
+                onSave={handleSave}
+                onSelect={handleItemSelect}
+                onViewContent={handleViewContent}
+                isDragOver={dragOverItem === item.id}
+                isDragging={touchDragHandlers.dragState.isDragging && touchDragHandlers.dragState.draggedItem === item.id}
+                isChild={childFlags[originalIndex]}
+                isCollapsed={collapsedItems.has(item.id)}
+                onToggleCollapse={() => handleToggleCollapse(item.id)}
+                hasChildren={getItemHasChildren(item.id)}
+              />
+            );
+          })
         )}
       </div>
 

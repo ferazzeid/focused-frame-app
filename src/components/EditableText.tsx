@@ -117,7 +117,7 @@ export const EditableText = ({
             onBlur={handleSave}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
-            className={`w-full bg-input border border-input-border rounded-sm px-sm py-sm text-sm transition-colors duration-fast focus:border-input-border focus:ring-0 focus:ring-offset-0 focus:outline-none ${
+            className={`w-full bg-input border border-input-border rounded-sm px-xs py-xs text-sm transition-colors duration-fast focus:border-input-border focus:ring-0 focus:ring-offset-0 focus:outline-none ${
               isBold ? "font-bold text-base" : "font-normal"
             }`}
             autoFocus
@@ -129,7 +129,7 @@ export const EditableText = ({
           <button
             onClick={handleMicrophoneClick}
             disabled={isProcessing}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-fast shadow-lg border-2 touch-manipulation ${
+            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-fast shadow-lg border-2 touch-manipulation ${
               isRecording 
                 ? "bg-accent-red text-white animate-pulse shadow-accent-red/40 scale-105 border-accent-red" 
                 : "text-accent-red hover:text-white hover:bg-accent-red border-accent-red bg-background-card hover:shadow-xl hover:scale-105"
@@ -138,9 +138,9 @@ export const EditableText = ({
             aria-label={isRecording ? "Stop recording" : "Start voice recording"}
           >
             {isProcessing ? (
-              <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
             ) : (
-              <Mic className={`transition-all duration-fast ${isRecording ? 'w-6 h-6' : 'w-5 h-5'}`} />
+              <Mic className={`transition-all duration-fast ${isRecording ? 'w-5 h-5' : 'w-4 h-4'}`} />
             )}
           </button>
           
@@ -148,11 +148,11 @@ export const EditableText = ({
           {isRecording && (
             <button
               onClick={cancelVoiceEdit}
-              className="absolute -top-1 -right-1 w-5 h-5 bg-accent-red rounded-full flex items-center justify-center hover:bg-accent-red/90 transition-all duration-fast shadow-lg border border-white touch-manipulation"
+              className="absolute -top-1 -right-1 w-4 h-4 bg-accent-red rounded-full flex items-center justify-center hover:bg-accent-red/90 transition-all duration-fast shadow-lg border border-white touch-manipulation"
               type="button"
               aria-label="Cancel voice recording"
             >
-              <X className="w-3 h-3 text-white" />
+              <X className="w-2 h-2 text-white" />
             </button>
           )}
         </div>
@@ -162,7 +162,7 @@ export const EditableText = ({
 
   return (
     <div
-      className={`flex-1 cursor-text py-sm rounded transition-colors duration-fast hover:bg-background-subtle flex items-center ${
+      className={`flex-1 cursor-text py-xs rounded transition-colors duration-fast hover:bg-background-subtle flex items-center ${
         isBold
           ? "font-bold text-base text-foreground"
           : "font-light text-sm text-foreground leading-tight"

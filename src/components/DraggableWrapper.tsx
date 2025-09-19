@@ -55,7 +55,7 @@ export const DraggableWrapper = ({
       )}
       
       <div
-        className={`group flex items-center gap-sm p-sm rounded-md transition-all duration-fast min-h-[3rem] relative ${
+        className={`group flex items-center gap-xs p-xs rounded-md transition-all duration-fast min-h-[2.5rem] relative ${
           isDragging ? "opacity-50 scale-95 rotate-1 shadow-lg" : ""
         } ${className}`}
         onDragOver={onDragOver}
@@ -68,7 +68,7 @@ export const DraggableWrapper = ({
         {/* Drag Handle */}
         <div 
           className={`drag-handle flex items-center justify-center flex-shrink-0 transition-all duration-fast ${
-            isTouch || isMobile ? 'w-8 h-8' : 'w-6 h-6'
+            isTouch || isMobile ? 'w-6 h-6' : 'w-5 h-5'
           } ${isDragging ? 'scale-110' : ''}`}
           draggable={!isTouch}
           onDragStart={(e) => {
@@ -79,7 +79,7 @@ export const DraggableWrapper = ({
         >
           <GripVertical 
             className={`text-foreground-subtle transition-all duration-fast cursor-grab active:cursor-grabbing touch-manipulation ${
-              isTouch || isMobile ? 'w-6 h-6 opacity-80' : 'w-5 h-5 opacity-60 group-hover:opacity-100'
+              isTouch || isMobile ? 'w-5 h-5 opacity-80' : 'w-4 h-4 opacity-60 group-hover:opacity-100'
             } ${isDragging ? 'text-accent-green scale-110 opacity-100' : ''}`}
           />
         </div>

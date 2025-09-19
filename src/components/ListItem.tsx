@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, ChevronDown, ChevronUp } from "lucide-react";
 import { EditableText } from "./EditableText";
 import { DraggableWrapper } from "./DraggableWrapper";
 import { ActionMenu } from "./ActionMenu";
@@ -39,6 +39,9 @@ interface ListItemProps {
   isDragOver?: boolean;
   isDragging?: boolean;
   isChild?: boolean;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
+  hasChildren?: boolean;
 }
 
 export const ListItem = ({
@@ -65,6 +68,9 @@ export const ListItem = ({
   isDragOver = false,
   isDragging = false,
   isChild = false,
+  isCollapsed = false,
+  onToggleCollapse,
+  hasChildren = false,
 }: ListItemProps) => {
   const [isInternalEdit, setIsInternalEdit] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -124,6 +130,12 @@ export const ListItem = ({
     }, 300); // Match the animation duration
   };
 
+  const handleToggleCollapse = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onToggleCollapse?.();
+  };
+
   // Handle empty/divider items
   if (item.isEmpty) {
     return (
@@ -140,24 +152,24 @@ export const ListItem = ({
         onTouchEnd={onTouchEnd}
         className={`${
           isDragOver ? 'bg-accent-green/20 border-accent-green' : 'bg-background-subtle/30 hover:bg-background-subtle/50'
-        } ${isDeleting ? "animate-slide-out-left" : ""} border border-border/50`}
+        } ${isDeleting ? "animate-slide-out-left" : ""} border border-border/50 mb-xs`}
       >
         {/* Divider Content */}
-        <div className="flex-1 flex items-center justify-center px-lg">
+        <div className="flex-1 flex items-center justify-center px-md">
           <div className="w-full h-px bg-border opacity-50"></div>
-          <span className="px-md text-xs text-foreground-muted font-medium bg-background-card rounded-full border border-border/30 mx-md opacity-70 group-hover:opacity-100 transition-opacity duration-fast">
+          <span className="px-sm text-xs text-foreground-muted font-medium bg-background-card rounded-full border border-border/30 mx-sm opacity-70 group-hover:opacity-100 transition-opacity duration-fast">
             DIVIDER
           </span>
           <div className="w-full h-px bg-border opacity-50"></div>
         </div>
         
         {/* Delete button for divider */}
-        <div className="flex items-center justify-center w-10 h-10 opacity-50 group-hover:opacity-100 transition-opacity duration-fast">
+        <div className="flex items-center justify-center w-8 h-8 opacity-50 group-hover:opacity-100 transition-opacity duration-fast">
           <button
             onClick={handleImmediateDelete}
-            className="w-8 h-8 rounded-full bg-accent-red/20 hover:bg-accent-red/40 transition-all duration-fast flex items-center justify-center touch-manipulation"
+            className="w-6 h-6 rounded-full bg-accent-red/20 hover:bg-accent-red/40 transition-all duration-fast flex items-center justify-center touch-manipulation"
           >
-            <X className="w-4 h-4 text-accent-red" />
+            <X className="w-3 h-3 text-accent-red" />
           </button>
         </div>
       </DraggableWrapper>
@@ -169,55 +181,74 @@ export const ListItem = ({
     <>
       {/* Divider line above bold items */}
       {item.isBold && (
-        <div className="mb-sm">
+        <div className="mb-xs">
           <div className="w-full h-px bg-border opacity-30"></div>
         </div>
       )}
       
-      <DraggableWrapper
-        id={item.id}
-        isDragging={isDragging}
-        isDragOver={isDragOver}
-        onDragStart={onDragStart!}
-        onDragOver={onDragOver!}
-        onDragEnd={onDragEnd!}
-        onDrop={onDrop!}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-        className={`${
-          isSelected
-            ? "border-2 border-accent-red bg-accent-red/5"
-            : "border border-border"
-        } ${isChild ? "ml-lg" : ""} ${
-          isDeleting ? "animate-slide-out-left" : ""
-        }`}
-      >
-        <EditableText
+      <div className="relative mb-xs">
+        <DraggableWrapper
           id={item.id}
-          value={item.title}
-          content={item.content}
-          isBold={item.isBold}
-          isEditing={actuallyEditing}
-          onUpdate={handleUpdate}
-          onStartEdit={handleStartEdit}
-          onStopEdit={handleStopEdit}
-          onDelete={handleDelete}
-        />
-
-        {!actuallyEditing && (
-          <ActionMenu
+          isDragging={isDragging}
+          isDragOver={isDragOver}
+          onDragStart={onDragStart!}
+          onDragOver={onDragOver!}
+          onDragEnd={onDragEnd!}
+          onDrop={onDrop!}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+          className={`${
+            isSelected
+              ? "border-2 border-accent-red bg-accent-red/5"
+              : "border border-border"
+          } ${isChild ? "ml-md" : ""} ${
+            isDeleting ? "animate-slide-out-left" : ""
+          }`}
+        >
+          <EditableText
             id={item.id}
+            value={item.title}
+            content={item.content}
             isBold={item.isBold}
-            hasContent={!!(item.content && item.content.trim())}
-            onToggleBold={handleToggleBold}
-            onViewContent={onViewContent ? handleViewContent : undefined}
-            onSendToSecondList={onSendToSecondList ? handleSendToSecondList : undefined}
-            onDeleteConfirm={handleDeleteConfirm}
-            sendToSecondListLabel={sendToSecondListLabel}
+            isEditing={actuallyEditing}
+            onUpdate={handleUpdate}
+            onStartEdit={handleStartEdit}
+            onStopEdit={handleStopEdit}
+            onDelete={handleDelete}
           />
+
+          {!actuallyEditing && (
+            <ActionMenu
+              id={item.id}
+              isBold={item.isBold}
+              hasContent={!!(item.content && item.content.trim())}
+              onToggleBold={handleToggleBold}
+              onViewContent={onViewContent ? handleViewContent : undefined}
+              onSendToSecondList={onSendToSecondList ? handleSendToSecondList : undefined}
+              onDeleteConfirm={handleDeleteConfirm}
+              sendToSecondListLabel={sendToSecondListLabel}
+            />
+          )}
+        </DraggableWrapper>
+        
+        {/* Collapse/Expand button for bold items with children */}
+        {item.isBold && hasChildren && !actuallyEditing && (
+          <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 z-10">
+            <button
+              onClick={handleToggleCollapse}
+              className="w-5 h-5 bg-background border border-border rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-all duration-200 hover:bg-background-subtle"
+              aria-label={isCollapsed ? "Expand children" : "Collapse children"}
+            >
+              {isCollapsed ? (
+                <ChevronDown className="w-3 h-3 text-foreground-subtle" />
+              ) : (
+                <ChevronUp className="w-3 h-3 text-foreground-subtle" />
+              )}
+            </button>
+          </div>
         )}
-      </DraggableWrapper>
+      </div>
     </>
   );
 };
