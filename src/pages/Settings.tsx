@@ -54,6 +54,21 @@ export const Settings = () => {
     });
   };
 
+  const handleClearCacheAndReset = () => {
+    // Clear all localStorage
+    localStorage.clear();
+    
+    toast({
+      title: "Cache Cleared",
+      description: "All data cleared. Refreshing page...",
+    });
+    
+    // Force refresh after a short delay to show the toast
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
+  };
+
   const handleSignOut = async () => {
     const { error } = await signOut();
     if (error) {
@@ -142,6 +157,23 @@ export const Settings = () => {
                 onCheckedChange={handleToggleSecondList}
               />
             </div>
+          </div>
+        </div>
+
+        {/* Development Tools */}
+        <div className="space-y-md">
+          <h2 className="text-lg font-semibold text-foreground">Development</h2>
+          <div className="bg-background-card border border-border rounded-md p-md">
+            <p className="text-sm text-foreground-muted mb-md">
+              Clear all cached data and refresh to see latest changes
+            </p>
+            <MobileButton
+              onClick={handleClearCacheAndReset}
+              variant="outline"
+              className="w-full text-accent-red border-accent-red hover:bg-accent-red hover:text-white"
+            >
+              Clear Cache & Reset
+            </MobileButton>
           </div>
         </div>
 
