@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { X, ChevronDown, ChevronUp } from "lucide-react";
+import { X, ChevronDown, ChevronUp, Mic } from "lucide-react";
 import { EditableText } from "./EditableText";
 import { DraggableWrapper } from "./DraggableWrapper";
 import { ActionMenu } from "./ActionMenu";
 import { useToast } from "@/hooks/use-toast";
+import { useVoiceEdit } from "@/hooks/useVoiceEdit";
 
 export interface ListItemData {
   id: string;
@@ -75,6 +76,7 @@ export const ListItem = ({
   const [isInternalEdit, setIsInternalEdit] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
+  const { isRecording, isProcessing, toggleVoiceEdit, cancelVoiceEdit } = useVoiceEdit();
 
   // Combined editing state - true if either parent says we're editing OR we're internally editing
   const actuallyEditing = isEditing || isInternalEdit;
@@ -89,6 +91,42 @@ export const ListItem = ({
     console.log('Stopping edit mode for item:', item.id);
     setIsInternalEdit(false);
     onSave?.(item.id);
+  };
+
+  const handleVoiceTranscription = async (transcribedText: string) => {
+    console.log("Voice transcription received:", transcribedText);
+    
+    if (transcribedText.trim() === "") {
+      console.log("Empty transcription received, removing item");
+      onDelete(item.id);
+      return;
+    }
+
+    let processedText = transcribedText.trim();
+    
+    try {
+      const wordCount = processedText.split(/\s+/).filter(word => word.length > 0).length;
+      if (wordCount > 3) {
+        try {
+          console.log("Generating AI summary for:", processedText);
+          const { SpeechService } = await import("@/lib/speechService");
+          const speechService = new SpeechService();
+          
+          processedText = await speechService.generateSummary(processedText);
+          console.log("AI summary generated:", processedText);
+        } catch (error) {
+          console.error("Error generating summary for voice:", error);
+          const words = processedText.split(/\s+/).filter(word => word.length > 0);
+          processedText = words.slice(0, 3).join(" ");
+          console.log("Using truncated text:", processedText);
+        }
+      }
+      
+      onUpdate(item.id, processedText, item.content, true);
+    } catch (error) {
+      console.error("Voice transcription processing failed:", error);
+      onDelete(item.id);
+    }
   };
 
   const handleUpdate = (title: string, content: string, fromVoice?: boolean) => {
@@ -124,10 +162,15 @@ export const ListItem = ({
       description: item.title || "Item removed from list",
     });
     
-    // Start slide-out animation, then delete after animation completes
-    setTimeout(() => {
-      onDelete(item.id);
-    }, 300); // Match the animation duration
+    // Delete immediately without animation delay
+    onDelete(item.id);
+  };
+
+  const handleMicrophoneClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Microphone button clicked');
+    toggleVoiceEdit(handleVoiceTranscription);
   };
 
   const handleToggleCollapse = (e: React.MouseEvent) => {
@@ -186,7 +229,7 @@ export const ListItem = ({
         </div>
       )}
       
-      <div className="relative mb-sm">
+      <div className="relative mb-md">
         <DraggableWrapper
           id={item.id}
           isDragging={isDragging}
@@ -206,17 +249,61 @@ export const ListItem = ({
             isDeleting ? "animate-slide-out-left" : ""
           }`}
         >
-          <EditableText
-            id={item.id}
-            value={item.title}
-            content={item.content}
-            isBold={item.isBold}
-            isEditing={actuallyEditing}
-            onUpdate={handleUpdate}
-            onStartEdit={handleStartEdit}
-            onStopEdit={handleStopEdit}
-            onDelete={handleDelete}
-          />
+          <div className="flex items-center gap-sm flex-1">
+            <EditableText
+              id={item.id}
+              value={item.title}
+              content={item.content}
+              isBold={item.isBold}
+              isEditing={actuallyEditing}
+              onUpdate={handleUpdate}
+              onStartEdit={handleStartEdit}
+              onStopEdit={handleStopEdit}
+              onDelete={handleDelete}
+            />
+
+            {actuallyEditing && (
+              <div className="flex-shrink-0 mic-button-zone relative" onClick={(e) => e.stopPropagation()}>
+                <button
+                  onClick={handleMicrophoneClick}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  disabled={isProcessing}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-fast shadow-lg border-2 touch-manipulation relative z-20 ${
+                    isRecording 
+                      ? "bg-accent-red text-white animate-pulse shadow-accent-red/40 scale-105 border-accent-red" 
+                      : "text-accent-red hover:text-white hover:bg-accent-red border-accent-red bg-background-card hover:shadow-xl hover:scale-105"
+                  } ${isProcessing ? "opacity-75 cursor-wait" : "cursor-pointer"}`}
+                  type="button"
+                  aria-label={isRecording ? "Stop recording" : "Start voice recording"}
+                >
+                  {isProcessing ? (
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Mic className={`transition-all duration-fast ${isRecording ? 'w-5 h-5' : 'w-4 h-4'}`} />
+                  )}
+                </button>
+                
+                {/* Cancel Voice Button */}
+                {isRecording && (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      cancelVoiceEdit();
+                    }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
+                    className="absolute -top-1 -right-1 w-4 h-4 bg-accent-red rounded-full flex items-center justify-center hover:bg-accent-red/90 transition-all duration-fast shadow-lg border border-white touch-manipulation z-30"
+                    type="button"
+                    aria-label="Cancel voice recording"
+                  >
+                    <X className="w-2 h-2 text-white" />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
 
           {!actuallyEditing && (
             <ActionMenu
