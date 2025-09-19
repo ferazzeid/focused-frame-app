@@ -311,16 +311,28 @@ export const FreeList = () => {
   };
 
   const deleteItem = async (id: string) => {
+    console.log("deleteItem called with id:", id);
     const itemToDelete = items.find(item => item.id === id);
-    if (!itemToDelete) return;
+    if (!itemToDelete) {
+      console.log("Item not found for deletion:", id);
+      return;
+    }
 
+    console.log("Deleting item:", itemToDelete.title);
+    
     try {
       // Archive the item
       await archiveItem(itemToDelete);
 
       // Remove from current list
       const newItems = items.filter(item => item.id !== id);
+      console.log("New items after deletion:", newItems.length, "items");
+      
+      // Update state first for immediate UI response
+      setItems(newItems);
+      // Then save to database
       await saveItems(newItems);
+      console.log("Item deleted and saved successfully");
 
       toast({
         title: "Item archived",

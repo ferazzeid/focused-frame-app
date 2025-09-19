@@ -360,7 +360,7 @@ export const ListItem = ({
                       item.isBold ? "text-accent-green" : "text-foreground"
                     }`}
                   >
-                    <span className="w-4 h-4 flex items-center justify-center text-xs font-bold border border-current rounded">AT</span>
+                    <span className="w-4 h-4 flex items-center justify-center text-lg font-bold">T</span>
                     Bold
                   </button>
                   
