@@ -193,10 +193,16 @@ export const SecondList = () => {
     console.log("Validation results - bold:", boldValid, "empty:", emptyValid);
     
     if (boldValid && emptyValid) {
-      console.log("Validation passed, saving items and setting editing");
-      saveItems(newItems);
+      console.log("Validation passed, adding item to UI only (not saving until voice completes)");
+      // CRITICAL FIX: Only update UI state, don't save to database until voice input succeeds
+      setItems(newItems);
       setEditingId(newItem.id);
       console.log("Set editing ID to:", newItem.id);
+      
+      toast({
+        title: "Voice input ready",
+        description: "Click the microphone to speak or type to add content",
+      });
     } else {
       console.log("Validation failed");
       toast({
@@ -251,11 +257,11 @@ export const SecondList = () => {
     }
   };
 
-  const updateItem = (id: string, title: string, content: string) => {
-    console.log("updateItem called for id:", id, "with title:", title, "and content:", content);
+  const updateItem = (id: string, title: string, content: string, fromVoice = false) => {
+    console.log("updateItem called for id:", id, "with title:", title, "content:", content, "fromVoice:", fromVoice);
     
-    // Don't allow empty items
-    if (title.trim() === "") {
+    // Don't allow empty items unless it's from voice (which we'll handle specially)
+    if (title.trim() === "" && !fromVoice) {
       toast({
         title: "Item required",
         description: "Items must have content",
@@ -271,6 +277,14 @@ export const SecondList = () => {
     if (validateBoldItemRules(newItems)) {
       console.log("Item update validation passed, saving");
       saveItems(newItems);
+      
+      // Success feedback for voice input
+      if (fromVoice && title.trim() !== "") {
+        toast({
+          title: "Voice input successful",
+          description: "Item created from your speech",
+        });
+      }
     } else {
       console.log("Item update validation failed");
       toast({
@@ -387,9 +401,25 @@ export const SecondList = () => {
     setViewingItem(null);
   };
 
-  const handleSave = (id: string) => {
+  const handleSave = (id: string, fromVoice = false) => {
+    console.log("handleSave called for id:", id, "fromVoice:", fromVoice);
     setEditingId(null);
-    // Remove any empty items that were not properly completed
+    
+    // CRITICAL: If item is empty and not from successful voice input, remove it
+    const item = items.find(item => item.id === id);
+    if (item && !item.isEmpty && item.title.trim() === "" && !fromVoice) {
+      console.log("Removing empty item that was not completed");
+      const newItems = items.filter(item => item.id !== id);
+      setItems(newItems);
+      // Don't save to database - this was a draft item
+      toast({
+        title: "Empty item removed",
+        description: "Items must have content to be saved",
+      });
+      return;
+    }
+    
+    // Remove any other empty items that were not properly completed
     const newItems = items.filter(item => {
       // Keep dividers (isEmpty = true)
       if (item.isEmpty) return true;
@@ -398,8 +428,16 @@ export const SecondList = () => {
       // Remove empty text items
       return false;
     });
+    
     if (newItems.length !== items.length) {
       console.log("Removed empty items:", items.length - newItems.length);
+      setItems(newItems);
+      // Only save if we have content
+      if (newItems.some(item => !item.isEmpty && item.title.trim() !== "")) {
+        saveItems(newItems);
+      }
+    } else if (fromVoice || (item && item.title.trim() !== "")) {
+      // Save if it's from voice input or has content
       saveItems(newItems);
     }
   };

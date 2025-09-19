@@ -14,7 +14,7 @@ export interface ListItemData {
 
 interface ListItemProps {
   item: ListItemData;
-  onUpdate: (id: string, title: string, content: string) => void;
+  onUpdate: (id: string, title: string, content: string, fromVoice?: boolean) => void;
   onDelete: (id: string) => void;
   onToggleBold: (id: string) => void;
   onSendToSecondList?: (id: string) => void;
@@ -25,7 +25,7 @@ interface ListItemProps {
   isEditing?: boolean;
   isSelected?: boolean;
   onEdit?: (id: string) => void;
-  onSave?: (id: string) => void;
+  onSave?: (id: string, fromVoice?: boolean) => void;
   onSelect?: (id: string) => void;
   onViewContent?: (id: string) => void;
   onDeleteConfirm?: (id: string) => void;
@@ -59,37 +59,52 @@ export const ListItem = ({
   const { isRecording, isProcessing, toggleVoiceEdit, cancelVoiceEdit } = useVoiceEdit();
 
   const handleVoiceTranscription = async (transcribedText: string) => {
+    console.log("Voice transcription received:", transcribedText);
+    
     if (transcribedText.trim() === "") {
+      console.log("Empty transcription received, removing item");
+      // If no transcription, delete the empty item
+      onDelete(item.id);
       return;
     }
 
     let processedText = transcribedText.trim();
     
-    // Check if transcribed text has more than 3 words and needs AI summarization
-    const wordCount = processedText.split(/\s+/).filter(word => word.length > 0).length;
-    if (wordCount > 3) {
-      try {
-        // Import SpeechService dynamically 
-        const { SpeechService } = await import("@/lib/speechService");
-        const speechService = new SpeechService();
-        
-        // Use AI to create a 3-word summary
-        processedText = await speechService.generateSummary(processedText);
-      } catch (error) {
-        console.error("Error generating summary for voice:", error);
-        // If AI summarization fails, truncate to first 3 words
-        const words = processedText.split(/\s+/).filter(word => word.length > 0);
-        processedText = words.slice(0, 3).join(" ");
+    try {
+      // Check if transcribed text has more than 3 words and needs AI summarization
+      const wordCount = processedText.split(/\s+/).filter(word => word.length > 0).length;
+      if (wordCount > 3) {
+        try {
+          console.log("Generating AI summary for:", processedText);
+          // Import SpeechService dynamically 
+          const { SpeechService } = await import("@/lib/speechService");
+          const speechService = new SpeechService();
+          
+          // Use AI to create a 3-word summary
+          processedText = await speechService.generateSummary(processedText);
+          console.log("AI summary generated:", processedText);
+        } catch (error) {
+          console.error("Error generating summary for voice:", error);
+          // If AI summarization fails, truncate to first 3 words
+          const words = processedText.split(/\s+/).filter(word => word.length > 0);
+          processedText = words.slice(0, 3).join(" ");
+          console.log("Using truncated text:", processedText);
+        }
       }
+      
+      setLocalTitle(processedText);
+      
+      // CRITICAL: Mark this as a successful voice update
+      setTimeout(() => {
+        onUpdate(item.id, processedText, localContent, true); // Pass fromVoice=true
+        onSave?.(item.id, true); // Pass fromVoice=true
+      }, 100);
+      
+    } catch (error) {
+      console.error("Voice transcription processing failed:", error);
+      // On any error, remove the empty item
+      onDelete(item.id);
     }
-    
-    setLocalTitle(processedText);
-    
-    // Auto-save after voice transcription completes
-    setTimeout(() => {
-      onUpdate(item.id, processedText, localContent);
-      onSave?.(item.id);
-    }, 100); // Small delay to ensure state is updated
   };
 
   const handleSave = () => {
