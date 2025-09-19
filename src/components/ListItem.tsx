@@ -70,7 +70,6 @@ export const ListItem = ({
   const [localContent, setLocalContent] = useState(item.content);
   const [showMenu, setShowMenu] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [dragStarted, setDragStarted] = useState(false);
   const { isRecording, isProcessing, toggleVoiceEdit, cancelVoiceEdit } = useVoiceEdit();
   const { toast } = useToast();
   const { isMobile, isTouch } = useDeviceDetection();
@@ -285,31 +284,26 @@ export const ListItem = ({
           } ${isChild ? "ml-lg" : ""} ${
             isDeleting ? "animate-slide-out-left" : ""
           } ${isDragging ? "opacity-50 scale-95 rotate-1 shadow-lg" : ""}`}
-          draggable={true}
-          onDragStart={(e) => {
-            setDragStarted(true);
-            onDragStart?.(e, item.id);
-          }}
           onDragOver={onDragOver}
-          onDragEnd={onDragEnd}
           onDrop={(e) => onDrop?.(e, item.id)}
           onTouchStart={(e) => handleTouchEvents(e, 'start')}
           onTouchMove={(e) => handleTouchEvents(e, 'move')}
           onTouchEnd={(e) => handleTouchEvents(e, 'end')}
-          onClick={(e) => {
-            // Don't trigger click if we just finished dragging
-            if (dragStarted) {
-              setDragStarted(false);
-              return;
-            }
-            handleItemClick(e);
-          }}
+          onClick={handleItemClick}
           data-item-id={item.id}
         >
         {/* Enhanced Drag Handle */}
-        <div className={`flex items-center justify-center flex-shrink-0 transition-all duration-fast ${
-          isTouch || isMobile ? 'w-8 h-8' : 'w-6 h-6'
-        } ${isDragging ? 'scale-110' : ''}`}>
+        <div 
+          className={`flex items-center justify-center flex-shrink-0 transition-all duration-fast ${
+            isTouch || isMobile ? 'w-8 h-8' : 'w-6 h-6'
+          } ${isDragging ? 'scale-110' : ''}`}
+          draggable={true}
+          onDragStart={(e) => {
+            console.log('Drag started from handle:', item.id);
+            onDragStart?.(e, item.id);
+          }}
+          onDragEnd={onDragEnd}
+        >
           <GripVertical 
             className={`grip-vertical text-foreground-subtle transition-all duration-fast cursor-grab active:cursor-grabbing touch-manipulation ${
               isTouch || isMobile ? 'w-6 h-6 opacity-80' : 'w-5 h-5 opacity-60 group-hover:opacity-100'
