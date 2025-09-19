@@ -79,7 +79,6 @@ export const ListItem = ({
     
     if (transcribedText.trim() === "") {
       console.log("Empty transcription received, removing item");
-      // If no transcription, delete the empty item
       onDelete(item.id);
       return;
     }
@@ -87,39 +86,80 @@ export const ListItem = ({
     let processedText = transcribedText.trim();
     
     try {
-      // Check if transcribed text has more than 3 words and needs AI summarization
       const wordCount = processedText.split(/\s+/).filter(word => word.length > 0).length;
       if (wordCount > 3) {
         try {
           console.log("Generating AI summary for:", processedText);
-          // Import SpeechService dynamically 
           const { SpeechService } = await import("@/lib/speechService");
           const speechService = new SpeechService();
           
-          // Use AI to create a 3-word summary
           processedText = await speechService.generateSummary(processedText);
           console.log("AI summary generated:", processedText);
         } catch (error) {
           console.error("Error generating summary for voice:", error);
-          // If AI summarization fails, truncate to first 3 words
           const words = processedText.split(/\s+/).filter(word => word.length > 0);
           processedText = words.slice(0, 3).join(" ");
           console.log("Using truncated text:", processedText);
         }
       }
       
-      // Only update the title (not content), and stay in editing mode
       setLocalTitle(processedText);
-      
-      // Update the parent state but DON'T exit editing mode
-      onUpdate(item.id, processedText, localContent, true); // Pass fromVoice=true
-      
-      // Don't call onSave here - let user manually save when they're done editing
-      
+      onUpdate(item.id, processedText, localContent, true);
     } catch (error) {
       console.error("Voice transcription processing failed:", error);
-      // On any error, remove the empty item
       onDelete(item.id);
+    }
+  };
+
+  // Unified event handlers
+  const handleItemClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    
+    // Don't trigger if clicking on interactive elements
+    if (isEditing || 
+        target.closest('button') || 
+        target.closest('input') ||
+        target.tagName === 'INPUT' ||
+        target.tagName === 'BUTTON') {
+      return;
+    }
+    
+    e.stopPropagation();
+    onSelect?.(item.id);
+  };
+
+  const handleMicrophoneClick = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Microphone activated');
+    toggleVoiceEdit(handleVoiceTranscription);
+  };
+
+  const handleMenuToggle = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowMenu(!showMenu);
+  };
+
+  const handleTouchEvents = (e: React.TouchEvent, eventType: 'start' | 'move' | 'end') => {
+    const target = e.target as HTMLElement;
+    
+    // Allow touch events on interactive elements
+    if (target.closest('button') || target.closest('input')) {
+      return;
+    }
+    
+    // Pass through to drag handlers
+    switch (eventType) {
+      case 'start':
+        onTouchStart?.(e, item.id);
+        break;
+      case 'move':
+        onTouchMove?.(e);
+        break;
+      case 'end':
+        onTouchEnd?.(e);
+        break;
     }
   };
 
@@ -242,51 +282,17 @@ export const ListItem = ({
               : "border border-border"
           } ${isChild ? "ml-lg" : ""} ${
             isDeleting ? "animate-slide-out-left" : ""
-          } ${isDragging ? "opacity-50 scale-95 rotate-1 shadow-lg" : ""} ${
-            isEditing ? "mic-button-container" : ""
-          }`}
+          } ${isDragging ? "opacity-50 scale-95 rotate-1 shadow-lg" : ""}`}
           draggable={!isTouch}
           onDragStart={(e) => onDragStart?.(e, item.id)}
           onDragOver={onDragOver}
           onDragEnd={onDragEnd}
           onDrop={(e) => onDrop?.(e, item.id)}
-          onTouchStart={(e) => {
-            // Prevent touch conflicts with buttons
-            const target = e.target as HTMLElement;
-            if (target.closest('button') || target.closest('.mic-button-zone')) {
-              return;
-            }
-            onTouchStart?.(e, item.id);
-          }}
-          onTouchMove={onTouchMove}
-          onTouchEnd={(e) => {
-            // Prevent touch conflicts with buttons
-            const target = e.target as HTMLElement;
-            if (target.closest('button') || target.closest('.mic-button-zone')) {
-              return;
-            }
-            onTouchEnd?.(e);
-          }}
-          onClick={(e) => {
-            // Don't trigger selection if clicking on input, microphone button, or menu
-            if (isEditing) {
-              return;
-            }
-            const target = e.target as HTMLElement;
-            if (target.closest('button') || 
-                target.closest('.mic-button-zone') ||
-                target.closest('input') ||
-                target.tagName === 'INPUT' ||
-                target.tagName === 'BUTTON') {
-              return;
-            }
-            onSelect?.(item.id);
-          }}
+          onTouchStart={(e) => handleTouchEvents(e, 'start')}
+          onTouchMove={(e) => handleTouchEvents(e, 'move')}
+          onTouchEnd={(e) => handleTouchEvents(e, 'end')}
+          onClick={handleItemClick}
           data-item-id={item.id}
-          style={{
-            pointerEvents: 'auto',
-            userSelect: 'none'
-          }}
         >
         {/* Enhanced Drag Handle */}
         <div className={`flex items-center justify-center flex-shrink-0 transition-all duration-fast ${
@@ -320,23 +326,13 @@ export const ListItem = ({
                 }}
                 onBlur={handleSave}
                 onKeyDown={handleKeyDown}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  console.log('Input field clicked');
-                }}
-                onFocus={(e) => {
-                  console.log('Input field focused');
-                  e.stopPropagation();
-                }}
+                onClick={(e) => e.stopPropagation()}
+                onFocus={(e) => e.stopPropagation()}
                 placeholder="Item..."
                 className={`w-full bg-input border border-input-border rounded-sm px-sm py-sm text-sm transition-colors duration-fast focus:border-input-border focus:ring-0 focus:ring-offset-0 focus:outline-none ${
                   item.isBold ? "font-bold text-base" : "font-normal"
                 }`}
                 autoFocus
-                style={{ 
-                  pointerEvents: 'auto',
-                  zIndex: 5
-                }}
               />
             </div>
           ) : (
@@ -362,52 +358,20 @@ export const ListItem = ({
           )}
         </div>
 
-        {/* Voice Edit Button - Mobile optimized */}
+        {/* Unified Voice Edit Button */}
         {isEditing && (
-          <div 
-            className="mic-button-zone flex-shrink-0 ml-xs"
-            style={{
-              pointerEvents: 'auto',
-              touchAction: 'manipulation',
-              zIndex: 20
-            }}
-          >
+          <div className="flex-shrink-0 ml-xs">
             <div className="relative">
               <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  console.log('Microphone button clicked - desktop');
-                  if (!isMobile && !isTouch) {
-                    toggleVoiceEdit(handleVoiceTranscription);
-                  }
-                }}
-                onTouchStart={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  console.log('Microphone button touch start');
-                }}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  console.log('Microphone button touch end - mobile');
-                  if (isMobile || isTouch) {
-                    toggleVoiceEdit(handleVoiceTranscription);
-                  }
-                }}
+                onClick={handleMicrophoneClick}
+                onTouchEnd={handleMicrophoneClick}
                 disabled={isProcessing}
-                className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-fast shadow-lg border-2 ${
+                className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-fast shadow-lg border-2 touch-manipulation ${
                   isRecording 
                     ? "bg-accent-red text-white animate-pulse shadow-accent-red/40 scale-105 border-accent-red" 
                     : "text-accent-red hover:text-white hover:bg-accent-red border-accent-red bg-background-card hover:shadow-xl hover:scale-105 active:scale-95"
                 } ${isProcessing ? "opacity-75 cursor-wait" : "cursor-pointer"}`}
                 type="button"
-                style={{
-                  pointerEvents: 'auto',
-                  touchAction: 'manipulation',
-                  zIndex: 30,
-                  WebkitTapHighlightColor: 'transparent'
-                }}
                 aria-label={isRecording ? "Stop recording" : "Start voice recording"}
               >
                 {isProcessing ? (
@@ -416,13 +380,13 @@ export const ListItem = ({
                   <Mic className={`transition-all duration-fast ${isRecording ? 'w-7 h-7' : 'w-6 h-6'}`} />
                 )}
               </button>
+              
               {/* Cancel Voice Edit Button */}
               {isRecording && (
                 <button
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('Cancel voice button clicked');
                     cancelVoiceEdit();
                   }}
                   onTouchEnd={(e) => {
@@ -430,12 +394,8 @@ export const ListItem = ({
                     e.stopPropagation();
                     cancelVoiceEdit();
                   }}
-                  className="absolute -top-1 -right-1 w-6 h-6 bg-accent-red rounded-full flex items-center justify-center hover:bg-accent-red/90 transition-all duration-fast shadow-lg z-20 border border-white"
+                  className="absolute -top-1 -right-1 w-6 h-6 bg-accent-red rounded-full flex items-center justify-center hover:bg-accent-red/90 transition-all duration-fast shadow-lg border border-white touch-manipulation"
                   type="button"
-                  style={{
-                    pointerEvents: 'auto',
-                    touchAction: 'manipulation'
-                  }}
                   aria-label="Cancel voice recording"
                 >
                   <X className="w-3 h-3 text-white" />
@@ -448,25 +408,9 @@ export const ListItem = ({
         {/* Actions - Three Dots Menu */}
         <div className="relative flex-shrink-0">
           <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              console.log('Three dots menu clicked');
-              setShowMenu(!showMenu);
-            }}
-            onTouchEnd={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              console.log('Three dots menu touched');
-              setShowMenu(!showMenu);
-            }}
-            className="w-10 h-10 rounded-md border border-transparent hover:border-border text-foreground-subtle hover:text-foreground transition-colors duration-fast flex items-center justify-center"
-            style={{ 
-              pointerEvents: 'auto',
-              touchAction: 'manipulation',
-              zIndex: 10,
-              WebkitTapHighlightColor: 'transparent'
-            }}
+            onClick={handleMenuToggle}
+            onTouchEnd={handleMenuToggle}
+            className="w-10 h-10 rounded-md border border-transparent hover:border-border text-foreground-subtle hover:text-foreground transition-colors duration-fast flex items-center justify-center touch-manipulation"
           >
             <MoreVertical className="w-5 h-5" />
           </button>
@@ -490,7 +434,7 @@ export const ListItem = ({
                         onViewContent?.(item.id);
                         setShowMenu(false);
                       }}
-                      className="w-full px-lg py-md text-left text-sm text-foreground hover:bg-background-subtle transition-colors duration-fast flex items-center gap-sm touch-manipulation"
+                     className="w-full px-lg py-md text-left text-sm text-foreground hover:bg-background-subtle transition-colors duration-fast flex items-center gap-sm"
                     >
                       <Info className="w-4 h-4" />
                       View
@@ -503,7 +447,7 @@ export const ListItem = ({
                       onToggleBold(item.id);
                       setShowMenu(false);
                     }}
-                    className={`w-full px-lg py-md text-left text-sm hover:bg-background-subtle transition-colors duration-fast flex items-center gap-sm touch-manipulation ${
+                    className={`w-full px-lg py-md text-left text-sm hover:bg-background-subtle transition-colors duration-fast flex items-center gap-sm ${
                       item.isBold ? "text-accent-green" : "text-foreground"
                     }`}
                   >
@@ -518,7 +462,7 @@ export const ListItem = ({
                         onSendToSecondList(item.id);
                         setShowMenu(false);
                       }}
-                      className="w-full px-lg py-md text-left text-sm text-foreground hover:bg-background-subtle transition-colors duration-fast flex items-center gap-sm touch-manipulation"
+                      className="w-full px-lg py-md text-left text-sm text-foreground hover:bg-background-subtle transition-colors duration-fast flex items-center gap-sm"
                     >
                       <ArrowRight className="w-4 h-4" />
                       2nd List
@@ -528,7 +472,7 @@ export const ListItem = ({
                    {/* Delete */}
                    <button
                      onClick={handleImmediateDelete}
-                     className="w-full px-lg py-md text-left text-sm text-foreground hover:bg-background-subtle hover:text-accent-red transition-colors duration-fast flex items-center gap-sm touch-manipulation"
+                     className="w-full px-lg py-md text-left text-sm text-foreground hover:bg-background-subtle hover:text-accent-red transition-colors duration-fast flex items-center gap-sm"
                    >
                      <Trash2 className="w-4 h-4" />
                      Delete
