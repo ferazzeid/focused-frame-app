@@ -127,7 +127,14 @@ export class SpeechService {
     }
 
     const data = await response.json();
-    return data.choices[0]?.message?.content?.trim() || 'Voice Note Summary';
+    const summary = data.choices[0]?.message?.content?.trim();
+    
+    // If OpenAI didn't return a proper summary, generate a quick local one
+    if (!summary) {
+      return this.generateQuickSummary(transcript);
+    }
+    
+    return summary;
   }
 
   async generateMultipleItems(transcript: string): Promise<MultiItemResult> {
@@ -184,6 +191,26 @@ export class SpeechService {
       items: [{ title: summary, content: transcript }],
       fallbackToSingle: true
     };
+  }
+
+  private generateQuickSummary(transcript: string): string {
+    // Simple local summarization - take meaningful words and create a proper title
+    const words = transcript.trim().split(/\s+/).filter(word => 
+      word.length > 2 && !['the', 'and', 'but', 'for', 'are', 'was', 'were', 'been', 'have', 'has', 'had', 'will', 'would', 'could', 'should', 'this', 'that', 'with', 'from', 'they', 'them', 'what', 'when', 'where', 'who', 'how', 'why'].includes(word.toLowerCase())
+    );
+    
+    if (words.length === 0) {
+      // Extract first few words regardless if no meaningful words found
+      const allWords = transcript.trim().split(/\s+/);
+      return allWords.slice(0, 3).join(' ') || 'Voice Note';
+    }
+    
+    // Take the first 3 meaningful words and capitalize them properly
+    const summary = words.slice(0, 3).map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    ).join(' ');
+    
+    return summary || 'Voice Note';
   }
 
   async processAudio(audioBlob: Blob): Promise<TranscriptionResult> {
