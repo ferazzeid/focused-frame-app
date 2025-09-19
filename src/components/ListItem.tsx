@@ -70,6 +70,7 @@ export const ListItem = ({
   const [localContent, setLocalContent] = useState(item.content);
   const [showMenu, setShowMenu] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [dragStarted, setDragStarted] = useState(false);
   const { isRecording, isProcessing, toggleVoiceEdit, cancelVoiceEdit } = useVoiceEdit();
   const { toast } = useToast();
   const { isMobile, isTouch } = useDeviceDetection();
@@ -284,15 +285,25 @@ export const ListItem = ({
           } ${isChild ? "ml-lg" : ""} ${
             isDeleting ? "animate-slide-out-left" : ""
           } ${isDragging ? "opacity-50 scale-95 rotate-1 shadow-lg" : ""}`}
-          draggable={!isTouch}
-          onDragStart={(e) => onDragStart?.(e, item.id)}
+          draggable={true}
+          onDragStart={(e) => {
+            setDragStarted(true);
+            onDragStart?.(e, item.id);
+          }}
           onDragOver={onDragOver}
           onDragEnd={onDragEnd}
           onDrop={(e) => onDrop?.(e, item.id)}
           onTouchStart={(e) => handleTouchEvents(e, 'start')}
           onTouchMove={(e) => handleTouchEvents(e, 'move')}
           onTouchEnd={(e) => handleTouchEvents(e, 'end')}
-          onClick={handleItemClick}
+          onClick={(e) => {
+            // Don't trigger click if we just finished dragging
+            if (dragStarted) {
+              setDragStarted(false);
+              return;
+            }
+            handleItemClick(e);
+          }}
           data-item-id={item.id}
         >
         {/* Enhanced Drag Handle */}
