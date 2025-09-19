@@ -48,7 +48,7 @@ export const MobileLayout = () => {
     setRefreshTrigger(prev => prev + 1);
   };
   
-  const { isRecording, isProcessing, toggleRecording, pendingRecordings, recordingTimeLeft, cancelRecording } = useRecording(handleItemAdded);
+  const { isRecording, isProcessing, toggleRecording, pendingRecordings, recordingTimeLeft, cancelRecording, canRequestPermission } = useRecording(handleItemAdded);
 
   const contextValue = {
     addTextItem,
@@ -203,14 +203,17 @@ export const MobileLayout = () => {
             {/* Recording Button */}
             <button
               onClick={toggleRecording}
-              disabled={isProcessing}
+              disabled={isProcessing || !canRequestPermission}
               className={`flex flex-col items-center justify-center h-12 text-xs font-medium transition-all duration-300 rounded-md border relative ${
                 isRecording
                   ? "text-white border-red-500 bg-red-500 animate-pulse"
                   : isProcessing
                     ? "text-white border-border/30 bg-accent-red/50 opacity-50"
-                    : "text-white border-accent-red bg-accent-red hover:bg-accent-red/90"
+                    : !canRequestPermission
+                      ? "text-white border-border/30 bg-accent-red/30 opacity-50 cursor-not-allowed"
+                      : "text-white border-accent-red bg-accent-red hover:bg-accent-red/90"
               }`}
+              title={!canRequestPermission ? "Microphone requires HTTPS or supported browser" : ""}
               style={{
                 animationDuration: isRecording ? "2s" : undefined,
               }}

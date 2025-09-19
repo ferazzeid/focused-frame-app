@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Archive, ChevronRight, Key, User, LogOut, X, List } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Archive as ArchivePage } from "@/pages/Archive";
+import { PermissionStatus } from "@/components/PermissionStatus";
 
 export const Settings = () => {
   const [openaiApiKey, setOpenaiApiKey] = useState("");
@@ -92,6 +93,9 @@ export const Settings = () => {
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto px-md py-md space-y-lg">
+        {/* Microphone Permission Status */}
+        <PermissionStatus />
+        
         {/* 2nd List Toggle */}
         <div className="space-y-md">
           <div className="bg-background-card border border-border rounded-md p-md">

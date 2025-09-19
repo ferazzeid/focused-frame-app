@@ -1,35 +1,31 @@
 import { useState, useRef } from 'react';
 import { speechService } from '@/lib/speechService';
 import { useToast } from '@/hooks/use-toast';
+import { useMicrophonePermission } from '@/hooks/useMicrophonePermission';
 
 export const useVoiceEdit = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const { toast } = useToast();
+  const { hasPermission, requestPermission, canRequestPermission } = useMicrophonePermission();
 
-  const requestMicrophonePermission = async (): Promise<boolean> => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      setHasPermission(true);
-      stream.getTracks().forEach(track => track.stop());
-      return true;
-    } catch (error) {
-      setHasPermission(false);
-      toast({
-        title: "Microphone Access Denied",
-        description: "Please allow microphone access to use voice editing.",
-        variant: "destructive",
-      });
-      return false;
-    }
-  };
+  // Remove old permission function - now handled by useMicrophonePermission
 
   const startVoiceEdit = async (onTranscription: (text: string) => void) => {
-    const hasAccess = hasPermission || await requestMicrophonePermission();
+    // Check permission first
+    if (!canRequestPermission) {
+      toast({
+        title: "Microphone Not Available",
+        description: "Microphone access requires HTTPS or a supported browser",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const hasAccess = hasPermission || await requestPermission();
     if (!hasAccess) return;
 
     try {
@@ -150,6 +146,7 @@ export const useVoiceEdit = () => {
     isRecording,
     isProcessing,
     hasPermission,
+    canRequestPermission,
     startVoiceEdit,
     stopVoiceEdit,
     cancelVoiceEdit,

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { speechService, TranscriptionResult, MultiItemResult } from '@/lib/speechService';
 import { createTextItem, loadData, saveData, generateId } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
+import { useMicrophonePermission } from '@/hooks/useMicrophonePermission';
 
 interface PendingRecording {
   id: string;
@@ -14,7 +15,6 @@ const RECORDING_TIME_LIMIT = 60; // 60 seconds max recording time
 export const useRecording = (onItemAdded?: () => void) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [pendingRecordings, setPendingRecordings] = useState<PendingRecording[]>([]);
   const [recordingTimeLeft, setRecordingTimeLeft] = useState(RECORDING_TIME_LIMIT);
   
@@ -22,6 +22,7 @@ export const useRecording = (onItemAdded?: () => void) => {
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
+  const { hasPermission, requestPermission, canRequestPermission } = useMicrophonePermission();
 
   // Cleanup timer on unmount
   useEffect(() => {
@@ -84,25 +85,20 @@ export const useRecording = (onItemAdded?: () => void) => {
     setPendingRecordings(prev => prev.filter(r => r.id !== id));
   };
 
-  const requestMicrophonePermission = async (): Promise<boolean> => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      setHasPermission(true);
-      stream.getTracks().forEach(track => track.stop());
-      return true;
-    } catch (error) {
-      setHasPermission(false);
-      toast({
-        title: "Microphone Access Denied",
-        description: "Please allow microphone access to use speech recording.",
-        variant: "destructive",
-      });
-      return false;
-    }
-  };
+  // Remove old permission function - now handled by useMicrophonePermission
 
   const startRecording = async () => {
-    const hasAccess = hasPermission || await requestMicrophonePermission();
+    // Check permission first
+    if (!canRequestPermission) {
+      toast({
+        title: "Microphone Not Available",
+        description: "Microphone access requires HTTPS or a supported browser",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const hasAccess = hasPermission || await requestPermission();
     if (!hasAccess) return;
 
     try {
@@ -299,6 +295,7 @@ export const useRecording = (onItemAdded?: () => void) => {
     isRecording,
     isProcessing,
     hasPermission,
+    canRequestPermission,
     pendingRecordings,
     recordingTimeLeft,
     startRecording,
