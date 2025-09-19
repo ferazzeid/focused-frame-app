@@ -125,7 +125,9 @@ export const ListItem = ({
         target.closest('input') || 
         target.closest('.grip-vertical') ||
         target.tagName === 'BUTTON' ||
-        target.tagName === 'INPUT') {
+        target.tagName === 'INPUT' ||
+        (target as HTMLInputElement).type === 'button') {
+      console.log('Click on interactive element, ignoring');
       return;
     }
     
@@ -137,7 +139,7 @@ export const ListItem = ({
   const handleMicrophoneClick = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('Microphone activated');
+    console.log('Microphone button clicked');
     toggleVoiceEdit(handleVoiceTranscription);
   };
 

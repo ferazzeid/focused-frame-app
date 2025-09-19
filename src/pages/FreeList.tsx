@@ -438,7 +438,8 @@ export const FreeList = () => {
     
     if (boldValid && emptyValid) {
       // Everything is valid, proceed normally
-      saveItems(newItems);
+      setItems(newItems); // Update UI immediately
+      saveItems(newItems); // Save to database in background
     } else if (!boldValid && emptyValid && draggedItemData.isBold) {
       // Bold rules failed but empty rules passed, and the dragged item is bold
       // Try converting the bold item to regular
@@ -450,7 +451,8 @@ export const FreeList = () => {
         // Validate again with the converted item
         if (validateBoldItemRules(convertedItems)) {
           console.log("Converting bold item to regular to allow drag");
-          saveItems(convertedItems);
+          setItems(convertedItems); // Update UI immediately
+          saveItems(convertedItems); // Save to database in background
           toast({
             title: "Item converted",
             description: "Bold item was converted to regular text to allow this arrangement",
