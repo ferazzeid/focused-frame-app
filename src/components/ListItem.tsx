@@ -111,28 +111,15 @@ export const ListItem = ({
     }
   };
 
-  // Simple click handler - always enters edit mode
-  const handleItemClick = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    
+  // Simple text area click handler - only triggers on text content
+  const handleTextAreaClick = (e: React.MouseEvent) => {
     // Don't trigger if already editing
     if (isEditing) {
       return;
     }
     
-    // Don't trigger if clicking on interactive elements (buttons, inputs, drag handle)
-    if (target.closest('button') || 
-        target.closest('input') || 
-        target.closest('.grip-vertical') ||
-        target.tagName === 'BUTTON' ||
-        target.tagName === 'INPUT' ||
-        (target as HTMLInputElement).type === 'button') {
-      console.log('Click on interactive element, ignoring');
-      return;
-    }
-    
     e.stopPropagation();
-    console.log('Item clicked, entering edit mode:', item.id);
+    console.log('Text area clicked, entering edit mode:', item.id);
     onEdit?.(item.id);
   };
 
@@ -291,7 +278,6 @@ export const ListItem = ({
           onTouchStart={(e) => handleTouchEvents(e, 'start')}
           onTouchMove={(e) => handleTouchEvents(e, 'move')}
           onTouchEnd={(e) => handleTouchEvents(e, 'end')}
-          onClick={handleItemClick}
           data-item-id={item.id}
         >
         {/* Enhanced Drag Handle */}
@@ -350,6 +336,7 @@ export const ListItem = ({
                   ? "font-bold text-base text-foreground"
                   : "font-light text-sm text-foreground leading-tight"
               }`}
+              onClick={handleTextAreaClick}
             >
               {item.title ? (
                 <span>
