@@ -74,7 +74,7 @@ export const ListItem = ({
   hasChildren = false,
 }: ListItemProps) => {
   const [isInternalEdit, setIsInternalEdit] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  
   const { toast } = useToast();
   const { isRecording, isProcessing, toggleVoiceEdit, cancelVoiceEdit } = useVoiceEdit();
 
@@ -154,15 +154,13 @@ export const ListItem = ({
   };
 
   const handleImmediateDelete = () => {
-    setIsDeleting(true);
-    
     // Show toast notification
     toast({
       title: "Item deleted",
       description: item.title || "Item removed from list",
     });
     
-    // Delete immediately without animation delay
+    // Delete immediately
     onDelete(item.id);
   };
 
@@ -195,7 +193,7 @@ export const ListItem = ({
         onTouchEnd={onTouchEnd}
         className={`${
           isDragOver ? 'bg-accent-green/20 border-accent-green' : 'bg-background-subtle/30 hover:bg-background-subtle/50'
-        } ${isDeleting ? "animate-slide-out-left" : ""} border border-border/50 mb-xs`}
+        } border border-border/50 mb-sm`}
       >
         {/* Divider Content */}
         <div className="flex-1 flex items-center justify-center px-md">
@@ -229,7 +227,7 @@ export const ListItem = ({
         </div>
       )}
       
-      <div className="relative mb-md">
+      <div className={`relative ${isChild ? 'mb-sm' : 'mb-md'}`}>
         <DraggableWrapper
           id={item.id}
           isDragging={isDragging}
@@ -245,9 +243,7 @@ export const ListItem = ({
             isSelected
               ? "border-2 border-accent-red bg-accent-red/5"
               : "border border-border"
-          } ${isChild ? "ml-md" : ""} ${
-            isDeleting ? "animate-slide-out-left" : ""
-          }`}
+          } ${isChild ? "ml-md" : ""}`}
         >
           <div className="flex items-center gap-sm flex-1">
             <EditableText
@@ -261,48 +257,6 @@ export const ListItem = ({
               onStopEdit={handleStopEdit}
               onDelete={handleDelete}
             />
-
-            {actuallyEditing && (
-              <div className="flex-shrink-0 mic-button-zone relative" onClick={(e) => e.stopPropagation()}>
-                <button
-                  onClick={handleMicrophoneClick}
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onTouchStart={(e) => e.stopPropagation()}
-                  disabled={isProcessing}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-fast shadow-lg border-2 touch-manipulation relative z-20 ${
-                    isRecording 
-                      ? "bg-accent-red text-white animate-pulse shadow-accent-red/40 scale-105 border-accent-red" 
-                      : "text-accent-red hover:text-white hover:bg-accent-red border-accent-red bg-background-card hover:shadow-xl hover:scale-105"
-                  } ${isProcessing ? "opacity-75 cursor-wait" : "cursor-pointer"}`}
-                  type="button"
-                  aria-label={isRecording ? "Stop recording" : "Start voice recording"}
-                >
-                  {isProcessing ? (
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <Mic className={`transition-all duration-fast ${isRecording ? 'w-5 h-5' : 'w-4 h-4'}`} />
-                  )}
-                </button>
-                
-                {/* Cancel Voice Button */}
-                {isRecording && (
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      cancelVoiceEdit();
-                    }}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onTouchStart={(e) => e.stopPropagation()}
-                    className="absolute -top-1 -right-1 w-4 h-4 bg-accent-red rounded-full flex items-center justify-center hover:bg-accent-red/90 transition-all duration-fast shadow-lg border border-white touch-manipulation z-30"
-                    type="button"
-                    aria-label="Cancel voice recording"
-                  >
-                    <X className="w-2 h-2 text-white" />
-                  </button>
-                )}
-              </div>
-            )}
           </div>
 
           {!actuallyEditing && (
@@ -318,6 +272,49 @@ export const ListItem = ({
             />
           )}
         </DraggableWrapper>
+        
+        {/* Microphone button - positioned outside draggable wrapper */}
+        {actuallyEditing && (
+          <div className="absolute top-2 right-12 z-30">
+            <button
+              onClick={handleMicrophoneClick}
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              disabled={isProcessing}
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-fast shadow-lg border-2 touch-manipulation ${
+                isRecording 
+                  ? "bg-accent-red text-white animate-pulse shadow-accent-red/40 scale-105 border-accent-red" 
+                  : "text-accent-red hover:text-white hover:bg-accent-red border-accent-red bg-background-card hover:shadow-xl hover:scale-105"
+              } ${isProcessing ? "opacity-75 cursor-wait" : "cursor-pointer"}`}
+              type="button"
+              aria-label={isRecording ? "Stop recording" : "Start voice recording"}
+            >
+              {isProcessing ? (
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Mic className={`transition-all duration-fast ${isRecording ? 'w-5 h-5' : 'w-4 h-4'}`} />
+              )}
+            </button>
+            
+            {/* Cancel Voice Button */}
+            {isRecording && (
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  cancelVoiceEdit();
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+                className="absolute -top-1 -right-1 w-4 h-4 bg-accent-red rounded-full flex items-center justify-center hover:bg-accent-red/90 transition-all duration-fast shadow-lg border border-white touch-manipulation z-40"
+                type="button"
+                aria-label="Cancel voice recording"
+              >
+                <X className="w-2 h-2 text-white" />
+              </button>
+            )}
+          </div>
+        )}
         
         {/* Collapse/Expand button for bold items with children */}
         {item.isBold && hasChildren && !actuallyEditing && (

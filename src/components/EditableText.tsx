@@ -70,7 +70,7 @@ export const EditableText = ({
           type="text"
           value={localValue}
           onChange={handleChange}
-          onBlur={handleSave}
+          
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           className={`w-full bg-input border border-input-border rounded-sm px-xs py-xs text-sm transition-colors duration-fast focus:border-input-border focus:ring-0 focus:ring-offset-0 focus:outline-none ${
