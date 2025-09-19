@@ -231,55 +231,59 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
           <div className="bg-background-card border border-border rounded-md p-md space-y-md">
             {sharedKeyStatus.hasKey && (
               <div className="p-sm bg-success/10 border border-success/20 rounded-md">
-                <div className="flex items-center gap-xs mb-xs">
+                <div className="flex items-center gap-xs">
                   <div className="w-2 h-2 bg-success rounded-full"></div>
-                  <p className="text-sm font-medium text-foreground">Shared API Key Active</p>
+                  <p className="text-sm font-medium text-foreground">Active: {sharedKeyStatus.keyPreview}</p>
                 </div>
-                <p className="text-sm text-foreground">
-                  <span className="font-medium">Key Preview:</span> {sharedKeyStatus.keyPreview}
-                </p>
-                <p className="text-xs text-foreground-subtle mt-xs">
-                  This key is available to all premium users for AI features
-                </p>
               </div>
             )}
             
             {!sharedKeyStatus.hasKey && (
               <div className="p-sm bg-warning/10 border border-warning/20 rounded-md">
-                <div className="flex items-center gap-xs mb-xs">
+                <div className="flex items-center gap-xs">
                   <div className="w-2 h-2 bg-warning rounded-full"></div>
                   <p className="text-sm font-medium text-foreground">No Shared API Key</p>
                 </div>
-                <p className="text-xs text-foreground-subtle">
-                  Premium users will need to use their own API keys until a shared key is configured
-                </p>
               </div>
             )}
-            <div className="space-y-sm">
-              <Label htmlFor="shared-openai-key" className="text-sm font-medium text-foreground">
-                Shared OpenAI API Key
-              </Label>
-              <Input
-                id="shared-openai-key"
-                type="password"
-                value={sharedApiKey}
-                onChange={(e) => setSharedApiKey(e.target.value)}
-                placeholder="sk-..."
-                className="bg-input border border-input-border"
-              />
-              <p className="text-xs text-foreground-subtle">
-                This shared key will be used by all premium users for AI transcription and processing features. Users can still override this with their personal "Bring Your Own Key" option.
-              </p>
+
+            {(!sharedKeyStatus.hasKey || sharedApiKey.trim()) && (
+              <div className="space-y-sm">
+                <Label htmlFor="shared-openai-key" className="text-sm font-medium text-foreground">
+                  {sharedKeyStatus.hasKey ? "Update API Key" : "Shared OpenAI API Key"}
+                </Label>
+                <Input
+                  id="shared-openai-key"
+                  type="password"
+                  value={sharedApiKey}
+                  onChange={(e) => setSharedApiKey(e.target.value)}
+                  placeholder="sk-..."
+                  className="bg-input border border-input-border"
+                />
+              </div>
+            )}
+
+            <div className="flex gap-sm">
+              {sharedKeyStatus.hasKey && !sharedApiKey.trim() && (
+                <MobileButton
+                  onClick={() => setSharedApiKey("dummy")}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Update Key
+                </MobileButton>
+              )}
+              
+              <MobileButton
+                onClick={handleSaveSharedApiKey}
+                variant="primary"
+                className={sharedKeyStatus.hasKey && !sharedApiKey.trim() ? "flex-1" : "w-full"}
+              >
+                {sharedApiKey.trim() ? 
+                  (sharedKeyStatus.hasKey ? "Update" : "Save") : 
+                  "Remove"}
+              </MobileButton>
             </div>
-            <MobileButton
-              onClick={handleSaveSharedApiKey}
-              variant="primary"
-              className="w-full"
-            >
-              {sharedApiKey.trim() ? 
-                (sharedKeyStatus.hasKey ? "Update Shared API Key" : "Save Shared API Key") : 
-                "Remove Shared API Key"}
-            </MobileButton>
           </div>
         </div>
 
@@ -291,12 +295,7 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
           </div>
           <div className="bg-background-card border border-border rounded-md p-md space-y-md">
             <div className="flex items-center justify-between">
-              <div className="space-y-xs">
-                <Label className="text-sm font-medium text-foreground">Enable Multi-Item Creation</Label>
-                <p className="text-xs text-foreground-subtle">
-                  When enabled, recordings can be split into multiple list items automatically
-                </p>
-              </div>
+              <Label className="text-sm font-medium text-foreground">Enable Multi-Item Creation</Label>
               <Switch
                 checked={multiItemEnabled}
                 onCheckedChange={setMultiItemEnabled}
@@ -305,18 +304,15 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
             
             <div className="space-y-sm">
               <Label htmlFor="multi-item-prompt" className="text-sm font-medium text-foreground">
-                Multi-Item Analysis Prompt
+                Analysis Prompt
               </Label>
               <Textarea
                 id="multi-item-prompt"
                 value={multiItemPrompt}
                 onChange={(e) => setMultiItemPrompt(e.target.value)}
                 placeholder="Enter the prompt for analyzing recordings..."
-                className="bg-input border border-input-border min-h-[120px] font-mono text-xs"
+                className="bg-input border border-input-border min-h-[100px] font-mono text-xs"
               />
-              <p className="text-xs text-foreground-subtle">
-                This prompt instructs the AI how to analyze recordings and split them into multiple items.
-              </p>
             </div>
             
             <MobileButton
@@ -338,34 +334,23 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
           <div className="bg-background-card border border-border rounded-md p-md space-y-md">
             <div className="space-y-sm">
               <Label className="text-sm font-medium text-foreground">OpenAI Model</Label>
-              <div className="text-xs text-foreground-subtle mb-xs">
-                Current: <span className="font-medium text-foreground">{selectedModel === "gpt-5-nano-2025-08-07" ? "GPT-5 Nano (Default)" : selectedModel}</span>
-              </div>
               <Select value={selectedModel} onValueChange={setSelectedModel}>
                 <SelectTrigger className="bg-background-card border border-border text-foreground">
                   <SelectValue placeholder="Select AI model" />
                 </SelectTrigger>
                 <SelectContent className="bg-background-card border border-border shadow-lg z-50">
-                  <SelectItem value="gpt-5-nano-2025-08-07" className="text-foreground hover:bg-background-subtle">GPT-5 Nano (Fastest, Default)</SelectItem>
-                  <SelectItem value="gpt-5-mini-2025-08-07" className="text-foreground hover:bg-background-subtle">GPT-5 Mini (Balanced)</SelectItem>
-                  <SelectItem value="gpt-5-2025-08-07" className="text-foreground hover:bg-background-subtle">GPT-5 (Most Capable)</SelectItem>
-                  <SelectItem value="gpt-4.1-2025-04-14" className="text-foreground hover:bg-background-subtle">GPT-4.1 (Reliable)</SelectItem>
-                  <SelectItem value="gpt-4o-mini" className="text-foreground hover:bg-background-subtle">GPT-4o Mini (Legacy)</SelectItem>
-                  <SelectItem value="gpt-4o" className="text-foreground hover:bg-background-subtle">GPT-4o (Legacy)</SelectItem>
+                  <SelectItem value="gpt-5-nano-2025-08-07" className="text-foreground hover:bg-background-subtle">GPT-5 Nano (Default)</SelectItem>
+                  <SelectItem value="gpt-5-mini-2025-08-07" className="text-foreground hover:bg-background-subtle">GPT-5 Mini</SelectItem>
+                  <SelectItem value="gpt-5-2025-08-07" className="text-foreground hover:bg-background-subtle">GPT-5</SelectItem>
+                  <SelectItem value="gpt-4.1-2025-04-14" className="text-foreground hover:bg-background-subtle">GPT-4.1</SelectItem>
+                  <SelectItem value="gpt-4o-mini" className="text-foreground hover:bg-background-subtle">GPT-4o Mini</SelectItem>
+                  <SelectItem value="gpt-4o" className="text-foreground hover:bg-background-subtle">GPT-4o</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-foreground-subtle">
-                GPT-5 Nano is optimized for speed and efficiency while maintaining quality.
-              </p>
             </div>
 
             <div className="flex items-center justify-between">
-              <div className="space-y-xs">
-                <Label className="text-sm font-medium text-foreground">Speech-to-Text Method</Label>
-                <p className="text-xs text-foreground-subtle">
-                  Current: <span className="font-medium text-foreground">{useLocalSpeech ? "Browser Speech Recognition (instant)" : "OpenAI Whisper (higher accuracy)"}</span>
-                </p>
-              </div>
+              <Label className="text-sm font-medium text-foreground">Use Browser Speech Recognition</Label>
               <Switch
                 checked={useLocalSpeech}
                 onCheckedChange={setUseLocalSpeech}
@@ -373,12 +358,7 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
             </div>
 
             <div className="flex items-center justify-between">
-              <div className="space-y-xs">
-                <Label className="text-sm font-medium text-foreground">Quick Mode</Label>
-                <p className="text-xs text-foreground-subtle">
-                  Current: <span className="font-medium text-foreground">{quickMode ? "Enabled (faster processing)" : "Disabled (AI summarization)"}</span>
-                </p>
-              </div>
+              <Label className="text-sm font-medium text-foreground">Quick Mode</Label>
               <Switch
                 checked={quickMode}
                 onCheckedChange={setQuickMode}
@@ -416,44 +396,29 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
           <div className="bg-background-card border border-border rounded-md p-md space-y-md">
             <div className="space-y-sm">
               <Label className="text-sm font-medium text-foreground">Action Button Position</Label>
-              <div className="text-xs text-foreground-subtle mb-xs">
-                Current: <span className="font-medium text-foreground">{buttonPosition === "bottom" ? "Bottom Toolbar" : "Header Area"}</span>
-              </div>
               <Select value={buttonPosition} onValueChange={setButtonPosition}>
                 <SelectTrigger className="bg-background-card border border-border text-foreground">
                   <SelectValue placeholder="Select button position" />
                 </SelectTrigger>
                 <SelectContent className="bg-background-card border border-border shadow-lg z-50">
-                  <SelectItem value="bottom" className="text-foreground hover:bg-background-subtle">Bottom (Current Position)</SelectItem>
-                  <SelectItem value="header" className="text-foreground hover:bg-background-subtle">Header (Near Settings)</SelectItem>
+                  <SelectItem value="bottom" className="text-foreground hover:bg-background-subtle">Bottom</SelectItem>
+                  <SelectItem value="header" className="text-foreground hover:bg-background-subtle">Header</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-foreground-subtle">
-                {buttonPosition === "bottom" && "Plus and divider buttons will stay in the bottom toolbar"}
-                {buttonPosition === "header" && "Plus and divider buttons will move to the header area"}
-              </p>
             </div>
 
             <div className="space-y-sm">
               <Label className="text-sm font-medium text-foreground">Notification Mode</Label>
-              <div className="text-xs text-foreground-subtle mb-xs">
-                Current: <span className="font-medium text-foreground">{notificationMode === "minimal" ? "Minimal (Visual only)" : notificationMode === "reduced" ? "Reduced (Errors only)" : "Verbose (All messages)"}</span>
-              </div>
               <Select value={notificationMode} onValueChange={setNotificationMode}>
                 <SelectTrigger className="bg-background-card border border-border text-foreground">
                   <SelectValue placeholder="Select notification style" />
                 </SelectTrigger>
                 <SelectContent className="bg-background-card border border-border shadow-lg z-50">
-                  <SelectItem value="minimal" className="text-foreground hover:bg-background-subtle">Minimal (Visual feedback only)</SelectItem>
-                  <SelectItem value="reduced" className="text-foreground hover:bg-background-subtle">Reduced (Critical errors only)</SelectItem>
-                  <SelectItem value="verbose" className="text-foreground hover:bg-background-subtle">Verbose (All notifications)</SelectItem>
+                  <SelectItem value="minimal" className="text-foreground hover:bg-background-subtle">Minimal</SelectItem>
+                  <SelectItem value="reduced" className="text-foreground hover:bg-background-subtle">Reduced</SelectItem>
+                  <SelectItem value="verbose" className="text-foreground hover:bg-background-subtle">Verbose</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-foreground-subtle">
-                {notificationMode === "minimal" && "Only visual indicators like checkmarks and spinners"}
-                {notificationMode === "reduced" && "Small toast notifications for errors only"}
-                {notificationMode === "verbose" && "Full toast notifications for all events"}
-              </p>
             </div>
 
             <div className="relative">
@@ -487,18 +452,15 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
           <div className="bg-background-card border border-border rounded-md p-md space-y-md">
             <div className="space-y-sm">
               <Label htmlFor="summary-prompt" className="text-sm font-medium text-foreground">
-                System Prompt for Single-Item Summaries
+                Summary Prompt
               </Label>
               <Textarea
                 id="summary-prompt"
                 value={summaryPrompt}
                 onChange={(e) => setSummaryPrompt(e.target.value)}
-                placeholder="Enter the system prompt for single-item summaries..."
+                placeholder="Enter the system prompt for summaries..."
                 className="bg-input border border-input-border min-h-[80px] font-mono text-xs"
               />
-              <p className="text-xs text-foreground-subtle">
-                This prompt instructs the AI how to create concise summaries for single voice recordings.
-              </p>
             </div>
             
             <MobileButton

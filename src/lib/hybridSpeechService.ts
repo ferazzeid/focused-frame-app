@@ -75,12 +75,23 @@ export class HybridSpeechService {
   }
 
   private generateQuickSummary(transcript: string): string {
-    // Simple local summarization - take first 3 meaningful words
+    // Simple local summarization - take meaningful words and create a proper title
     const words = transcript.trim().split(/\s+/).filter(word => 
-      word.length > 2 && !['the', 'and', 'but', 'for', 'are', 'was', 'were', 'been', 'have', 'has', 'had', 'will', 'would', 'could', 'should'].includes(word.toLowerCase())
+      word.length > 2 && !['the', 'and', 'but', 'for', 'are', 'was', 'were', 'been', 'have', 'has', 'had', 'will', 'would', 'could', 'should', 'this', 'that', 'with', 'from', 'they', 'them', 'what', 'when', 'where', 'who', 'how', 'why'].includes(word.toLowerCase())
     );
     
-    return words.slice(0, 3).join(' ') || 'Voice Note';
+    if (words.length === 0) {
+      // Extract first few words regardless if no meaningful words found
+      const allWords = transcript.trim().split(/\s+/);
+      return allWords.slice(0, 3).join(' ') || 'Voice Note';
+    }
+    
+    // Take the first 3 meaningful words and capitalize them properly
+    const summary = words.slice(0, 3).map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    ).join(' ');
+    
+    return summary || 'Voice Note';
   }
 }
 
