@@ -33,6 +33,7 @@ export const MobileLayout = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [addTextItem, setAddTextItem] = useState<(() => void) | null>(null);
   const [addEmptyLine, setAddEmptyLine] = useState<(() => void) | null>(null);
+  const [buttonPosition, setButtonPosition] = useState("bottom");
   const [showSecondList, setShowSecondList] = useState(true);
   const { isAdmin, isLoading } = useUserRole();
   

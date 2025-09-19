@@ -7,6 +7,7 @@ import { loadData, saveData, createTextItem, createEmptyItem, archiveItem } from
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useAddFunctions } from "@/components/MobileLayout";
+import { cleanupItems } from "@/lib/cleanupData";
 
 export const SecondList = () => {
   const [items, setItems] = useState<ListItemData[]>([]);
@@ -29,7 +30,17 @@ export const SecondList = () => {
         try {
           setIsLoading(true);
           const data = await loadData();
+        {/* Apply cleanup on data load */}
+        const cleanedItems = cleanupItems(data.secondList);
+        if (cleanedItems.length !== data.secondList.length) {
+          console.log(`Cleaned up ${data.secondList.length - cleanedItems.length} invalid items`);
+          // Save cleaned data back
+          const updatedData = { ...data, secondList: cleanedItems };
+          await saveData(updatedData);
+          setItems(cleanedItems);
+        } else {
           setItems(data.secondList);
+        }
         } catch (error) {
           console.error("Error loading data:", error);
           toast({
@@ -132,12 +143,13 @@ export const SecondList = () => {
   const validateEmptyLineRules = (newItems: ListItemData[]): boolean => {
     console.log("=== Empty Lines Validation ===");
     let consecutiveEmpty = 0;
-    for (const item of newItems) {
+    for (let i = 0; i < newItems.length; i++) {
+      const item = newItems[i];
       if (item.isEmpty) {
         consecutiveEmpty++;
-        console.log(`Empty line found: "${item.title}" - Consecutive count: ${consecutiveEmpty}`);
+        console.log(`Empty line found at index ${i}: "${item.title}" - Consecutive count: ${consecutiveEmpty}`);
         if (consecutiveEmpty > 1) {
-          console.log(`RULE VIOLATION: More than one consecutive empty line`);
+          console.log(`RULE VIOLATION: More than one consecutive empty line at index ${i}`);
           return false;
         }
       } else {
@@ -220,7 +232,7 @@ export const SecondList = () => {
       setSelectedItemId(null);
       saveItems(newItems);
     } else {
-      console.log("Validation failed");
+      console.log("Validation failed - consecutive dividers detected");
       toast({
         title: "Cannot add empty line",
         description: "No two consecutive empty lines allowed",
@@ -332,12 +344,17 @@ export const SecondList = () => {
 
   const handleSave = (id: string) => {
     setEditingId(null);
-    // Only remove empty items that are not the one we just edited and not intentional empty lines
+    // Remove any empty items that were not properly completed
     const newItems = items.filter(item => {
-      if (item.id === id) return true; // Keep the item we just edited
-      return !(item.title.trim() === "" && item.content.trim() === "" && !item.isEmpty); // Remove other empty text items
+      // Keep dividers (isEmpty = true)
+      if (item.isEmpty) return true;
+      // Keep items with content
+      if (item.title.trim() !== "" || item.content.trim() !== "") return true;
+      // Remove empty text items
+      return false;
     });
     if (newItems.length !== items.length) {
+      console.log("Removed empty items:", items.length - newItems.length);
       saveItems(newItems);
     }
   };

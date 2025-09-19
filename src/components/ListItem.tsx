@@ -95,6 +95,8 @@ export const ListItem = ({
   const handleSave = () => {
     // Don't save if item content is empty
     if (localTitle.trim() === "") {
+      // Delete the item instead of saving empty
+      onDelete(item.id);
       return;
     }
     onUpdate(item.id, localTitle, localContent);

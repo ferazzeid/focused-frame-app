@@ -23,6 +23,7 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const [useLocalSpeech, setUseLocalSpeech] = useState(false);
   const [notificationMode, setNotificationMode] = useState("");
   const [quickMode, setQuickMode] = useState(false);
+  const [buttonPosition, setButtonPosition] = useState("");
   const { toast } = useToast();
   const { isAdmin, isLoading } = useUserRole();
 
@@ -49,6 +50,9 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
     
     const savedQuickMode = localStorage.getItem("quick_mode");
     setQuickMode(savedQuickMode === "true");
+    
+    const savedButtonPosition = localStorage.getItem("button_position");
+    setButtonPosition(savedButtonPosition || "bottom");
     
     // Load shared OpenAI key status
     loadSharedKeyStatus();
@@ -124,11 +128,19 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const handleSaveAISettings = () => {
     localStorage.setItem("openai_model", selectedModel);
     localStorage.setItem("use_local_speech", useLocalSpeech.toString());
-    localStorage.setItem("notification_mode", notificationMode);
     localStorage.setItem("quick_mode", quickMode.toString());
     toast({
       title: "AI Settings Saved",
       description: "Your AI processing settings have been updated.",
+    });
+  };
+
+  const handleSaveInterfaceSettings = () => {
+    localStorage.setItem("button_position", buttonPosition);
+    localStorage.setItem("notification_mode", notificationMode);
+    toast({
+      title: "Interface Settings Saved",
+      description: "Your interface preferences have been updated.",
     });
   };
 
@@ -335,6 +347,59 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
               className="w-full"
             >
               Save AI Settings
+            </MobileButton>
+          </div>
+        </div>
+
+        {/* Interface Settings */}
+        <div className="space-y-md">
+          <div className="flex items-center gap-sm">
+            <Settings2 className="w-5 h-5 text-foreground-muted" />
+            <h2 className="text-lg font-semibold text-foreground">Interface Settings</h2>
+          </div>
+          <div className="bg-background-card border border-border rounded-md p-md space-y-md">
+            <div className="space-y-sm">
+              <Label className="text-sm font-medium text-foreground">Action Button Position</Label>
+              <Select value={buttonPosition} onValueChange={setButtonPosition}>
+                <SelectTrigger className="bg-input border border-input-border">
+                  <SelectValue placeholder="Select button position" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bottom">Bottom (Current Position)</SelectItem>
+                  <SelectItem value="header">Header (Near Settings)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-foreground-subtle">
+                {buttonPosition === "bottom" && "Plus and divider buttons will stay in the bottom toolbar"}
+                {buttonPosition === "header" && "Plus and divider buttons will move to the header area"}
+              </p>
+            </div>
+
+            <div className="space-y-sm">
+              <Label className="text-sm font-medium text-foreground">Notification Mode</Label>
+              <Select value={notificationMode} onValueChange={setNotificationMode}>
+                <SelectTrigger className="bg-input border border-input-border">
+                  <SelectValue placeholder="Select notification style" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="minimal">Minimal (Visual feedback only)</SelectItem>
+                  <SelectItem value="reduced">Reduced (Critical errors only)</SelectItem>
+                  <SelectItem value="verbose">Verbose (All notifications)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-foreground-subtle">
+                {notificationMode === "minimal" && "Only visual indicators like checkmarks and spinners"}
+                {notificationMode === "reduced" && "Small toast notifications for errors only"}
+                {notificationMode === "verbose" && "Full toast notifications for all events"}
+              </p>
+            </div>
+
+            <MobileButton
+              onClick={handleSaveInterfaceSettings}
+              variant="primary"
+              className="w-full"
+            >
+              Save Interface Settings
             </MobileButton>
           </div>
         </div>
