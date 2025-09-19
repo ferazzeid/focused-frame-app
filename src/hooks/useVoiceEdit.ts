@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { speechService } from '@/lib/speechService';
 import { useToast } from '@/hooks/use-toast';
 import { useMicrophonePermission } from '@/hooks/useMicrophonePermission';
+import { useMicrophoneCoordinator } from '@/contexts/MicrophoneContext';
 
 export const useVoiceEdit = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -11,12 +12,24 @@ export const useVoiceEdit = () => {
   const audioChunksRef = useRef<Blob[]>([]);
   const { toast } = useToast();
   const { hasPermission, requestPermission, canRequestPermission } = useMicrophonePermission();
+  const { requestMicrophone, releaseMicrophone } = useMicrophoneCoordinator();
 
   // Remove old permission function - now handled by useMicrophonePermission
 
   const startVoiceEdit = async (onTranscription: (text: string) => void) => {
-    // Check permission first
+    // Check microphone coordination first
+    if (!requestMicrophone('edit')) {
+      toast({
+        title: "Microphone Busy",
+        description: "Another microphone is currently active. Please stop it first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check permission
     if (!canRequestPermission) {
+      releaseMicrophone('edit');
       toast({
         title: "Microphone Not Available",
         description: "Microphone access requires HTTPS or a supported browser",
@@ -26,7 +39,10 @@ export const useVoiceEdit = () => {
     }
 
     const hasAccess = hasPermission || await requestPermission();
-    if (!hasAccess) return;
+    if (!hasAccess) {
+      releaseMicrophone('edit');
+      return;
+    }
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -71,6 +87,7 @@ export const useVoiceEdit = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      releaseMicrophone('edit');
     }
   };
 
@@ -78,6 +95,7 @@ export const useVoiceEdit = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      releaseMicrophone('edit');
       
       // Clear audio chunks to prevent processing
       audioChunksRef.current = [];

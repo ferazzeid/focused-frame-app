@@ -4,6 +4,7 @@ import { hybridSpeechService } from '@/lib/hybridSpeechService';
 import { createTextItem, loadData, saveData, generateId } from '@/lib/storage';
 import { useNotification } from '@/hooks/useNotification';
 import { useMicrophonePermission } from '@/hooks/useMicrophonePermission';
+import { useMicrophoneCoordinator } from '@/contexts/MicrophoneContext';
 
 interface PendingRecording {
   id: string;
@@ -24,6 +25,7 @@ export const useRecording = (onItemAdded?: () => void) => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const { showSuccess, showError, showProcessing } = useNotification();
   const { hasPermission, requestPermission, canRequestPermission } = useMicrophonePermission();
+  const { requestMicrophone, releaseMicrophone } = useMicrophoneCoordinator();
 
   // Cleanup timer on unmount
   useEffect(() => {
@@ -89,14 +91,24 @@ export const useRecording = (onItemAdded?: () => void) => {
   // Remove old permission function - now handled by useMicrophonePermission
 
   const startRecording = async () => {
-    // Check permission first
+    // Check microphone coordination first
+    if (!requestMicrophone('global')) {
+      showError("Microphone Busy", "Another microphone is currently active. Please stop it first.");
+      return;
+    }
+
+    // Check permission
     if (!canRequestPermission) {
+      releaseMicrophone('global');
       showError("Microphone Not Available", "Microphone access requires HTTPS or a supported browser");
       return;
     }
 
     const hasAccess = hasPermission || await requestPermission();
-    if (!hasAccess) return;
+    if (!hasAccess) {
+      releaseMicrophone('global');
+      return;
+    }
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -136,6 +148,7 @@ export const useRecording = (onItemAdded?: () => void) => {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       stopTimer();
+      releaseMicrophone('global');
     }
   };
 
@@ -144,6 +157,7 @@ export const useRecording = (onItemAdded?: () => void) => {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       stopTimer();
+      releaseMicrophone('global');
       
       // Clear audio chunks to prevent processing
       audioChunksRef.current = [];
