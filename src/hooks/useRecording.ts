@@ -158,33 +158,68 @@ export const useRecording = (onItemAdded?: () => void) => {
     try {
       // Check if multi-item is enabled
       const multiItemEnabled = localStorage.getItem('multi_item_enabled') === 'true';
+      const multiItemDestination = localStorage.getItem('multi_item_destination') || 'free';
       
       if (multiItemEnabled) {
         showProcessing("Processing recording...");
 
         const multiResult: MultiItemResult = await hybridSpeechService.processAudioForMultipleItems(audioBlob);
-        
-        // Create multiple items
         const currentData = await loadData();
-        const newItems = multiResult.items.map(item => createTextItem(item.title, item.content));
         
-        const updatedData = {
-          ...currentData,
-          freeList: [...newItems, ...currentData.freeList],
-        };
-        await saveData(updatedData);
+        if (multiItemDestination === 'second' && multiResult.items.length > 1) {
+          // Create structured parent-child items in Second List
+          const timestamp = new Date().toLocaleString('en-US', { 
+            month: 'short', 
+            day: 'numeric', 
+            hour: 'numeric', 
+            minute: '2-digit' 
+          });
+          
+          // Create parent item (bold) with timestamp
+          const parentItem = createTextItem(`Voice Recording ${timestamp}`, '');
+          parentItem.isBold = true;
+          
+          // Create child items (non-bold)
+          const childItems = multiResult.items.map(item => createTextItem(item.title, item.content));
+          
+          // Create empty divider after the group
+          const dividerItem = createTextItem('', '');
+          dividerItem.isEmpty = true;
+          
+          // Add to second list: parent, children, divider, then existing items
+          const updatedData = {
+            ...currentData,
+            secondList: [parentItem, ...childItems, dividerItem, ...currentData.secondList],
+          };
+          await saveData(updatedData);
+          
+          showSuccess(
+            "Structured Items Created",
+            `Created ${multiResult.items.length} items under "${parentItem.title}"`
+          );
+        } else {
+          // Create flat items in selected list (or fallback to free list)
+          const newItems = multiResult.items.map(item => createTextItem(item.title, item.content));
+          const targetList = multiItemDestination === 'second' ? 'secondList' : 'freeList';
+          
+          const updatedData = {
+            ...currentData,
+            [targetList]: [...newItems, ...currentData[targetList]],
+          };
+          await saveData(updatedData);
+          
+          showSuccess(
+            multiResult.items.length > 1 ? "Multiple Items Created" : "Voice Note Created",
+            multiResult.items.length > 1 
+              ? `Created ${multiResult.items.length} items in ${multiItemDestination === 'second' ? 'Second' : 'Free'} List`
+              : `Added: "${multiResult.items[0].title}"`
+          );
+        }
 
         // Remove from pending if it was a retry
         if (recordingId) {
           removePendingRecording(recordingId);
         }
-
-        showSuccess(
-          multiResult.items.length > 1 ? "Multiple Items Created" : "Voice Note Created",
-          multiResult.items.length > 1 
-            ? `Created ${multiResult.items.length} items from recording`
-            : `Added: "${multiResult.items[0].title}"`
-        );
 
       } else {
         showProcessing("Processing recording...");
@@ -194,7 +229,7 @@ export const useRecording = (onItemAdded?: () => void) => {
         // Create new item with 3-word summary as title and transcript as content
         const newItem = createTextItem(result.summary, result.transcript);
         
-        // Add to free list
+        // Add to free list (single items always go to free list)
         const currentData = await loadData();
         const updatedData = {
           ...currentData,

@@ -134,7 +134,7 @@ export class SpeechService {
     const apiKey = await this.getApiKey();
     const selectedModel = localStorage.getItem('openai_model') || 'gpt-5-nano-2025-08-07';
     const multiItemPrompt = localStorage.getItem('multi_item_prompt') || 
-      'Analyze this transcript and break it down into distinct, actionable items. Each item should be a separate task, idea, or note. If the content naturally contains multiple distinct items, return them as separate entries. If it\'s really just one cohesive item, return only one. For each item, provide a 3-word title (no punctuation) and the relevant content. Respond in JSON format: {"items": [{"title": "Three Word Title", "content": "detailed content"}], "is_single_item": false}';
+      'You are an expert at analyzing voice recordings and splitting them into distinct, actionable items. \n\nSPLIT CRITERIA - Only split when the transcript contains:\n- Multiple distinct tasks or action items\n- Different meeting topics or agenda items\n- Separate ideas that can stand alone\n- List-like content with clear separators\n\nDO NOT SPLIT if:\n- Content is under 50 words\n- It\'s a single cohesive thought or story\n- Items are closely related parts of one topic\n\nFor each item, create a meaningful 3-word title (no punctuation) that captures the essence. The title should help identify the content at a glance.\n\nExamples of good splitting:\n- "Buy groceries, call mom, finish project report" → 3 items\n- "Meeting discussed budget, then reviewed marketing plans, finally addressed hiring" → 3 items\n- "Remember to schedule dentist appointment and pick up dry cleaning" → 2 items\n\nExamples of NO splitting:\n- "Just had a great conversation with Sarah about the new product ideas" → 1 item\n- "Quick reminder to myself about tomorrow\'s presentation" → 1 item\n\nRespond in JSON format: {"items": [{"title": "Three Word Title", "content": "detailed content"}], "is_single_item": false}';
     
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -151,10 +151,10 @@ export class SpeechService {
           },
           {
             role: 'user',
-            content: `Transcript: "${transcript}"`
+            content: `Analyze this transcript for splitting: "${transcript}"`
           }
         ],
-        max_completion_tokens: 500,
+        max_completion_tokens: 600,
       }),
     });
 

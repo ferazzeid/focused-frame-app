@@ -20,6 +20,7 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const [sharedKeyStatus, setSharedKeyStatus] = useState<{ hasKey: boolean; keyPreview: string | null }>({ hasKey: false, keyPreview: null });
   const [multiItemEnabled, setMultiItemEnabled] = useState(false);
   const [multiItemPrompt, setMultiItemPrompt] = useState("");
+  const [multiItemDestination, setMultiItemDestination] = useState("free");
   const [summaryPrompt, setSummaryPrompt] = useState("");
   const [selectedModel, setSelectedModel] = useState("");
   const [useLocalSpeech, setUseLocalSpeech] = useState(false);
@@ -39,8 +40,11 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
     if (savedPrompt) {
       setMultiItemPrompt(savedPrompt);
     } else {
-      setMultiItemPrompt('Analyze this transcript and break it down into distinct, actionable items. Each item should be a separate task, idea, or note. If the content naturally contains multiple distinct items, return them as separate entries. If it\'s really just one cohesive item, return only one. For each item, provide a 3-word title (no punctuation) and the relevant content. Respond in JSON format: {"items": [{"title": "Three Word Title", "content": "detailed content"}], "is_single_item": false}');
+      setMultiItemPrompt('You are an expert at analyzing voice recordings and splitting them into distinct, actionable items. \n\nSPLIT CRITERIA - Only split when the transcript contains:\n- Multiple distinct tasks or action items\n- Different meeting topics or agenda items\n- Separate ideas that can stand alone\n- List-like content with clear separators\n\nDO NOT SPLIT if:\n- Content is under 50 words\n- It\'s a single cohesive thought or story\n- Items are closely related parts of one topic\n\nFor each item, create a meaningful 3-word title (no punctuation) that captures the essence. The title should help identify the content at a glance.\n\nExamples of good splitting:\n- "Buy groceries, call mom, finish project report" → 3 items\n- "Meeting discussed budget, then reviewed marketing plans, finally addressed hiring" → 3 items\n- "Remember to schedule dentist appointment and pick up dry cleaning" → 2 items\n\nExamples of NO splitting:\n- "Just had a great conversation with Sarah about the new product ideas" → 1 item\n- "Quick reminder to myself about tomorrow\'s presentation" → 1 item\n\nRespond in JSON format: {"items": [{"title": "Three Word Title", "content": "detailed content"}], "is_single_item": false}');
     }
+    
+    const savedDestination = localStorage.getItem("multi_item_destination");
+    setMultiItemDestination(savedDestination || "free");
     
     const savedSummaryPrompt = localStorage.getItem("summary_prompt");
     if (savedSummaryPrompt) {
@@ -130,6 +134,7 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const handleSaveMultiItemSettings = () => {
     localStorage.setItem("multi_item_enabled", multiItemEnabled.toString());
     localStorage.setItem("multi_item_prompt", multiItemPrompt);
+    localStorage.setItem("multi_item_destination", multiItemDestination);
     toast({
       title: "Multi-Item Settings Saved",
       description: "Your multi-item recording settings have been updated.",
@@ -303,6 +308,19 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
             </div>
             
             <div className="space-y-sm">
+              <Label className="text-sm font-medium text-foreground">Destination List</Label>
+              <Select value={multiItemDestination} onValueChange={setMultiItemDestination}>
+                <SelectTrigger className="bg-background-card border border-border text-foreground">
+                  <SelectValue placeholder="Select destination list" />
+                </SelectTrigger>
+                <SelectContent className="bg-background-card border border-border shadow-lg z-50">
+                  <SelectItem value="free" className="text-foreground hover:bg-background-subtle">Free List (Flat Items)</SelectItem>
+                  <SelectItem value="second" className="text-foreground hover:bg-background-subtle">Second List (Structured)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-sm">
               <Label htmlFor="multi-item-prompt" className="text-sm font-medium text-foreground">
                 Analysis Prompt
               </Label>
@@ -311,7 +329,7 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
                 value={multiItemPrompt}
                 onChange={(e) => setMultiItemPrompt(e.target.value)}
                 placeholder="Enter the prompt for analyzing recordings..."
-                className="bg-input border border-input-border min-h-[100px] font-mono text-xs"
+                className="bg-input border border-input-border min-h-[120px] font-mono text-xs"
               />
             </div>
             
