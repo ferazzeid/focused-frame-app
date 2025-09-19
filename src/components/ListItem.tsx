@@ -2,6 +2,7 @@ import { useState } from "react";
 import { MobileButton } from "@/components/ui/mobile-button";
 import { Trash2, GripVertical, Bold, X, Mic, MoreVertical, Info, ArrowRight } from "lucide-react";
 import { useVoiceEdit } from "@/hooks/useVoiceEdit";
+import { useToast } from "@/hooks/use-toast";
 
 export interface ListItemData {
   id: string;
@@ -56,7 +57,9 @@ export const ListItem = ({
   const [localTitle, setLocalTitle] = useState(item.title);
   const [localContent, setLocalContent] = useState(item.content);
   const [showMenu, setShowMenu] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { isRecording, isProcessing, toggleVoiceEdit, cancelVoiceEdit } = useVoiceEdit();
+  const { toast } = useToast();
 
   const handleVoiceTranscription = async (transcribedText: string) => {
     console.log("Voice transcription received:", transcribedText);
@@ -130,6 +133,22 @@ export const ListItem = ({
     }
   };
 
+  const handleImmediateDelete = () => {
+    setShowMenu(false);
+    setIsDeleting(true);
+    
+    // Show toast notification
+    toast({
+      title: "Item deleted",
+      description: item.title || "Item removed from list",
+    });
+    
+    // Start slide-out animation, then delete after animation completes
+    setTimeout(() => {
+      onDelete(item.id);
+    }, 300); // Match the animation duration
+  };
+
   if (item.isEmpty) {
     return (
       <div className="relative">
@@ -162,7 +181,7 @@ export const ListItem = ({
           
           {/* Delete button for divider */}
           <button
-            onClick={() => onDeleteConfirm?.(item.id)}
+            onClick={handleImmediateDelete}
             className="absolute right-0 w-4 h-4 rounded-full bg-accent-red/20 hover:bg-accent-red/40 opacity-0 group-hover:opacity-100 transition-all duration-fast flex items-center justify-center"
           >
             <X className="w-2.5 h-2.5 text-accent-red" />
@@ -190,7 +209,9 @@ export const ListItem = ({
           isSelected
             ? "border border-border-focus"
             : "border border-border"
-        } ${isChild ? "ml-lg" : ""}`}
+        } ${isChild ? "ml-lg" : ""} ${
+          isDeleting ? "animate-slide-out-left" : ""
+        }`}
         draggable
         onDragStart={(e) => onDragStart?.(e, item.id)}
         onDragOver={onDragOver}
@@ -357,17 +378,14 @@ export const ListItem = ({
                     </button>
                   )}
                   
-                  {/* Delete */}
-                  <button
-                    onClick={() => {
-                      onDeleteConfirm?.(item.id);
-                      setShowMenu(false);
-                    }}
-                    className="w-full px-lg py-md text-left text-sm text-foreground hover:bg-background-subtle hover:text-accent-red transition-colors duration-fast flex items-center gap-sm touch-manipulation"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Delete
-                  </button>
+                   {/* Delete */}
+                   <button
+                     onClick={handleImmediateDelete}
+                     className="w-full px-lg py-md text-left text-sm text-foreground hover:bg-background-subtle hover:text-accent-red transition-colors duration-fast flex items-center gap-sm touch-manipulation"
+                   >
+                     <Trash2 className="w-4 h-4" />
+                     Delete
+                   </button>
                 </div>
               </div>
             </>

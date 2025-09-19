@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { ListItem, ListItemData } from "@/components/ListItem";
 import { ContentModal } from "@/components/ContentModal";
-import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
 import { FileText } from "lucide-react";
 import { loadData, saveData, createTextItem, createEmptyItem, archiveItem } from "@/lib/storage";
 import { useToast } from "@/hooks/use-toast";
@@ -567,7 +566,6 @@ export const FreeList = () => {
               onSave={handleSave}
               onSelect={handleItemSelect}
               onViewContent={handleViewContent}
-              onDeleteConfirm={handleDeleteConfirm}
               onDragStart={handleDragStart}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
@@ -584,14 +582,6 @@ export const FreeList = () => {
         isOpen={isModalOpen}
         onClose={handleModalClose}
         onSave={handleModalSave}
-      />
-
-      {/* Delete Confirmation Modal */}
-      <DeleteConfirmModal
-        isOpen={isDeleteModalOpen}
-        onClose={handleDeleteCancel}
-        onConfirm={handleDeleteExecute}
-        itemTitle=""
       />
     </div>
   );
