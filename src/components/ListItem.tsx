@@ -3,6 +3,7 @@ import { MobileButton } from "@/components/ui/mobile-button";
 import { Trash2, GripVertical, Bold, X, Mic, MoreVertical, Info, ArrowRight } from "lucide-react";
 import { useVoiceEdit } from "@/hooks/useVoiceEdit";
 import { useToast } from "@/hooks/use-toast";
+import { useDeviceDetection } from "@/hooks/useDeviceDetection";
 
 export interface ListItemData {
   id: string;
@@ -25,6 +26,9 @@ interface ListItemProps {
   onDragOver?: (e: React.DragEvent) => void;
   onDragEnd?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent, targetId: string) => void;
+  onTouchStart?: (e: React.TouchEvent, id: string) => void;
+  onTouchMove?: (e: React.TouchEvent) => void;
+  onTouchEnd?: (e: React.TouchEvent) => void;
   isEditing?: boolean;
   isSelected?: boolean;
   onEdit?: (id: string) => void;
@@ -33,6 +37,7 @@ interface ListItemProps {
   onViewContent?: (id: string) => void;
   onDeleteConfirm?: (id: string) => void;
   isDragOver?: boolean;
+  isDragging?: boolean;
   isChild?: boolean;
 }
 
@@ -47,6 +52,9 @@ export const ListItem = ({
   onDragOver,
   onDragEnd,
   onDrop,
+  onTouchStart,
+  onTouchMove,
+  onTouchEnd,
   isEditing = false,
   isSelected = false,
   onEdit,
@@ -55,6 +63,7 @@ export const ListItem = ({
   onViewContent,
   onDeleteConfirm,
   isDragOver = false,
+  isDragging = false,
   isChild = false,
 }: ListItemProps) => {
   const [localTitle, setLocalTitle] = useState(item.title);
@@ -63,6 +72,7 @@ export const ListItem = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const { isRecording, isProcessing, toggleVoiceEdit, cancelVoiceEdit } = useVoiceEdit();
   const { toast } = useToast();
+  const { isMobile, isTouch } = useDeviceDetection();
 
   const handleVoiceTranscription = async (transcribedText: string) => {
     console.log("Voice transcription received:", transcribedText);
@@ -156,21 +166,30 @@ export const ListItem = ({
     return (
       <div className="relative">
         {isDragOver && (
-          <div className="absolute -top-1 left-0 right-0 h-0.5 bg-accent-green animate-pulse"></div>
+          <div className="absolute -top-1 left-0 right-0 h-1 bg-accent-green animate-pulse rounded-full shadow-lg shadow-accent-green/50"></div>
         )}
         <div 
-          className="group min-h-[3rem] flex items-center justify-center relative px-sm py-md border border-border/50 rounded-md bg-background-subtle/30 hover:bg-background-subtle/50 transition-colors duration-fast"
-          draggable
+          className={`group min-h-[3rem] flex items-center justify-center relative px-sm py-md border border-border/50 rounded-md transition-all duration-fast ${
+            isDragOver ? 'bg-accent-green/20 border-accent-green' : 'bg-background-subtle/30 hover:bg-background-subtle/50'
+          } ${isDragging ? 'opacity-50 scale-95 shadow-lg' : ''}`}
+          draggable={!isTouch}
           onDragStart={(e) => onDragStart?.(e, item.id)}
           onDragOver={onDragOver}
           onDragEnd={onDragEnd}
           onDrop={(e) => onDrop?.(e, item.id)}
+          onTouchStart={(e) => onTouchStart?.(e, item.id)}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
           data-item-id={item.id}
         >
-          {/* Drag Handle for divider - always visible on mobile */}
-          <div className="absolute left-0 flex items-center justify-center w-10 h-10 opacity-50 group-hover:opacity-100 transition-opacity duration-fast">
+          {/* Drag Handle for divider - enhanced for touch */}
+          <div className={`absolute left-0 flex items-center justify-center w-10 h-10 transition-all duration-fast ${
+            isTouch || isMobile ? 'opacity-80' : 'opacity-50 group-hover:opacity-100'
+          } ${isDragging ? 'scale-110 opacity-100' : ''}`}>
             <GripVertical 
-              className="w-6 h-6 text-foreground-subtle cursor-grab active:cursor-grabbing touch-manipulation" 
+              className={`text-foreground-subtle cursor-grab active:cursor-grabbing touch-manipulation transition-all duration-fast ${
+                isTouch || isMobile ? 'w-7 h-7' : 'w-6 h-6'
+              } ${isDragging ? 'text-accent-green scale-110' : ''}`}
               onMouseDown={(e) => {
                 e.currentTarget.style.cursor = 'grabbing';
               }}
@@ -204,45 +223,52 @@ export const ListItem = ({
   }
 
   return (
-    <div className="relative">
-      {isDragOver && (
-        <div className="absolute -top-1 left-0 right-0 h-0.5 bg-accent-green animate-pulse"></div>
-      )}
-      
-      {/* Divider line above bold items */}
-      {item.isBold && (
-        <div className="mb-sm">
-          <div className="w-full h-px bg-border opacity-30"></div>
-        </div>
-      )}
-      
-      <div
-        className={`group flex items-center gap-sm p-sm rounded-md transition-colors duration-fast min-h-[3rem] ${
-          isSelected
-            ? "border-2 border-accent-red bg-accent-red/5"
-            : "border border-border"
-        } ${isChild ? "ml-lg" : ""} ${
-          isDeleting ? "animate-slide-out-left" : ""
-        }`}
-        draggable
-        onDragStart={(e) => onDragStart?.(e, item.id)}
-        onDragOver={onDragOver}
-        onDragEnd={onDragEnd}
-        onDrop={(e) => onDrop?.(e, item.id)}
-        onClick={(e) => {
-          // Don't trigger selection if clicking on interactive elements
-          if (isEditing || e.target !== e.currentTarget && 
-              !(e.target as HTMLElement).closest('.content-area')) {
-            return;
-          }
-          onSelect?.(item.id);
-        }}
-        data-item-id={item.id}
-      >
-        {/* Drag Handle */}
-        <div className="flex items-center justify-center w-6 h-6 flex-shrink-0">
+      <div className="relative">
+        {isDragOver && (
+          <div className="absolute -top-1 left-0 right-0 h-1 bg-accent-green animate-pulse rounded-full shadow-lg shadow-accent-green/50"></div>
+        )}
+        
+        {/* Divider line above bold items */}
+        {item.isBold && (
+          <div className="mb-sm">
+            <div className="w-full h-px bg-border opacity-30"></div>
+          </div>
+        )}
+        
+        <div
+          className={`group flex items-center gap-sm p-sm rounded-md transition-all duration-fast min-h-[3rem] ${
+            isSelected
+              ? "border-2 border-accent-red bg-accent-red/5"
+              : "border border-border"
+          } ${isChild ? "ml-lg" : ""} ${
+            isDeleting ? "animate-slide-out-left" : ""
+          } ${isDragging ? "opacity-50 scale-95 rotate-1 shadow-lg" : ""}`}
+          draggable={!isTouch}
+          onDragStart={(e) => onDragStart?.(e, item.id)}
+          onDragOver={onDragOver}
+          onDragEnd={onDragEnd}
+          onDrop={(e) => onDrop?.(e, item.id)}
+          onTouchStart={(e) => onTouchStart?.(e, item.id)}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+          onClick={(e) => {
+            // Don't trigger selection if clicking on interactive elements
+            if (isEditing || e.target !== e.currentTarget && 
+                !(e.target as HTMLElement).closest('.content-area')) {
+              return;
+            }
+            onSelect?.(item.id);
+          }}
+          data-item-id={item.id}
+        >
+        {/* Enhanced Drag Handle */}
+        <div className={`flex items-center justify-center flex-shrink-0 transition-all duration-fast ${
+          isTouch || isMobile ? 'w-8 h-8' : 'w-6 h-6'
+        } ${isDragging ? 'scale-110' : ''}`}>
           <GripVertical 
-            className="w-5 h-5 text-foreground-subtle transition-opacity duration-fast cursor-grab active:cursor-grabbing" 
+            className={`text-foreground-subtle transition-all duration-fast cursor-grab active:cursor-grabbing touch-manipulation ${
+              isTouch || isMobile ? 'w-6 h-6 opacity-80' : 'w-5 h-5 opacity-60 group-hover:opacity-100'
+            } ${isDragging ? 'text-accent-green scale-110 opacity-100' : ''}`}
             onMouseDown={(e) => {
               e.currentTarget.style.cursor = 'grabbing';
             }}

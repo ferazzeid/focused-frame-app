@@ -7,6 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useNotification } from "@/hooks/useNotification";
 import { useAuth } from "@/hooks/useAuth";
 import { useAddFunctions } from "@/components/MobileLayout";
+import { useTouchDrag } from "@/hooks/useTouchDrag";
+import { useDeviceDetection } from "@/hooks/useDeviceDetection";
 
 export const FreeList = () => {
   const [items, setItems] = useState<ListItemData[]>([]);
@@ -23,6 +25,53 @@ export const FreeList = () => {
   const { showSuccess: showNotificationSuccess, showError: showNotificationError } = useNotification();
   const { user } = useAuth();
   const { setAddTextItem, setAddEmptyLine } = useAddFunctions();
+  const { isMobile, isTouch } = useDeviceDetection();
+
+  // Touch drag handlers for mobile compatibility
+  const touchDragHandlers = useTouchDrag({
+    onDrop: (draggedId, targetId) => {
+      console.log("Touch drop:", draggedId, "->", targetId);
+      
+      const draggedIndex = items.findIndex(item => item.id === draggedId);
+      const targetIndex = items.findIndex(item => item.id === targetId);
+      
+      if (draggedIndex === -1 || targetIndex === -1) {
+        console.log("Invalid touch drop indices");
+        return;
+      }
+
+      const newItems = [...items];
+      const [draggedItemData] = newItems.splice(draggedIndex, 1);
+      newItems.splice(targetIndex, 0, draggedItemData);
+      
+      const boldValid = validateBoldItemRules(newItems);
+      const emptyValid = validateEmptyLineRules(newItems);
+      
+      if (boldValid && emptyValid) {
+        console.log("Touch drop successful - updating items");
+        saveItems(newItems);
+        toast({
+          title: "Item moved",
+          description: "Item reordered successfully",
+        });
+      } else {
+        console.log("Touch drop validation failed");
+        toast({
+          title: "Cannot move item",
+          description: "This would break formatting rules",
+          variant: "destructive",
+        });
+      }
+    },
+    onDragStart: (itemId) => {
+      console.log("Touch drag started:", itemId);
+      setDraggedItem(itemId);
+    },
+    onDragEnd: () => {
+      console.log("Touch drag ended");
+      clearDragState();
+    },
+  });
 
   // Handle deselect all event
   useEffect(() => {
@@ -620,6 +669,22 @@ export const FreeList = () => {
               onDelete={deleteItem}
               onToggleBold={toggleBold}
               onSendToSecondList={handleSendToSecondList}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDragEnd={handleDragEnd}
+              onDrop={handleDrop}
+              onTouchStart={touchDragHandlers.onTouchStart}
+              onTouchMove={touchDragHandlers.onTouchMove}
+              onTouchEnd={touchDragHandlers.onTouchEnd}
+              isEditing={editingId === item.id}
+              isSelected={selectedItemId === item.id}
+              onEdit={handleEdit}
+              onSave={handleSave}
+              onSelect={handleItemSelect}
+              onViewContent={handleViewContent}
+              isDragOver={dragOverItem === item.id}
+              isDragging={touchDragHandlers.dragState.isDragging && touchDragHandlers.dragState.draggedItem === item.id}
+            />
               isEditing={editingId === item.id}
               isSelected={selectedItemId === item.id}
               onEdit={handleEdit}
