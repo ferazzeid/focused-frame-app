@@ -20,6 +20,7 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const [sharedKeyStatus, setSharedKeyStatus] = useState<{ hasKey: boolean; keyPreview: string | null }>({ hasKey: false, keyPreview: null });
   const [multiItemEnabled, setMultiItemEnabled] = useState(false);
   const [multiItemPrompt, setMultiItemPrompt] = useState("");
+  const [summaryPrompt, setSummaryPrompt] = useState("");
   const [selectedModel, setSelectedModel] = useState("");
   const [useLocalSpeech, setUseLocalSpeech] = useState(false);
   const [notificationMode, setNotificationMode] = useState("");
@@ -39,6 +40,13 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
       setMultiItemPrompt(savedPrompt);
     } else {
       setMultiItemPrompt('Analyze this transcript and break it down into distinct, actionable items. Each item should be a separate task, idea, or note. If the content naturally contains multiple distinct items, return them as separate entries. If it\'s really just one cohesive item, return only one. For each item, provide a 3-word title (no punctuation) and the relevant content. Respond in JSON format: {"items": [{"title": "Three Word Title", "content": "detailed content"}], "is_single_item": false}');
+    }
+    
+    const savedSummaryPrompt = localStorage.getItem("summary_prompt");
+    if (savedSummaryPrompt) {
+      setSummaryPrompt(savedSummaryPrompt);
+    } else {
+      setSummaryPrompt('You are a helpful assistant that creates concise 3-word summaries. Respond with exactly 3 words, no punctuation, no extra text.');
     }
     
     // Load AI model settings
@@ -125,6 +133,14 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
     toast({
       title: "Multi-Item Settings Saved",
       description: "Your multi-item recording settings have been updated.",
+    });
+  };
+
+  const handleSaveSummaryPrompt = () => {
+    localStorage.setItem("summary_prompt", summaryPrompt);
+    toast({
+      title: "Summary Prompt Saved", 
+      description: "Your summary prompt has been updated.",
     });
   };
 
@@ -462,55 +478,36 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
           </div>
         </div>
 
-        {/* Notification Settings */}
-        <div className="space-y-md">
-          <div className="flex items-center gap-sm">
-            <Settings2 className="w-5 h-5 text-foreground-muted" />
-            <h2 className="text-lg font-semibold text-foreground">Notification Settings</h2>
-          </div>
-          <div className="bg-background-card border border-border rounded-md p-md space-y-md">
-            <div className="space-y-sm">
-              <Label className="text-sm font-medium text-foreground">Notification Mode</Label>
-              <Select value={notificationMode} onValueChange={setNotificationMode}>
-                <SelectTrigger className="bg-input border border-input-border">
-                  <SelectValue placeholder="Select notification style" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="minimal">Minimal (Visual feedback only)</SelectItem>
-                  <SelectItem value="reduced">Reduced (Critical errors only)</SelectItem>
-                  <SelectItem value="verbose">Verbose (All notifications)</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-foreground-subtle">
-                {notificationMode === "minimal" && "Only visual indicators like checkmarks and spinners"}
-                {notificationMode === "reduced" && "Small toast notifications for errors only"}
-                {notificationMode === "verbose" && "Full toast notifications for all events"}
-              </p>
-            </div>
-          </div>
-        </div>
-
         {/* Summary Prompt */}
         <div className="space-y-md">
           <div className="flex items-center gap-sm">
             <MessageSquare className="w-5 h-5 text-foreground-muted" />
             <h2 className="text-lg font-semibold text-foreground">Summary Prompt</h2>
           </div>
-          <div className="bg-background-card border border-border rounded-md p-md">
-            <div className="bg-background-subtle border border-border rounded-sm p-sm font-mono text-xs text-foreground space-y-sm">
-              <div>
-                <span className="text-foreground-subtle">System:</span>
-                <div className="mt-xs text-foreground">
-                  "You are a helpful assistant that creates concise 3-word summaries. Respond with exactly 3 words, no punctuation, no extra text."
-                </div>
-              </div>
-              <div>
-                <span className="text-foreground-subtle">User:</span>
-                <div className="mt-xs text-foreground">
-                  "Summarize this text in exactly 3 words: [your text]"
-                </div>
-              </div>
+          <div className="bg-background-card border border-border rounded-md p-md space-y-md">
+            <div className="space-y-sm">
+              <Label htmlFor="summary-prompt" className="text-sm font-medium text-foreground">
+                System Prompt for Single-Item Summaries
+              </Label>
+              <Textarea
+                id="summary-prompt"
+                value={summaryPrompt}
+                onChange={(e) => setSummaryPrompt(e.target.value)}
+                placeholder="Enter the system prompt for single-item summaries..."
+                className="bg-input border border-input-border min-h-[80px] font-mono text-xs"
+              />
+              <p className="text-xs text-foreground-subtle">
+                This prompt instructs the AI how to create concise summaries for single voice recordings.
+              </p>
             </div>
+            
+            <MobileButton
+              onClick={handleSaveSummaryPrompt}
+              variant="primary"
+              className="w-full"
+            >
+              Save Summary Prompt
+            </MobileButton>
           </div>
         </div>
       </div>

@@ -96,6 +96,8 @@ export class SpeechService {
   async generateSummary(transcript: string): Promise<string> {
     const apiKey = await this.getApiKey();
     const selectedModel = localStorage.getItem('openai_model') || 'gpt-5-nano-2025-08-07';
+    const summaryPrompt = localStorage.getItem('summary_prompt') || 
+      'You are a helpful assistant that creates concise 3-word summaries. Respond with exactly 3 words, no punctuation, no extra text.';
     
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -108,7 +110,7 @@ export class SpeechService {
         messages: [
           {
             role: 'system',
-            content: 'You are a helpful assistant that creates concise 3-word summaries. Respond with exactly 3 words, no punctuation, no extra text.'
+            content: summaryPrompt
           },
           {
             role: 'user',
